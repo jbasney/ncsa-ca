@@ -1,0 +1,69 @@
+         Cacl, a CA System with Automated User Authentication
+
+       
+                         William J. Link
+                 San Diego Supercomputer Center
+               University of California, San Diego
+                        February 20, 2003
+
+
+Introduction and Summary of Operation:
+
+    Cacl is an OpenSSL based CA (Certificate Authority) system which was 
+developed at the San Diego Supercomputer Center.  The primary motivation 
+for developing the system was to create a CA which could automatically 
+authenticate the identity of a certificate requester and thus reduce the 
+administrative burden of CA management.  The system was developed and put 
+into production use in 2000 and been running at SDSC since that time.  
+The cacl CA system has replaced a Netscape Certificate Management System 
+for use in issuing all client and server certificates at SDSC.
+    The cacl CA system is based on a client/server model.  The client 
+program, called cacl (Certificate Authority CLient), is run by users 
+logged into machines within the SDSC domain, to request client certificates.
+When a user runs the cacl program to request a certificate he is prompted
+for the password used to login to the account from which cacl is being 
+run.  Next the user is prompted for a private key encryption password.
+Additional information which will be included in the certificate request
+is extracted from the user account's /etc/passwd entry, these items are:
+user name and user login name.  The cacl program constructs a PKCS#10
+certificate request based on a modified OpenSSL configuration file
+into which user information has been added.
+    After cacl constructs a certificate request it then encrypts the 
+request using the certificate authority's certificate.  This is done in 
+order to protect the certificate request file which contains the user's 
+login password in the challenge password field of the request.  Cacl then 
+opens a socket connection to the cacl system's CA daemon, which is running 
+on a machine dedicated to CA functions, and sends the request to the CA.  
+The CA daemon decrypts the request using its' private key and, after 
+determining from which machine within the SDSC domain the request originated,
+begins the process of authenticating the user.
+    At SDSC most of the machines from which cacl can be run have their
+account information recorded in a single file which is managed by an
+account management system.  The information found in the passwd
+file maintained by this system is what would normally be found in 
+Unix /etc/passwd and /etc/shadow files.  The CA daemon is able to 
+authenticate the user requesting a certificate by checking this passwd
+file.  After matching the login name and user name from the GECOS field
+with the information in the certificate request the password is checked.
+The salt from the user's encrypted password in the passwd file together 
+with the password provided in the certificate request is run through crypt 
+to encrypt the password supplied in the certificate request. The newly 
+encrypted password is then matched against the user account's encrypted 
+password in the account management system's passwd file for the machine 
+from which the certificate request originated.  This process authenticates 
+the certificate requester to the same level of certainty that ordinary 
+account login provides.  This is appropriate given that the certificate
+issued by the CA will provide the user with a  method of authentication 
+in addition to ordinary password authentication but not confer any 
+authorization above that available through account login.
+    After the CA daemon has evaluated the certificate request it will 
+either issue a certificate and send it back to the cacl client program 
+through the socket connection or send a rejection notice back to cacl. 
+In either case it usually takes only ten to twenty seconds to establish
+the socket connection, send the request, evaluate the request, and get
+a certificate or rejection notice back to the user.
+    Another component of the CA system is the caad (CA ADministrator) 
+program which an administrator can use to revoke certificates and create
+server certificates.  This program is available only to the administrators
+of the CA system and must be run on the machine which provides the CA 
+service.

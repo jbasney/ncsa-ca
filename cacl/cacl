@@ -1,0 +1,318 @@
+#!/usr/local/bin/perl5.6.0 -w
+# 
+# Copyright (c) 2002 The Regents of the University of California. All
+# rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: 1. Redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following
+# disclaimer. 2. Redistributions in binary form must reproduce the above
+# copyright notice, this list of conditions and the following disclaimer
+# in the documentation and/or other materials provided with the
+# distribution. 3. All advertising materials mentioning features or use
+# of this software must display the following acknowledgement: This
+# product includes software developed by the San Diego Supercomputer
+# Center and its contributors. 4. Neither the name of the Center nor the
+# names of its contributors may be used to endorse or promote products
+# derived from this software without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS''
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS
+# BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+# BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+# OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# 
+#  Script name: cacl (Certificate Authority CLient)
+#  Written by: William J. Link
+#  Date: June, 2000
+#
+#  This script can be used to acquire digital certificates issued by
+#  the NPACI/SDSC developed certificate management system.  It also
+#  creates a Globus enviroment for the user by creating a .globus
+#  directory within the user's home directory.  The user's encrypted
+#  cerificate key and the digital certificate in both pem and PKCS#12
+#  format are put into the .globus directory.
+# 
+
+$PKIAPPS = "/usr/local/apps/pki_apps";
+$OPENSSL = "/usr/local/apps/openssl/bin/openssl";
+$CONFIG = "$PKIAPPS/CA/user.cnf";
+$CACERT = "$PKIAPPS/CA/ca.pem";
+$CA = "ca.sdsc.edu";
+$PORT = 3434;
+$GLMV = 0;
+$MINPWDLEN = 8;
+$RUNBY = `logname`;
+chomp ($RUNBY);
+
+#
+# Move to the user's home directory before doing anything.
+#
+
+chdir($ENV{"HOME"}) || die "Can't get to your home directory. \n";
+
+#
+# Check for conditions which will prevent this script from running.
+#
+
+if (! -e $OPENSSL) {
+   print ("\n");
+   print ("You can not request a cert from this machine because \n");
+   print ("$OPENSSL is not available. \n");
+   print ("\n");
+   exit 1;
+}
+
+if ((! -e $CONFIG) || (! -e $CACERT)) {
+   print ("\n"); 
+   print ("You can not request a cert from this machine because files \n");
+   print ("needed from $PKIAPPS/CA are not available. \n");
+   print ("\n");
+   exit 1;
+}
+
+if (-e ".globus" && -e ".globus.old") {
+   print ("\n");
+   print ("You already have both .globus and .globus.old directories. \n");
+   print ("You will have to clean up your home directory Globus environment \n");
+   print ("before you can rerun this program. \n");
+   print ("\n");
+   exit 1;
+}
+
+if (-e ".globus") {
+   print ("\n");
+   print ("You already have a .globus directory.  It will be moved to \n");
+   print (".globus.old and a new .globus directory will be created. \n");
+   print ("\n");
+   rename (".globus",".globus.old");
+   $GLMV = 1;
+}
+
+@PWDENTRY = getpwnam($RUNBY);
+if (! @PWDENTRY) {
+   print ("Passwd file entry not found. \n"); 
+   exit 1;
+}
+
+($PWLOGNAME, $PWGECOS) = @PWDENTRY[0,6];
+if ($RUNBY eq $PWLOGNAME) {
+   $REALNAME = $PWGECOS;
+   $REALNAME =~ s/,.*$//;
+} else {
+   print ("The login name returned from the password file does not \n");
+   print ("match the name returned by logname for this login session. \n");
+   exit 1;
+}
+
+system ("stty -echo");
+print ("Please enter your login password: ");
+$LOGINPWD = <STDIN>;
+chomp ($LOGINPWD);
+
+# 
+# Precede a backslash in the password with lots of escapes, precede 
+# double quotes with a single escape character, and enclose the password 
+# with double quotes to prevent "special characters" from being stripped 
+# out when openssl creates the req.pem file.
+#
+$LOGINPWD=~ s/\\/\\\\/g;
+$LOGINPWD=~ s/"/\\"/g;
+$LOGINPWD= "\"$LOGINPWD\"";
+
+$ENCPWD = "a";
+$ENCPWD2 = "b";
+print ("\n \n");
+print ("Next you will be prompted to enter a password which will serve \n");
+print ("as both the encryption key for your certificate's private key \n");
+print ("and as the 'export password' for your PKCS#12 converted \n");
+print ("certificate.  Please choose a password that you can remember, \n");
+print ("you will need to use it in the future. \n");
+print ("\n");
+while ($ENCPWD ne $ENCPWD2) {
+   $ENCPWD = "pwd1";
+   $ENCPWD2 = "pwd2";
+   print ("\n");
+   print ("Please enter your private key encryption password: ");
+   $ENCPWD = <STDIN>;
+   chomp ($ENCPWD);
+   if (length($ENCPWD) < $MINPWDLEN) {
+      print ("\n\nPrivate key encryption passwords must be at least eight  \ncharacters in length, please try again.\n");
+   } else {
+      print ("\n");
+      print ("Verifying private key password, please reenter password: ");
+      $ENCPWD2 = <STDIN>;
+      chomp ($ENCPWD2);
+      print ("\n");
+      if ($ENCPWD ne $ENCPWD2) {
+      print ("\nThe passwords did not match, please try again.\n");
+      }
+   }
+}
+
+system ("stty echo");
+print ("\n");
+
+mkdir (".globus",0700);
+$OK = chdir(".globus");
+if (! $OK) {
+   print "Can't get to your .globus directory. \n";
+   exit 1;
+}
+
+#
+# Write out the private key encryption password for use by openssl 
+# when generating the key and certificate request.  It will be deleted
+# after it has been used for the key encryption.
+#
+
+open(OUT, ">epwd");
+print(OUT "$ENCPWD");
+close(OUT);
+
+#
+# Stream edit the standard cert request config file to insert information
+# gathered from STDIN and from the user's /etc/passwd file entry, write
+# the modified config file out into the "conf" file.
+#
+
+open(IN,$CONFIG) || die "Can't open $CONFIG file. \n";
+open(OUT,">conf" || die "Can't open .globus/conf file for writing. \n");
+select(OUT);
+while (<IN>) {
+s/CommonName/$REALNAME/;
+s/LoginName/$RUNBY/;
+s/ChallengePwd/$LOGINPWD/;
+print;
+}
+close(IN);
+close(OUT);
+select(STDOUT);
+
+#
+# Generate a .rnd file to be used as a randon number seed, create the cert 
+# request, and encrypt it using the CA's cert. 
+#
+
+$RNUM = rand;
+system ("echo $RNUM | /bin/cat > rnseed");
+system ("echo `ps -el` | gzip >> rnseed");
+system ("echo `/bin/date` | /bin/cat >> rnseed");
+system ("$OPENSSL genrsa -rand rnseed > /dev/null 2>&1");
+system ("$OPENSSL req -new -config conf -passout file:./epwd -keyout userkey.pem -out req.pem > /dev/null 2>&1");
+chmod (0400,"userkey.pem");
+system ("$OPENSSL smime -encrypt -des3 -in req.pem -out ereq $CACERT");
+unlink ("conf","epwd","req.pem","rnseed");
+
+#
+# Set up a socket connection to the CA daemon running on ca.sdsc.edu and send
+# the certificate request.
+#
+
+use IO::Socket;
+$SOCKET = new IO::Socket::INET (PeerAddr => $CA,
+                                PeerPort => $PORT,
+                                Proto    => 'tcp');
+
+if (! $SOCKET) {
+   chdir($ENV{"HOME"}) || die "Can't cd back to home directory. \n";
+   system ("rm -rf .globus");
+   if ($GLMV) {
+      rename (".globus.old",".globus");
+   }
+   print ("Can not connect to $CA: $! \n");
+   exit 1;
+}
+
+$MSG=`/bin/cat ereq`;
+select($SOCKET);
+send($SOCKET,$MSG,0);
+send($SOCKET,"All done\n",0);
+unlink ("ereq");
+
+#
+# Get a reply from the CA daemon.  If the first eight bytes is "Success "
+# the rest of the message is the cert, which can be written out to disk
+# in the current .globus directory as usercert.pem.  Next the encrypted
+# private key is sent to the CA daemon for safe keeping, a PKCS#12 
+# copy of the cert is made, and the local conf and cert request files are
+# deleted.  If the first eight bytes is "Error   " then something went 
+# wrong, print the rest of the message, which is an error message, to 
+# STDOUT.
+#
+
+recv($SOCKET,$BUFF,8,0);
+if ("$BUFF" eq "Error   ") {
+    select (STDOUT);
+    print ($BUFF);
+    recv($SOCKET,$BUFF,5000,0);
+    print ("$BUFF \n");
+    close($SOCKET);
+    chdir($ENV{"HOME"}) || die "Can't cd back to home directory. \n";
+    system ("rm -rf .globus");
+    if ($GLMV) {
+       rename (".globus.old",".globus");
+    }
+    exit 1;
+} elsif ("$BUFF" eq "Success ") {
+     open (CERTFILE, ">usercert.pem");
+     select (CERTFILE);
+     local $/;
+     undef ($/);
+     while (<$SOCKET>) {
+        print ($_);
+     }
+     close(CERTFILE);
+     open(OUT, ">epwd");
+     print(OUT "$ENCPWD");
+     close(OUT);
+     $KEY = `/bin/cat userkey.pem`;
+     send($SOCKET,$KEY,0);
+     send($SOCKET,"All done\n",0);
+     close($SOCKET);
+     select (STDOUT);
+     print ("\n");
+     system ("$OPENSSL rsa -passin file:./epwd -in userkey.pem -outform PEM -out key.pem > /dev/null 2>&1");
+     system ("$OPENSSL pkcs12 -export -in usercert.pem -inkey key.pem -passout file:./epwd -out usercert.p12 -name \"NPACI/SDSC OpenSSL Certificate\"");
+     chmod (0400,"usercert.p12","usercert.pem");
+     unlink ("epwd","key.pem");
+     print ("You now have a .globus directory containing the following files: \n");
+     print ("\n");
+     print ("usercert.p12 - Your digital certificate and private key in \n");
+     print ("               a PKCS#12 format certificate \n");
+     print ("\n");
+     print ("usercert.pem - Your digital certificate, signed by the CA \n");
+     print ("               daemon \n");
+     print ("\n");
+     print ("userkey.pem  - Your encrypted private key matching the \n");
+     print ("               public key contained in your usercert.pem \n");
+     print ("\n");
+     print ("\n");
+     print ("********************************************************** \n");
+     print ("\n");
+     print (" YOUR CERTIFICATE IS VALID FOR FOUR YEARS, DO NOT FORGET \n");
+     print (" YOUR PRIVATE KEY ENCRYPTION PASSWORD AND, DO NOT DELETE \n");
+     print (" YOUR .globus DIRECTORY. \n");
+     print ("\n");
+     print ("********************************************************** \n");
+     print ("\n");
+} else {
+    select (STDOUT);
+    print ("Can't recognize reply from CA daemon. \n");
+    close($SOCKET);
+    chdir($ENV{"HOME"}) || die "Can't cd back to home directory. \n";
+    system ("rm -rf .globus");
+    if ($GLMV) {
+       rename (".globus.old",".globus");
+    }
+    exit 1;
+}
+exit 0;
