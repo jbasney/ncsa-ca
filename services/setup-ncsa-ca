@@ -1,0 +1,67 @@
+#! /bin/sh
+#
+# [excuse the dissertation]
+#
+# two modes of thinking:
+#   o GLOBUS_LOCATION must be defined, and the file we call must be called via
+#       absolute pathname
+#   o GLOBUS_LOCATION has nothing to do with it, since we're already relative
+#       to the file.  we can just call it with './'
+#
+# [addendum: apparently, we must use an absolute pathname, since our cwd is
+#   $GLOBUS_LOCATION/setup/globus/ at the time the script is run.  grr. ]
+#
+# we still check for the existence of GLOBUS_LOCATION to ensure we're running
+#   in a sane environment.  btw, aren't all of these constant checks for
+#   necessary environment variables kind of extraneous??  shouldn't we have
+#   a 'sanity check' library which, per platform, gets all of our assumptions
+#   in-line.. something that defines a namespace, even..
+#
+#     globus:gt2:installdir => "/opt/globus"
+#     globus:gt2:devdir => "/opt/globus"
+#     globus:gt2:gsidir => "/etc/grid-security"
+#
+# the namespace "means something" only to the programs that are placing files
+#   there.  in fact, it would really suck for a program to place a file there
+#   and then later find out that the globus:gt2:installdir is now pointing
+#   to a new location, and its files are gone.
+#
+# the proper way may be through object orientation.  have one large globus_fs
+#   object with methods on it like "read", "move", "copy", "delete", etc.  the
+#   directories are all referenced similar to the namespace symbols provided
+#   above.  eg:
+#
+#     globus_fs myglobusfs;
+#     myglobusfs->read("globus:gt2:gsidir", "globus-host-ssl.conf");
+#
+# when a user decides to move his/her globus location, then the whole thing
+#   is resilient in that the namespace pointers just need to be changed.
+#   providing compositionality to them allows them to reference each other.
+#   providing runtime evaluation to switch out GLOBUS_LOCATION.  in this
+#   scenario, GLOBUS_LOCATION is used by this globus_fs object to resolve
+#   a reference to globus:gt2:devdir, which is what other programs complying
+#   with gpt point to.  the globus_fs object contains all of the necessary
+#   error-checking for all of the standard sanity checks.
+#
+# for runtime wrapper scripts?  create a gpt namespace resolving tool which
+#   /bin/sh can run upon invocation.  say the user runs
+#   $GLOBUS_LOCATION/bin/sftp.  then sftp would look like:
+#
+#     #!/bin/sh
+#     #
+#
+#     $GLOBUS_LOCATION/bin/globus-resolve (globus:gt2:bindir)/sftp.real \
+#       -F (globus:gt2:etcdir)/ssh_config
+#
+# so globus-resolve would translate all arguments in $* and execute them
+#   through /bin/sh.
+#
+# jeez, this is a hack.
+#
+
+if [ "$GLOBUS_LOCATION" = "" ]; then
+  echo "Set GLOBUS_LOCATION before running this script"
+  exit 1
+fi
+
+perl $GLOBUS_LOCATION/setup/globus/ncsa/gsi-ncsa-ca/setup-ncsa-ca.pl
