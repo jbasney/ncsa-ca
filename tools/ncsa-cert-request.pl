@@ -1016,11 +1016,15 @@ sub createCerts
     my ($umsk, $tmpfile);
 
     printf("A certificate request and private key is being created.\n");
-    printf("You will be asked to enter a PEM pass phrase.\n");
-    printf("This pass phrase is akin to your account password,\n");
-    printf("and is used to protect your key file.\n");
-    printf("If you forget your pass phrase, you will need to\n");
-    printf("obtain a new certificate.\n");
+
+    if (!defined($nopw))
+    {
+        printf("You will be asked to enter a PEM pass phrase.\n");
+        printf("This pass phrase is akin to your account password,\n");
+        printf("and is used to protect your key file.\n");
+        printf("If you forget your pass phrase, you will need to\n");
+        printf("obtain a new certificate.\n");
+    }
 
     #
     # create the certificate file
