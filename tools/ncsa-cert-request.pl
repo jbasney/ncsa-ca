@@ -297,14 +297,10 @@ sub determinePaths
         exit;
     }
 
-    if ( ! grep(/^\//, $dir) )
-    {
-        # make $tmp_dir an absolute path
-        $dir = absolutePath($dir);
-    }
+    # make $tmp_dir an absolute path if need be
+    $dir = absolutePath($dir);
 
     # create $dir if it doesn't exist
-
     makeDir($dir);
 
     #
@@ -614,12 +610,6 @@ sub readFile
 {
     my ($filename) = @_;
 
-    # my ($size, $data, $rc);
-    #
-    # open(FILE, "$filename") or die "ERROR: cannot open $filename";
-    # $size = (stat($filename))[7];
-    # $rc = read(FILE, $data, $size);
-
     open (IN, "$filename") || die "Can't open '$filename': $!";
     $/ = undef;
     $data = <IN>;
@@ -703,6 +693,7 @@ sub checkCerts
 sub getCN
 {
     my ($type, $name) = @_;
+    my ($str);
 
     if ($type eq "user")
     {
@@ -1317,16 +1308,14 @@ sub handleFailedPost
     return;
 }
 
-### postReq( $user_email, $user_phone, $request_id_file )
+### postReq( $user_email, $user_phone, $request_id_file, $name )
 #
 # Post the req to the web server.
-#
-# NEED TO TEST
 #
 
 sub postReq
 {
-    my ($user_email, $user_phone, $request_id_file) = @_;
+    my ($user_email, $user_phone, $request_id_file, $name) = @_;
 
     my ($server, $port, $enroll_page);
     my ($post_cmd_file, $post_out_file);
@@ -1427,7 +1416,7 @@ sub postReq
     {
         handleSuccessfulPost($post_out_file, $request_id_file);
 
-#        cleanup($post_out_file);
+        cleanup($post_out_file);
     }
     else
     {
@@ -1441,7 +1430,7 @@ sub postReq
         action("cat ${post_cmd_file} >> ${post_out_file}");
     }
 
-#    cleanup($post_cmd_file);
+    cleanup($post_cmd_file);
 }
 
 ### getUserEmail( )
@@ -1717,8 +1706,6 @@ sub action
 #
 # driver function
 #
-# NEED TO TEST
-#
 
 sub main
 {
@@ -1733,21 +1720,10 @@ sub main
     $default_files = preparePathsHash($default_dir, $default_cert_file, $default_key_file, $default_request_file, $default_request_id_file);
     $files = determinePaths($default_files, $cl_files);
 
-    #printf("%s\n", Dumper($files));
-
     $cert_file = $files->{'cert_file'};
     $key_file = $files->{'key_file'};
     $request_file = $files->{'request_file'};
     $request_id_file = $files->{'request_id_file'};
-
-    # <testing>
-    #checkCerts($cert_file, $key_file, $request_file);
-    #printf("ret = '%s'\n", printPostData("foo%.&.@. .foo", "bar%.&.@. .bar"));
-    #handleFailedPost("unsuccess");
-    #checkResubmit();
-    #createCerts($type, $name);
-    #printf("%s\n", processReqFile($request_file));
-    # </testing>
 
     checkGlobusSystem($ca_config);
 
@@ -1769,10 +1745,7 @@ sub main
         checkResubmit();
     }
 
-    #-  COMMON_NAME="`echo ${SUBJECT} | ${GLOBUS_SH_SED-sed} -e 's|^.*/CN=||'`"
-    # what do i replace the above with?
-
-    postReq($user_email, $user_phone, $request_id_file);
+    postReq($user_email, $user_phone, $request_id_file, $name);
 }
 
 __END__
@@ -1902,5 +1875,10 @@ connection error, you can use the --resubmit option.  If all of your request
 files exist in, eg. /home/myhome/mycerts:
 
 B<ncsa-cert-request --resubmit --dir="/home/myhome/mycerts">
+
+=head1 AUTHORS
+
+ Joe Greenseid <jgreen@ncsa.uiuc.edu>,
+ Chase Phillips <cphillip@ncsa.uiuc.edu>
 
 =cut
