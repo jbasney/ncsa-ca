@@ -22,7 +22,7 @@ $progname =~ s|.*/||g;
 # If not, then die.
 $gpath = $ENV{GLOBUS_LOCATION};
 if (!defined($gpath)) {
-  die "GLOBUS_LOCATION needs to be set before running this script"
+  die "GLOBUS_LOCATION needs to be set before running this script";
 }
 
 #### OK, here we set tons of variables ####
@@ -38,20 +38,21 @@ $ca_config = "$gpath/share/gsi_ncsa_ca_tools/ncsa-ca.conf";
 
 #- # Default Generated Files
 $userhome = $ENV{HOME};
+
+$default_cert_file = "cert.pem";
+$default_key_file = "key.pem";
 # Changing location of retrieved certs so that they can move certs
 # wherever they want, and no accidental overwrites of existing certs
 # in ~/.globus happens
-$def_globus_dir = "$userhome/.certs";
+$default_dir = "$userhome/.certs";
 
-$def_cert_file = "cert.pem";
-$def_key_file = "key.pem";
-$def_request_file = "req.pem";
-$def_request_id_file = "request_id";
+#$def_request_file = "req.pem";
+#$def_request_id_file = "request_id";
 
-$def_ldap_cert_file = "ldapservercert.pem";
-$def_ldap_key_file = "ldapserverkey.pem";
-$def_ldap_request_file = "ldapservercert_req.pem";
-$def_ldap_request_id_file = "ldap_request_id";
+#$def_ldap_cert_file = "ldapservercert.pem";
+#$def_ldap_key_file = "ldapserverkey.pem";
+#$def_ldap_request_file = "ldapservercert_req.pem";
+#$def_ldap_request_id_file = "ldap_request_id";
 
 $contact_email_addr = "consult\@alliance.paci.org";
 $contact_url = "http://www.ncsa.uiuc.edu/UserInfo/Alliance/GridSecurity/";
@@ -60,144 +61,76 @@ $user_agent="ncsa-cert-request/$version";
 # By default, nocheck is 1, and if specified on the cmd line can be set to
 # 0.  if nocheck is 1, then checkState is run later on -- this is a simple
 # sanity check.
-$nocheck = 1;
-
-$short_usage = "$progname [-help] [options ...] -id <id>";
-
-##############################################
-## MUST CHANGE ALL THINGS BETWEEN HERE
-## AND "END MARK"
-##############################################
-
-	### BEGIN   inserted by configure ###	
-
-	_done=no
-	_n=1
-	while [ "$_done" = no -a "$_n" -le "$#" ] ; do
-	    _tmp="echo \"\$${_n}\""
-	    _arg="`eval ${_tmp}`"
-	    case "${_arg}" in
-		-help | -usage)
-		    long_usage
-		    exit 0
-		    ;;
-		-version)
-		    echo "ncsa-cert-retrieve $VERSION"
-		    exit 0
-		    ;;
-	        --)
-		    _done=yes
-		    ;;
-		--*)
-		    globus_args_option_error $1 "double-dashed option syntax is not allowed"
-		    ;;
-		*)
-		    _n=`${GLOBUS_SH_EXPR-expr} $_n + 1`
-		    ;;
-	    esac
-	done
-	_n=
-	_tmp=
-	_arg=
-	_done=
-	### END   inserted by configure ###
-
-# echo "Checking grid-security.conf file in $secconfdir"
-# security_conf=${secconfdir}/grid-security.conf
 #
-# See if we can proceed
-#. ${security_conf}
+# For now, must leave nocheck = 0 in all cases, as we have not figure out a 
+# good way to check the state of the system yet.
+$nocheck = 0;
 
-readCommandLine () {
-  # Expects $* from the shell invocation
+### READ COMMAND LINE OPTIONS ###
 
-  while [ "X$1" !=  "X" ]
-  do
-    case $1 in
-      -\?|-h|-help|-usage)
-	 # changed to longUsage to be consistent w/ naming of subs
-         long_usage
-         exit 0
-         ;;
+GetOptions ( 'dir=s' => \$cl_dir,
+	     'id=s'  => \$request_id,
+	     'nocheck' =>
+	     sub { $nocheck = 0; },
+	     'cert=s' => \$cl_cert_file,
+	     'key=s' => \$cl_key_file,
+	     'version' => \$versionopt,
+	     'help|?' => \$help,
+	     'man' => \$man,
+	     ) or pod2usage(2);
 
-     -dir)
-         DEF_GLOBUS_DIR="$2"
-         shift ; shift
-         ;;
+### DEAL WITH COMMAND LINE OPTIONS ###
 
-     -id)
-         REQUEST_ID="$2"
-	 shift; shift
-	 ;;
-
-     -nocheck)
-         NOCHECK="TRUE"
-	 shift
-	 ;;
-
-     *)
-	 globus_args_unrecognized_option "$1"
-         ;;
-    esac
-  done
-
+if ($versionopt) {
+  print "$progname Version $version\n";
+  exit;
 }
 
-###########################################################
-# MAIN
-###########################################################
+pod2usage(1) if $help;
 
-readCommandLine "$@"
+pod2usage('exitval' => 0, '-verbose' => 2) if $man;
 
-### THIS IS PERL ##################################
-
-# Set the actual file names using absolute paths.
-# absolutePath takes an array as input and returns an array as output,
-# hence the form ($var1, $var2, ...) = absolutePath ($file1, $file2, ...)
-
-($globus_dir, $cert_file, $key_file, $request_file, $request_id_file) = absolutePath($def_globus_dir, $def_cert_file, $def_key_file, $def_request_file, $def_request_id_file);
-
-checkGlobusSystem();
-
-### END PERL ######################################
-
-# must change this -- the logic is stupid for perl.
-# NOCHECK = 1; if -nocheck on cmd line, NOCHECK = 0;
-# then here we can simply do: if ($nocheck) {...}
-if [ "${NOCHECK}" = "FALSE" ]; then
-  checkState
-fi
-
-if [ "X${REQUEST_ID}" = "X" ]; then
-  cat<<EOF
-
+if (!$request_id) {
+  print "
 Please supply the serial number of your certificate as contained in the
 email you received from the CA. (Note that this is not the same as the
 request number you got when submitting your certificate.)
 
 For example, if your certificate is serial number 45, please run:
 
-${PROGRAM_NAME} -id 45
+$progname -id 45
 
-If you want assistance please email ${CONTACT_EMAIL_ADDR}
+If you want assistance please email $contact_email_addr
 or visit
 
-${CONTACT_URL}
+$contact_url\n";
 
-EOF
-  
-  globus_args_short_usage
-  exit 1
-fi
+exit;
+}
 
-getCertificate
+#if ($nocheck) { print "i will run checkState here eventually.\n"; }
 
-exit 0
+if (! $cl_cert_file) { $cl_cert_file = undef; }
+if (! $cl_key_file) { $cl_key_file = undef; }
 
-#####################################################
-### END MARK
-#####################################################
+# Figure out if we are using command line or default files and/or
+# directories.  All these values are stored in the hash $files
 
+$cl_files = preparePathsHash($cl_dir, $cl_cert_file, $cl_key_file);
+$default_files = preparePathsHash($default_dir, $default_cert_file, $default_key_file);
+$files = determinePaths($default_files, $cl_files);
+
+# Pull the values out of $files hash and set them up as easy to
+# remember variables for use throughout the rest of the script
+
+$cert_file = $files->{'cert_file'};
+$key_file = $files->{'key_file'};
+
+checkGlobusSystem();
+
+getCertificate();
+
+exit;
 
 ##########################
 ##########################
@@ -564,15 +497,15 @@ sub getCertificate {
   open (POST_DATA_FILE, ">>$post_data_file") || die "can't open $post_data_file";
 
   $tmpvar = printPostData("op", "displayBySerial");
-  print POST_DATA_FILE "$tmpvar\n";
-  print POST_DATA_FILE "&\n";
+  print POST_DATA_FILE "$tmpvar";
+  print POST_DATA_FILE "&";
 
   $tmpvar = printPostData("serialNumber", "$request_id");
-  print POST_DATA_FILE "$tmpvar\n";
-  print POST_DATA_FILE "&\n";
+  print POST_DATA_FILE "$tmpvar";
+  print POST_DATA_FILE "&";
 
   $tmpvar = printPostData("submit", "Details");
-  print POST_DATA_FILE "$tmpvar\n";
+  print POST_DATA_FILE "$tmpvar";
   print POST_DATA_FILE "\n\n";
 
   close (POST_DATA_FILE);
@@ -601,6 +534,7 @@ sub getCertificate {
   # Sleep to give server a chance to respond
   action("(cat $post_cmd_file; sleep 10) | $ssl_exec s_client -quiet -connect $server:$port > $post_out_file 2>&1");
 
+  $/ = "\n";
   open (POST_OUT_FILE, "$post_out_file") || die "can't open $post_out_file";
   while (<POST_OUT_FILE>) {
     if ($_ =~ /certChainBase64 =/) {
@@ -615,7 +549,6 @@ sub getCertificate {
     open (TMP_CERT_FILE, ">$tmp_cert_file") || die "can't open $tmp_cert_file";
     print TMP_CERT_FILE "-----BEGIN CERTIFICATE-----\n";
     print TMP_CERT_FILE "$cert_data\n";
-    print TMP_CERT_FILE "\n";
     print TMP_CERT_FILE "-----END CERTIFICATE-----\n";
     close (TMP_CERT_FILE);
 
@@ -639,18 +572,18 @@ sub getCertificate {
 }
 
 
-### preparePathsHash( $dir, $cert_file, $key_file )
+### preparePathsHash( $dir, $my_cert_file, $my_key_file )
 #
 # create a hash based on the arguments passed to the subroutine
 #
 
 sub preparePathsHash {
-  my ($dir, $cert_file, $key_file ) = @_;
+  my ($dir, $my_cert_file, $my_key_file ) = @_;
   my $hash = {};
 
   $hash->{'dir'} = $dir;
-  $hash->{'cert_file'} = $cert_file;
-  $hash->{'key_file'} = $key_file;
+  $hash->{'cert_file'} = $my_cert_file;
+  $hash->{'key_file'} = $my_key_file;
 
   return $hash;
 }
@@ -664,7 +597,7 @@ sub preparePathsHash {
 
 sub determinePaths {
   my ( $default_files, $cl_files ) = @_;
-  my ( $cert_file );
+  my ( $my_cert_file );
   my ( $files );
 
   $files = {};
@@ -714,7 +647,7 @@ sub determinePaths {
 
 ### determineFile( $default, $cl, $name )
 #
-# choose between the default- and the commandline-specified file.  
+# choose between the default- and the commandline-specified file.
 # error out if we can't write to our choice.
 #
 
@@ -803,36 +736,23 @@ sub makeDir {
 
 __END__
 
-#################
-## Must go through POD Docs and change for ncsa-cert-retrieve
-## Don't forget.
-#################
+#####################
+#                   #
+# Pod Documentation #
+#                   #
+#####################
 
 =head1 NAME
 
-ncsa-cert-request - Request a certificate from the NCSA certificate authority
+ncsa-cert-retrieve - Retrieve a certificate from the NCSA certificate authority
 
 =head1 SYNOPSIS
 
-ncsa-cert-request [options]
-
- Options:
-   --help              brief help message
-   --man               full documentation
+ncsa-cert-retrieve [options] -id <id_number>
 
 =head1 OPTIONS
 
 =over 8
-
-=item B<--cn=<name>>
-
-=item B<--commonname=<name>>
-
-Sets the common name of the certificate to <name>.
-
-=item B<--gatekeeper=<name>>
-
-=item B<--type=<cert_type>>
 
 =item B<--dir=<dir_name>>
 
@@ -840,17 +760,16 @@ Sets the common name of the certificate to <name>.
 
 =item B<--key=<file>>
 
-=item B<--req=<file>>
+=cut
 
-=item B<--nopw>
+# Cutting this option out of the pod docs for now, as it is 
+# unimplemented in this version of the script
 
-=item B<--interactive>
+#=item B<--nocheck>>
+#
+#Attempt retrieval without checking system to make sure everything is correct to retrieve the certificate
 
-=item B<--force>
-
-=item B<--resubmit>
-
-=item B<--verbose>
+=pod
 
 =item B<--version>
 
@@ -862,30 +781,27 @@ Prints a brief help message and exits.
 
 Prints the manual page and exits.
 
-=item B<--mylongusageitemisatest>
-
-To see just what pod usage does when the name of the name of the usage item
-is way to long to fit onto one line.
 
 =back
 
 =head1 DESCRIPTION
 
-B<ncsa-cert-request> will request a certificate from the NCSA certificate
-authority.  This program understands three different types of certificates:
+B<ncsa-cert-retrieve> will retrieve a certificate from the NCSA certificate
+authority.
 
-    host
-      A certificate of type 'host' represents a validation that the machine
-      is truly affiliated with its current institution.
+You can specify to B<ncsa-cert-retrieve> the name of the B<certificate file>, B<key file>, and/or the B<directory> they will be placed in.  If none of these are specified with the command line flags and arguments, default settings will be used.  Currently, these are:
 
-    user
-      The user certificate is a representation that the NCSA CA has verified
-      a user's affiliation with their organization.
+      certificate: cert.pem
 
-    ldap
-      The ldap certificate is a representation that the NCSA CA has verified
-      the affiliation between a machine's ldap service and its organization.
+      key:         key.pem
 
-Drink your ovaltine!
+      directory:   ~/.certs
+
+If using the default directory, after you successfully retrieve your certificate, you must move the certificate to the appropriate place on your system, so that it may be used by Globus.
+
+=head1 AUTHORS
+
+ Joe Greenseid <jgreen@ncsa.uiuc.edu>,
+ Chase Phillips <cphillip@ncsa.uiuc.edu>
 
 =cut
