@@ -1,8 +1,8 @@
-#!/usr/local/bin/perl -w
-# 
+#!/usr/bin/perl -w
+#
 # Copyright (c) 2002 The Regents of the University of California. All
 # rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
 # met: 1. Redistributions of source code must retain the above copyright
@@ -16,7 +16,7 @@
 # Center and its contributors. 4. Neither the name of the Center nor the
 # names of its contributors may be used to endorse or promote products
 # derived from this software without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS''
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 # THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -28,7 +28,7 @@
 # WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
 # IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-# 
+#
 #
 #  Script name: caad (Certificate Authority ADministration)
 #  Written by: William J. Link
@@ -38,19 +38,21 @@
 #  or revoke certificates and update the CRL.
 #
 
-$CADIR = "/certman/CA_SYSTEM";
-$OPENSSLDIR = "/usr/local/apps/openssl";
+$CADIR = "/usr/local/certman/CA_SYSTEM";
+$OPENSSLDIR = "/usr";
 $OPENSSL = "$OPENSSLDIR/bin/openssl";
-$CONFIG = "$CADIR/sdsc.cnf";
-$SCONFIG = "$CADIR/sdsc.server.cnf";
+$CONFIG = "$CADIR/ncsa.cnf";
+$SCONFIG = "$CADIR/ncsa.server.cnf";
 $SCERTDIR = "$CADIR/server.certs";
 $CERTDIR = "$CADIR/ca.db.certs";
 $INDEX = "$CADIR/ca.db.index";
 $CRL = "$CADIR/CRL";
-$PUB_PKI_DIR="/projects/security/PKI";
-$PUB_CERT_DIR="/projects/security/PKI/certificates";
+$PUB_PKI_DIR="/usr/local/projects/security/PKI";
+$PUB_CERT_DIR="/usr/local/projects/security/PKI/certificates";
 $LOGFILE="$CADIR/CA.log";
 $LOGDATE=`date`;
+$CA_KEY="$CADIR/ca.key";
+$CA_CERT="$CADIR/ca.pem";
 
 #
 # Check for conditions which will prevent this script from running.
@@ -58,101 +60,75 @@ $LOGDATE=`date`;
 
 $RUNBY = `whoami`;
 chomp ($RUNBY);
-if ($RUNBY ne "certman") {
-   print ("\n");
-   print ("caad must be run from the certman account, bye. \n");
-   print ("\n");
-   exit;
+#if ($RUNBY ne "certman") {
+if ($RUNBY ne "root") {
+    print ("\n");
+    print ("caad must be run from the certman account, bye. \n");
+    print ("\n");
+    exit;
 }
 
 if (! -e $OPENSSLDIR) {
-   print ("\n");
-   print ("You can not request a cert from this machine because \n");
-   print ("$OPENSSLDIR is not available. \n");
-   print ("\n");
-   exit;
+    print ("\n");
+    print ("You can not request a cert from this machine because \n");
+    print ("$OPENSSLDIR is not available. \n");
+    print ("\n");
+    exit;
 }
 
-$CP = `cat $ENV{"HOME"}/.cp"`;
-chomp ($CP);
 print ("\n");
 print ("Do you want to create a server cert? [y/n] ");
 $ANSWER = <STDIN>;
 chomp ($ANSWER);
 print ("\n");
 if ($ANSWER eq "y") {
-    chdir ("$SCERTDIR") || die "Can't cd into server.certs directory.";
-    print ("Please enter the server name: ");
-    $SERVER = <STDIN>;
-    chomp($SERVER);
-    open (IN,$SCONFIG) || die "Can't open $SCONFIG file. \n";
-    open( OUT,">sconfig" || die "Can't open  file sconfig for writing. \n");
-    select (OUT);
-    while (<IN>) {
-       s/CommonName/$SERVER/;
-       print;
-    }
-    close (IN);
-    close (OUT);
-    select (STDOUT);
-    $_ = $SERVER;
-    s/ //g;
-    s/'//g;
-    s/\//-/g;
-    $SN = $_;
-    system ("stty -echo");
-    $ENCPWD = "a";
-    $ENCPWD2 = "b";
-    while ($ENCPWD ne $ENCPWD2) {
-       print ("\n");
-       print ("Please enter your private key encryption password: ");
-       $ENCPWD = <STDIN>;
-       chomp ($ENCPWD);
-       print ("\n");
-       print ("Verifying private key password, please reenter password: ");
-       $ENCPWD2 = <STDIN>;
-       chomp ($ENCPWD2);
-       print ("\n");
-       if ($ENCPWD ne $ENCPWD2) {
-          print ("\nThe passwords did not match, please try again.\n");
-       }
-    }
-    system ("stty echo");
-    open(OUT, ">epwd");
-    print(OUT "$ENCPWD");
-    close(OUT);
+     chdir ("$SCERTDIR") || die "Can't cd into server.certs directory.";
+     print ("Please enter the server type (host, gatekeeper, ldap): ");
+     $TYPE = <STDIN>;
+     chomp($TYPE);
+     if ( ( $TYPE ne "gatekeeper" ) && ( $TYPE ne "host" ) && ( $TYPE ne "ldap" ) ) {
+        printf("I don't know how to request a certificate of type '$TYPE'!\n");
+        exit;
+     }
+     print ("Please enter the server name: ");
+     $SERVER = <STDIN>;
+     chomp($SERVER);
+     open (IN,$SCONFIG) || die "Can't open $SCONFIG file. \n";
+     open( OUT,">sconfig" || die "Can't open  file sconfig for writing. \n");
+     select (OUT);
+     while (<IN>) {
+        s/CommonName/$TYPE\/$SERVER/;
+        print;
+     }
+     close (IN);
+     close (OUT);
+     select (STDOUT);
+     $_ = $TYPE. "-" . $SERVER;
+     s/ //g;
+     s/'//g;
+     s/\//-/g;
+     $SN = $_;
 
-    $RNUM = rand;
-    system ("echo $RNUM | /bin/cat > rnseed");
-    system ("echo `ps -el` | gzip >> rnseed");
-    system ("echo `/bin/date` | /bin/cat >> rnseed");
-    system ("$OPENSSL genrsa -rand rnseed 1024 > /dev/null 2>&1");
-    system ("$OPENSSL req -new -config sconfig -passout file:./epwd -keyout $SN.privkey.pem -out $SN.req");
-    system ("$OPENSSL ca -config sconfig -key $CP -in $SN.req -out $SN.cert.pem");     
-    system ("$OPENSSL rsa -passin file:./epwd -in $SN.privkey.pem -outform PEM -out key.pem > /dev/null 2>&1");
+     $RNUM = rand;
+     system ("echo $RNUM | /bin/cat > rnseed");
+     system ("echo `ps -el` | gzip >> rnseed");
+     system ("echo `/bin/date` | /bin/cat >> rnseed");
+     system ("$OPENSSL genrsa -rand rnseed 1024 > /dev/null 2>&1");
+     system ("$OPENSSL req -new -config sconfig -keyout $SN.privkey.pem -out $SN.req -nodes");
+     system ("$OPENSSL ca -config sconfig -in $SN.req -out $SN.cert.pem -keyfile $CA_KEY -cert $CA_CERT");
+#    system ("$OPENSSL rsa -in $SN.privkey.pem -outform PEM -out key.pem > /dev/null 2>&1");
+     unlink("rnseed","sconfig","$SN.req");
 
-#    system ("$OPENSSL pkcs12 -export -in $SN.cert.pem -inkey key.pem -passout file:./epwd -out $SN.p12 -name \"NPACI/SDSC OpenSSL Certificate\"");
+     `echo "$LOGDATE" >> $LOGFILE`;
+     `cat "$SN.cert.pem" >> $LOGFILE`;
 
-    print ("\n");
-    print ("Would you like a decrypted copy of the private key? [y/n] ");
-    $ANSWER = <STDIN>;
-    chomp ($ANSWER);
-    print ("\n");
-    if ($ANSWER eq "y") {
-       system("$OPENSSL rsa -out $SN.privkey -in $SN.privkey.pem -passin file:./epwd");
-    }
-    unlink("rnseed","sconfig","$SN.req","epwd","key.pem");
-
-    `echo "$LOGDATE" >> $LOGFILE`;
-    `cat "$SN.cert.pem" >> $LOGFILE`;
-
-    `cp $INDEX $PUB_PKI_DIR`;
-    $certs=`find $CERTDIR -mtime -2 -type f -print`;
-    @certfiles=split(/\n/, $certs);
-    foreach $certfile (@certfiles) {
-       chmod 0644, "$certfile";
-       `cp -p $certfile $PUB_CERT_DIR`;
-    }
+     `cp $INDEX $PUB_PKI_DIR`;
+     $certs=`find $CERTDIR -mtime -2 -type f -print`;
+     @certfiles=split(/\n/, $certs);
+     foreach $certfile (@certfiles) {
+        chmod 0644, "$certfile";
+        `cp -p $certfile $PUB_CERT_DIR`;
+     }
 
 exit 0;
 }
@@ -162,26 +138,27 @@ $ANSWER = <STDIN>;
 chomp ($ANSWER);
 print ("\n");
 if ($ANSWER eq "y") {
-   chdir ("$SCERTDIR") || die "Can't cd into server.certs directory.";
-   print ("Please provide the full path name of the request file: ");
-   $REQFILE = <STDIN>;
-   chomp ($REQFILE);
-   print ("Please provide the name of the server: ");
-   $SN = <STDIN>;
-   chomp ($SN);
-   `echo "y\ny\n" | $OPENSSL ca -config $SCONFIG -key $CP -in $REQFILE -out $SN.cert.pem`;
-   print ("\n");
+    chdir ("$SCERTDIR") || die "Can't cd into server.certs directory.";
+    print ("Please provide the full path name of the request file: ");
+    $REQFILE = <STDIN>;
+    chomp ($REQFILE);
+    print ("Please provide the name of the server: ");
+    $SN = <STDIN>;
+    chomp ($SN);
+#   `echo "y\ny\n" | $OPENSSL ca -config $SCONFIG -key $CP -in $REQFILE -out $SN.cert.pem`;
+    `echo "y\ny\n" | $OPENSSL ca -config $SCONFIG -in $REQFILE -out $SN.cert.pem -keyfile $CA_KEY -cert $CA_CERT 2>&1`;
+    print ("\n");
 
-    `echo "$LOGDATE" >> $LOGFILE`;
-    `cat "$SN.cert.pem" >> $LOGFILE`;
+     `echo "$LOGDATE" >> $LOGFILE`;
+     `cat "$SN.cert.pem" >> $LOGFILE`;
 
-    `cp $INDEX $PUB_PKI_DIR`;
-    $certs=`find $CERTDIR -mtime -2 -type f -print`;
-    @certfiles=split(/\n/, $certs);
-    foreach $certfile (@certfiles) {
-       chmod 0644, "$certfile";
-       `cp -p $certfile $PUB_CERT_DIR`;
-    }
+     `cp $INDEX $PUB_PKI_DIR`;
+     $certs=`find $CERTDIR -mtime -2 -type f -print`;
+     @certfiles=split(/\n/, $certs);
+     foreach $certfile (@certfiles) {
+        chmod 0644, "$certfile";
+        `cp -p $certfile $PUB_CERT_DIR`;
+     }
 
 exit 0;
 }
@@ -192,17 +169,20 @@ $ANSWER = <STDIN>;
 chop ($ANSWER);
 print ("\n");
 if ($ANSWER eq "y") {
-   print ("Enter the cert serial number: ");
-   $REVOKE = <STDIN>;
-   chop ($REVOKE);
-   system ("$OPENSSL ca -config $CONFIG -key $CP -revoke $CERTDIR/$REVOKE.pem");
-   system ("$OPENSSL ca -gencrl -key $CP -config $CONFIG >> CRL");
+    print ("Enter the cert serial number: ");
+    $REVOKE = <STDIN>;
+    chop ($REVOKE);
+#   system ("$OPENSSL ca -config $CONFIG -key $CP -revoke $CERTDIR/$REVOKE.pem");
+    system ("$OPENSSL ca -config $CONFIG -keyfile $CA_KEY -cert $CA_CERT -revoke $CERTDIR/$REVOKE.pem");
+#   system ("$OPENSSL ca -gencrl -key $CP -config $CONFIG >> CRL");
+    system ("$OPENSSL ca -gencrl -keyfile $CA_KEY -cert $CA_CERT -config $CONFIG >> CRL");
 
-   `echo "$LOGDATE" >> $LOGFILE`;
-   `echo "$REVOKE.pem revoked. \n" >> $LOGFILE`;
+    `echo "$LOGDATE" >> $LOGFILE`;
+    `echo "$REVOKE.pem revoked. \n" >> $LOGFILE`;
 
-   `cp $CRL $PUB_PKI_DIR`;
-   `cp $INDEX $PUB_PKI_DIR`;   
+    `cp $CRL $PUB_PKI_DIR`;
+    `cp $INDEX $PUB_PKI_DIR`;
 }
 
 exit 0;
+
