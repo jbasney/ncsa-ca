@@ -196,8 +196,6 @@ exit;
 #
 # remove some set of files
 #
-# WORKSFORME (cphillip)
-#
 
 sub cleanup
 {
@@ -212,90 +210,9 @@ sub cleanup
     }
 }
 
-#- readCommandLine () {
-#-  # Expects $* from the shell invocation
-#- 
-#-   while [ "X$1" !=  "X" ]
-#-   do
-#-     case $1 in
-#-       -cn | -commonname)
-#-         COMMON_NAME="$2"
-#-         shift ; shift
-#-         ;;
-#-
-#-       -gatekeeper)
-#-         SERVICE="gatekeeper"
-#-         COMMON_NAME="$2"
-#-         NO_DES="-nodes"
-#-         shift ; shift
-#-         ;;
-#-
-#-       -host)
-#-         SERVICE="host"
-#-         SERVICE_HOST="$2"
-#-         NO_DES="-nodes"
-#-         shift ; shift
-#-         ;;
-#-
-#-       -ldap)
-#-         SERVICE="ldap"
-#-         SERVICE_HOST="$2"
-#-         NO_DES="-nodes"
-#-         shift ; shift
-#-         ;;
-#-
-#-       -dir)
-#-         CL_GLOBUS_DIR="$2"
-#-         shift ; shift
-#-         ;;
-#-
-#-       -cert|-certificate)
-#-         CL_CERT_FILE="$2"
-#-         shift ; shift
-#-         ;;
-#-
-#-       -key)
-#-         CL_KEY_FILE="$2"
-#-         shift ; shift
-#-         ;;
-#-
-#-       -req|-request)
-#-         CL_REQUEST_FILE="$2"
-#-         shift ; shift
-#-         ;;
-#-
-#-       -nopw|-nodes|-nopassphrase)
-#-         NO_DES="-nodes"
-#-         shift
-#-         ;;
-#-
-#-       -int|-interactive)
-#-         INTERACTIVE="TRUE"
-#-         shift
-#-         ;;
-#-
-#-       -force)
-#-         FORCE="TRUE"
-#-         shift
-#-         ;;
-#-
-#-       -resubmit)
-#-         RESUBMIT="TRUE"
-#-         shift
-#-         ;;
-#-
-#-       *)
-#-         globus_args_unrecognized_option "$1"
-#-         ;;
-#-    esac
-#-  done
-#- }
-
 ### preparePathsHash( $dir, $cert_file, $key_file, $request_file, $request_id_file )
 #
 # create a hash based on the arguments passed to the subroutine
-#
-# WORKSFORME (cphillip)
 #
 
 sub preparePathsHash
@@ -317,8 +234,6 @@ sub preparePathsHash
 # based on the hashes we're given, return a hash which contains the correct set
 # of files (possibly containing a mixture of default- and commandline-specified
 # files)
-#
-# WORKSFORME (cphillip)
 #
 
 sub determinePaths
@@ -394,8 +309,6 @@ sub determinePaths
 # choose between the default- and the commandline-specified file.  error out if we
 # can't write to our choice.
 #
-# WORKSFORME (cphillip)
-#
 
 sub determineFile
 {
@@ -450,8 +363,6 @@ sub determineFile
 #
 # creates the directory structure in $path if it doesn't already exist
 #
-# WORKSFORME (cphillip)
-#
 
 sub makeDir
 {
@@ -502,8 +413,6 @@ sub makeDir
 # create the inputs to the ssl program at $filename, appending the common name to the
 # stream in the process
 #
-# WORKSFORME (cphillip)
-#
 
 sub writeFile
 {
@@ -536,8 +445,6 @@ sub writeFile
 #
 # create the inputs to the ssl program at $filename, appending the common name to the
 # stream in the process
-#
-# WORKSFORME (cphillip)
 #
 
 sub createInputFileString
@@ -606,8 +513,6 @@ sub createInputFileString
 #
 # generate the request header for a generic service
 #
-# WORKSFORME (cphillip)
-#
 
 sub createServiceRequestHeader
 {
@@ -640,8 +545,6 @@ sub createServiceRequestHeader
 #
 # generate a request header
 #
-# WORKSFORME (cphillip)
-#
 
 sub createRequestHeader
 {
@@ -672,8 +575,6 @@ sub createRequestHeader
 #
 # reads and returns $filename's contents
 #
-# WORKSFORME (cphillip)
-#
 
 sub readFile
 {
@@ -698,8 +599,6 @@ sub readFile
 #
 # verify that the local system has a valid CA configuration file
 #
-# WORKSFORME (cphillip)
-#
 
 sub checkGlobusSystem
 {
@@ -721,8 +620,6 @@ sub checkGlobusSystem
 #
 # check the system for preexisting valid files.  remove them if '--force' was
 # given as an argument.
-#
-# WORKSFORME (cphillip)
 #
 
 sub checkCerts
@@ -768,8 +665,6 @@ sub checkCerts
 #
 # get the name for the cert request based on $type
 #
-# WORKSFORME (cphillip)
-#
 
 sub getCN
 {
@@ -806,8 +701,6 @@ sub getCN
 ### getUserCN( $name )
 #
 # get the common name for the user cert request
-#
-# WORKSFORME (cphillip)
 #
 
 sub getUserCN
@@ -859,8 +752,6 @@ sub getUserCN
 # check $userinput to verify its integrity as a user CN.  No transformations should
 # occur in this function.
 #
-# WORKSFORME (cphillip)
-#
 
 sub validateUserString
 {
@@ -879,8 +770,6 @@ sub validateUserString
 #
 # check $userinput to verify its integrity as a host CN.  No transformations should
 # occur in this function.
-#
-# WORKSFORME (cphillip)
 #
 
 sub validateHostString
@@ -942,8 +831,6 @@ sub validateHostString
 #
 # Query the user with a boolean string
 #
-# WORKSFORME (cphillip)
-#
 
 sub query_user_boolean
 {
@@ -996,8 +883,6 @@ sub query_user_boolean
 #
 # get the host name for the host cert request
 #
-# WORKSFORME (cphillip)
-#
 
 sub getHostCN
 {
@@ -1049,8 +934,6 @@ sub getHostCN
 #
 # get the host name for the ldap cert request
 #
-# WORKSFORME (cphillip)
-#
 
 sub getLdapCN
 {
@@ -1101,8 +984,6 @@ sub getLdapCN
 ### createCerts( $type )
 #
 # use $ssl_exec program to create the key and certificate files on a system
-#
-# WORKSFORME (cphillip)
 #
 
 sub createCerts
@@ -1199,8 +1080,6 @@ sub createCerts
 #
 # returns the concatenation of $var and a url-encoded $value
 #
-# WORKSFORME (cphillip)
-#
 
 sub printPostData
 {
@@ -1234,8 +1113,6 @@ sub printPostData
 #
 # given the name of a certreq file, process and print
 # contents suitabily encoded for inclusion in POST data.
-#
-# WORKSFORME (cphillip)
 #
 
 sub processReqFile
@@ -1311,8 +1188,6 @@ sub processReqFile
 #
 # get the request id number from the output file generated via the post
 #
-# WORKSFORME (cphillip)
-#
 
 sub handleSuccessfulPost
 {
@@ -1353,8 +1228,6 @@ sub handleSuccessfulPost
 ### handleFailedPost( $post_out_file )
 #
 # attempt to diagnose the error which occurred during the post to the CA
-#
-# WORKSFORME (cphillip)
 #
 
 sub handleFailedPost
@@ -1414,6 +1287,8 @@ sub handleFailedPost
 ### postReq( $user_email, $user_phone )
 #
 # Post the req to the web server.
+#
+# NEED TO TEST
 #
 
 sub postReq
@@ -1540,8 +1415,6 @@ sub postReq
 #
 # get the email address for the user cert request
 #
-# WORKSFORME (cphillip)
-#
 
 sub getUserEmail
 {
@@ -1578,8 +1451,6 @@ sub getUserEmail
 # check $userinput to verify its integrity as a user email.  No transformations should
 # occur within this function.
 #
-# WORKSFORME (cphillip)
-#
 
 sub validateUserEmailString
 {
@@ -1603,8 +1474,6 @@ sub validateUserEmailString
 ### getUserPhone( )
 #
 # get the phone number of the user
-#
-# WORKSFORME (cphillip)
 #
 
 sub getUserPhone
@@ -1642,8 +1511,6 @@ sub getUserPhone
 # check $userinput to verify its integrity as a user phone.  No transformations should
 # occur within this function.
 #
-# WORKSFORME (cphillip)
-#
 
 sub validateUserPhoneString
 {
@@ -1661,8 +1528,6 @@ sub validateUserPhoneString
 ### checkResubmit( )
 #
 # check to see if we set to try resubmission
-#
-# WORKSFORME (cphillip)
 #
 
 sub checkResubmit
@@ -1729,8 +1594,6 @@ sub checkResubmit
 #
 # print out a generic text message to the user so they may know what is about to happen
 #
-# WORKSFORME (cphillip)
-#
 
 sub printPreamble
 {
@@ -1752,8 +1615,6 @@ sub printPreamble
 #
 # accept a list of files and, based on our current directory, make their pathnames absolute
 #
-# WORKSFORME (cphillip)
-#
 
 sub absolutePath
 {
@@ -1772,8 +1633,6 @@ sub absolutePath
 #
 # inform the user of an event
 #
-# WORKSFORME (cphillip)
-#
 
 sub inform
 {
@@ -1788,8 +1647,6 @@ sub inform
 ### action( $command, $dir )
 #
 # perform some command and inform the user
-#
-# WORKSFORME (cphillip)
 #
 
 sub action
@@ -1824,6 +1681,8 @@ sub action
 ### main( )
 #
 # driver function
+#
+# NEED TO TEST
 #
 
 sub main
