@@ -16,7 +16,6 @@
 use Getopt::Long;
 use Pod::Usage;
 use Cwd;
-use Data::Dumper;
 
 #
 # the upper portion of this file consists of global variable defines.
