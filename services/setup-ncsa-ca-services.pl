@@ -16,7 +16,6 @@ $gpath = $ENV{GLOBUS_LOCATION};
 
 #
 # sanity check environment
-# ------------------------
 #
 
 if (!defined($gpath))
@@ -39,25 +38,9 @@ else
 
 require Grid::GPT::Setup;
 
-#
-# define global variables
-# -----------------------
-# Get user's GPT_LOCATION since we may be installing this using a new(er)
-# version of GPT.
-#
-
 my $globusdir = $gpath;
 my $setupdir = "$globusdir/setup/gsi_ncsa_ca_services";
-my $secconfdir = "/etc/grid-security";
 my $myname = "setup-ncsa-ca-services.pl";
-
-#
-# Set up path prefixes for use in the path translations
-#
-
-$prefix = ${globusdir};
-$exec_prefix = "${prefix}";
-$bindir = "${exec_prefix}/bin";
 
 #
 # Backup-related variables
@@ -66,97 +49,156 @@ $bindir = "${exec_prefix}/bin";
 $curr_time = time();
 $backup_dir = "backup_gsi_ncsa_ca_services_${curr_time}";
 
-#
-# define main subroutines
-# -----------------------
-#
+main();
+
+exit;
 
 #
-# We need to make sure it's okay to copy our setup files (if some files are already
-# present).  If we do copy any files, we backup the old files so the user can (possibly)
-# reverse any damage.
+# subroutines
 #
 
-#
-# perl modes
-# 16877 = 755
-#
+sub main
+{
+    my(@certdirlist, $dirs, $response);
 
-    #
-    # From <http://www.globus.org/security/v2.0/env_variables.html>
-    #
-    # GLOBUS_LOCATION
-    # The GSI libraries use GLOBUS_LOCATION as one place to look for the trusted
-    # certificates directory. The location $GLOBUS_LOCATION/share/certficates is
-    # used if X509_CERT_DIR is not set and /etc/grid-security and
-    # $HOME/.globus/certificates do not exist.
-    #
-    # to be safe, install certs into the following directories:
-    #   /etc/grid-security/certificates
-    #   $GLOBUS_LOCATION/share/certificates
-    #   $X509_CERT_DIR
-    #   $HOME/.globus/certificates
-    #
+    printf("$myname: Configuring package gsi_ncsa_ca_services...\n");
+    printf("-------------------------------------------------------------------------------\n");
+    printf("Being the setup script for the gsi_ncsa_ca_services package, I do\n");
+    printf("all of my work by copying a handful of certificate files into\n");
+    printf("various directories.  In the odd case where I cannot find both the\n");
+    printf("NCSA CA certificate and its signing policy in certain locations,\n");
+    printf("but I do find one or the other alone, I will make a backup directory\n");
+    printf("and copy the file I found into it (just in case).\n");
+    printf("\n");
 
-sub s1_install_certs
+    @certdirlist = get_eligible_cert_dirs();
+    $dirs = triageDirs(@certdirlist);
+
+    $response = query_boolean("Do you wish to continue with the setup package?","y");
+
+    if ($response eq "n")
+    {
+        print("\n");
+        print("Okay... exiting gsi_ncsa_ca_services setup.\n");
+
+        exit(0);
+    }
+
+    install_certs($dirs);
+
+    my $metadata = new Grid::GPT::Setup(package_name => "gsi_ncsa_ca_services");
+    $metadata->finish();
+
+    printf("\n");
+
+    @installdirs = @{$dirs->{install}};
+    if (@installdirs)
+    {
+        printf("Additional Notes:\n");
+        printf("\n");
+        printf("  o A complete set of NCSA CA certificate files should now exist in\n");
+        printf("    each of the directories listed above.  If, based on your local\n");
+        printf("    needs, you need a copy of those CA files in an additional location,\n");
+        printf("    just copy the files\n");
+        printf("\n");
+        printf("    \t5aba75cb.0 and\n");
+        printf("    \t5aba75cb.signing_policy\n");
+        printf("\n");
+        printf("    from one of the following directories:\n");
+        printf("\n");
+
+        for my $dir (@{$dirs->{install}})
+        {
+            printf("    \t$dir\n");
+        }
+    }
+    else
+    {
+        printf("No installation directories were found.\n");
+    }
+
+    printf("\n");
+    printf("-------------------------------------------------------------------------------\n");
+    printf("$myname: Finished configuring package gsi_ncsa_ca_services.\n");
+}
+
+sub triageDirs
 {
     my (@dirlist) = @_;
     my @backupdirs, @installdirs;
+    my $foo = {};
+
+    $foo->{install} = \@installdirs;
+    $foo->{backup} = \@backupdirs;
+
+    if (@dirlist)
+    {
+        printf("The following directories will have certificate files installed into them:\n");
+        printf("\n");
+
+        for my $d (@dirlist)
+        {
+            $num_certs = cert_files_present($d);
+
+            if ( $num_certs eq "none" )
+            {
+                printf("\t$d\n");
+
+                push(@installdirs, $d);
+            }
+            elsif ( $num_certs eq "some" )
+            {
+                printf("\t$d (backup)\n");
+
+                push(@backupdirs, $d);
+                push(@installdirs, $d);
+            }
+            else
+            {
+                ; # do nothing
+            }
+        }
+
+        printf("\n");
+
+        if (@backupdirs)
+        {
+            printf("NOTE: Those entries marked with '(backup)' are eligble to have\n");
+            printf("those certificate files present in them be placed in a backup\n");
+            printf("directory contained within their parent directory.  Those entries\n");
+            printf("with no marking beside them suggest that I found no NCSA CA\n");
+            printf("certficate files present in them and do not require any backup.\n");
+            printf("\n");
+        }
+    }
+
+    return $foo;
+}
+
+sub install_certs
+{
+    my ($dirs) = @_;
+    my @backupdirs, @installdirs;
     my $dir_count = 0;
 
-    print("\nInstalling NCSA CA certificate and signing policy files.\n");
+    @backupdirs = @{$dirs->{backup}};
+    @installdirs = @{$dirs->{install}};
+
+    print("\n[ Installing NCSA CA certificate and signing policy files ]\n");
     print("\n");
 
     #
     # alternatively, we could create separate lists for backups, and installs
     #
 
-    printf("Looking for directories in which to install my files...\n");
-    printf("\n");
-
-    for my $d (@dirlist)
-    {
-        $num_certs = cert_files_present($d);
-
-        if ( $num_certs eq "none" )
-        {
-            printf("\t$d\n");
-
-            push(@installdirs, $d);
-            $dir_count += 1;
-        }
-        elsif ( $num_certs eq "some" )
-        {
-            printf("\t$d (backup)\n");
-
-            push(@backupdirs, $d);
-            push(@installdirs, $d);
-            $dir_count += 1;
-        }
-        else
-        {
-            ; # do nothing
-        }
-
-    }
-
-    if ( $dir_count > 0 )
+    if ( @backupdirs or @installdirs )
     {
         #
         # we've actually got directories to install our files into
         #
 
-        printf("\n");
-        printf("Directories found: $dir_count\n");
-        printf("\n");
-
-        if (scalar(@backupdirs) > 0)
+        if (@backupdirs)
         {
-            printf("Those entries marked with '(backup)' have some certificate files\n");
-            printf("present, but not all.  Those with no marking beside them suggest\n");
-            printf("that I found no NCSA CA certficate files present in them.\n");
-            printf("\n");
-
             printf("Creating backups of critical files...\n");
             for my $d (@backupdirs)
             {
@@ -164,7 +206,7 @@ sub s1_install_certs
             }
         }
 
-        if (scalar(@installdirs) > 0)
+        if (@installdirs)
         {
             printf("Copying certificates and policies...\n");
             for my $d (@installdirs)
@@ -184,6 +226,22 @@ sub s1_install_certs
         printf "necessary to work with the Alliance CA.\n";
     }
 }
+
+    #
+    # From <http://www.globus.org/security/v2.0/env_variables.html>
+    #
+    # GLOBUS_LOCATION
+    # The GSI libraries use GLOBUS_LOCATION as one place to look for the trusted
+    # certificates directory. The location $GLOBUS_LOCATION/share/certficates is
+    # used if X509_CERT_DIR is not set and /etc/grid-security and
+    # $HOME/.globus/certificates do not exist.
+    #
+    # to be safe, install certs into the following directories:
+    #   /etc/grid-security/certificates
+    #   $GLOBUS_LOCATION/share/certificates
+    #   $X509_CERT_DIR
+    #   $HOME/.globus/certificates
+    #
 
 sub get_eligible_cert_dirs
 {
@@ -286,6 +344,12 @@ sub get_eligible_cert_dirs
     return @eligible_dirs;
 }
 
+### isMutable( $dir )
+#
+# this function is used to simplify what could appear to be a complicated conditional
+# into one name.
+#
+
 sub isMutable
 {
     my ($dir) = @_;
@@ -300,10 +364,10 @@ sub isMutable
     }
 }
 
+### cert_files_present( $dir_path )
 #
-# $retval = cert_files_present($dir)
-# this function returns true if and only if both 5aba75cb.0 and 5aba75cb.signing_policy
-# are both present in '$dir'.
+# given some directory, return a string describing how many certificate files are
+# present in that directory.
 #
 
 sub cert_files_present
@@ -314,7 +378,8 @@ sub cert_files_present
     $count = $max_count = 0;
 
     #
-    # we are looking for 5aba75cb.0 and 5aba75cb.signing_policy
+    # tally up the count of files present in our directory, along with the
+    # maximum count along the way.
     #
 
     $max_count += 1;
@@ -328,6 +393,11 @@ sub cert_files_present
     {
         $count += 1;
     }
+
+    #
+    # our counting is finished.  make our decision based on how many files
+    # files are present.
+    #
 
     if ( $count == 0 )
     {
@@ -375,7 +445,7 @@ sub backup_cert_dir
         # ouch.  couldn't make backup directories.
         #
 
-        printf("Unable to make backup directory.. not backing up files in ${dir_path}..\n");
+        printf("Unable to make backup directory... not backing up files in ${dir_path}.\n");
 
         return 0;
     }
@@ -396,90 +466,6 @@ sub backup_cert_dir
 
     return 1;
 }
-
-#
-# begin main
-# ----------
-#
-
-#
-# parse command line options
-# --------------------------
-# for now, no command-line options
-# ideally, we would have --root and --non-root
-# (this would effect which directories the files get installed into)
-#
-
-#
-# verify directories
-# backup files
-#   /etc/grid-security/ncsa-ca-bak-{time}/
-#     grid-security.conf
-#     globus-user-ssl.conf
-#     globus-host-ssl.conf
-#     certificates/
-#       5aba75cb.0
-#       5aba75cb.signing_policy
-# install the ncsa ca cert and policy
-#
-# file: grid-security.conf
-# phase 1: modify (call grid-security-config)
-# phase 2: move (cp grid-security.conf to /etc/grid-security/)
-#
-# file: globus-{host,user}-ssl.conf
-# phase 1: modify (call grid-cert-request-config)
-# phase 2: move (cp these files to /etc/grid-security/)
-#
-# file: ncsa-cert-{request,retrieve}
-# phase 1: modify (run fixpaths() on this file to swap out the @ARCH@ variable)
-# phase 2: move (cp files into $GL/bin/)
-#
-
-printf "$myname: Configuring package gsi_ncsa_ca_services..\n";
-printf "-----------------------------------------------------------------------\n";
-printf "Hi, I'm the setup script for the gsi_ncsa_ca_services package!\n";
-printf "\n";
-printf "I do a lot of my work by modifying and then copying a handful of\n";
-printf "files.  The directories that may be affected by this install\n";
-printf "include:\n";
-printf "\n";
-
-@certdirlist = get_eligible_cert_dirs();
-
-for my $d (@certdirlist)
-{
-    printf "  $d\n";
-}
-
-printf "\n";
-printf "I will make backups of any files that may need to be overwritten.\n";
-printf "\n";
-
-$response = query_boolean("Do you wish to continue with the setup package?","y");
-
-if ($response eq "n")
-{
-    print "\n";
-    print "Okay.. exiting gsi_ncsa_ca_services setup.\n";
-
-    exit 0;
-}
-
-s1_install_certs(@certdirlist);
-
-my $metadata = new Grid::GPT::Setup(package_name => "gsi_ncsa_ca_services");
-
-$metadata->finish();
-
-print "\n";
-print "-----------------------------------------------------------------------\n";
-print "$myname: Finished configuring package gsi_ncsa_ca_services.\n";
-
-#
-# define support subroutines
-# --------------------------
-# Just need a minimal action() subroutine for now..
-#
 
 sub action
 {
