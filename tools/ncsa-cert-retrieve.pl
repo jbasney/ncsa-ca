@@ -1,13 +1,35 @@
 #!/usr/bin/perl
 #
-# ncsa-cert-retrieve-trans.pl
+# ncsa-cert-retrieve.pl
 #
 # This is the first version of ncsa-cert-retrieve in perl.  This is going
 # to be mighty similar to the shell script version.  After this is gotten
 # to a working state, a huge overhaul will make this into good perl code,
 # and include some major changes that will take into account the need for
-# modularity so that others may take this script and adapt it for their 
+# modularity so that others may take this script and adapt it for their
 # CA needs.
+
+
+### License info
+#
+# ncsa-cert-retrieve is Copyright 2002 The Board of Trustees of the University
+# of Illinois.
+#
+# All rights to ncsa-cert-retrieve are held by the authors, the National
+# Center for Supercomputing Applications and the University of Illinois.
+#
+# You may freely distribute ncsa-cert-retrieve in any form as along as
+# it is accompanied by this license.
+#
+# You may freely use ncsa-cert-retrieve for non-commercial applications.
+# You are asked, but not required, to inform the authors if you use
+# ncsa-cert-retrieve.
+#
+# You may freely modify ncsa-cert-retrieve and redistribute with your
+# changes as long as you clearly indicate that you have made changes
+# and describe your changes, preferably in a separate README file.
+# Modifications to ncsa-cert-retrieve do not effect this license.
+
 
 use Getopt::Long;
 use Pod::Usage;
@@ -35,17 +57,19 @@ $ssl_exec = "$gpath/bin/openssl";
 # $ca_config is $gpath/share/gsi_ncsa_ca_tools/ncsa-ca.conf
 $ca_config = "$gpath/share/gsi_ncsa_ca_tools/ncsa-ca.conf";
 
-$default_cert_file = "cert.pem";
-$default_key_file = "key.pem";
+$default_cert_file = "usercert.pem";
+$default_key_file = "userkey.pem";
 
 # User's home directory
 $userhome = $ENV{HOME};
 # which is needed for $default_dir, which is just below this...
 
-# Changing location of retrieved certs so that they can move certs
-# wherever they want, and no accidental overwrites of existing certs
-# in ~/.globus happens
-$default_dir = "$userhome/.certs";
+# For now, we are leaving the ~/.globus directory as where we write
+# stuff, so that we can release an initial version of this script
+# that mimics the old shell script that people are used to.
+# Changes such as this being somewhere else, or perhaps more intelligent
+# are hopefully forthcoming.
+$default_dir = "$userhome/.globus";
 
 #$def_request_file = "req.pem";
 #$def_request_id_file = "request_id";
@@ -71,8 +95,9 @@ $nocheck = 0;
 # Main is pretty easy:
 #    1) read cmd-line options
 #    2) deal with them appropriately
-#    3) check the system to make sure it can do proper OpenSSL stuff
-#    4) get the certificate
+#    3) make sure we are not overwriting an existing certificate
+#    4) check the system to make sure it can do proper OpenSSL stuff
+#    5) get the certificate
 
 ### READ COMMAND LINE OPTIONS ###
 
@@ -127,6 +152,12 @@ exit;
 if (! $cl_cert_file) { $cl_cert_file = undef; }
 if (! $cl_key_file) { $cl_key_file = undef; }
 
+# Check to see if we need to do tilde expansion on a specified command line
+# directory
+if ($cl_dir =~ /^~/) {
+  $cl_dir = tilde_expand($cl_dir);
+}
+
 # Figure out if we are using command line or default files and/or
 # directories.  These values (the ones we're using) are stored in
 # the hash $files
@@ -141,6 +172,36 @@ $files = determinePaths($default_files, $cl_files);
 $cert_file = $files->{'cert_file'};
 $key_file = $files->{'key_file'};
 
+# Here we check to make sure that $cert_file is not > zero bytes long.
+# If it is, then we die, b/c we don't want to overwrite an existing
+# certificate.  However, -z returns false if the file > 0 bytes long OR
+# if the file DNE.  So we had a 2nd check, and if the file DNE, we still
+# continue.  We only die if the file exists AND it is > 0 bytes long.
+
+
+if ( (! -z $cert_file) && (-e $cert_file) ) {
+  my $error_message =
+    "There appears to be a certificate already existing in the location you
+are trying to retrieve this certificate to.
+At $cert_file,
+there is a file that exists and has some sort of data in it.
+
+If you wish to successfully retrieve and place this certificate you are
+currently trying to get in that location, you must either move or delete
+the certificate file that is currently there.
+
+If you wish to place this certificate you are trying to retrieve in a
+different location, please use the --dir option.
+
+If you wish to name this certificate you are trying to retrieve a different
+name, please use the --cert option.
+
+For more help on these options and others, please run $progname --help or
+$progname --man.";
+
+  die "$error_message\n";
+}
+
 checkGlobusSystem();
 
 getCertificate();
@@ -149,12 +210,12 @@ $def_dir = $default_files->{'dir'};
 if ($cert_file =~ /^$def_dir/) {
   print "
 \n\tPLEASE NOTE:\n
-You seem to have chosen to have your certificate placed
-in the default directory, $def_dir
+You have chosen to have your certificate placed in the
+default directory, $def_dir
 
-You will probably want to move this certificate to its
-more appropriate permanent location, so that Globus can
-use it properly.\n";
+If this is not a user certificate, you will probably want 
+to move this certificate to its more appropriate permanent 
+location, so that Globus can use it properly.\n";
 }
 
 exit;
@@ -556,6 +617,7 @@ sub getCertificate {
 
   if (length ($cert_data) > 0) {
     action("rm -f $post_out_file");
+    $cert_data =~ s/\\n/\n/g;
     open (TMP_CERT_FILE, ">$tmp_cert_file") || die "can't open $tmp_cert_file";
     print TMP_CERT_FILE "-----BEGIN CERTIFICATE-----\n";
     print TMP_CERT_FILE "$cert_data\n";
@@ -723,6 +785,22 @@ sub makeDir {
   }
 }
 
+sub tilde_expand {
+  my $dir = shift;
+
+  ($homedir, @rest) = split (/\//, $dir);
+
+  my $real_homedir = `/bin/echo $homedir`;
+  chomp($real_homedir);
+
+  my $expanded_path = $real_homedir;
+  for (my $i=0; $i<@rest; $i++) {
+    $expanded_path = "$expanded_path/$rest[$i]";
+  }
+
+  return $expanded_path;
+}
+
 ##########################
 ##########################
 ###                    ###
@@ -748,22 +826,22 @@ ncsa-cert-retrieve - Retrieve a certificate from the NCSA (Alliance) CA
 ncsa-cert-retrieve [options] -id <id_number>
 
    Help-Related Options:
-      --help      brief help message
-      --man       full documentation
+      -help      brief help message
+      -man       full documentation
 
 =head1 OPTIONS
 
 =over 8
 
-=item B<--dir=<dir_name>>
+=item B<-dir <dir_name>>
 
 User-specified certificate directory. (eg. $HOME/.certs or /etc/grid-security)
 
-=item B<--cert=<filename>>
+=item B<-cert <filename>>
 
 File name of the certificate.
 
-=item B<--key=<filename>>
+=item B<-key <filename>>
 
 File name of the user key.
 
@@ -772,19 +850,19 @@ File name of the user key.
 # Cutting this option out of the pod docs for now, as it is 
 # unimplemented in this version of the script
 
-#=item B<--nocheck>>
+#=item B<-nocheck>>
 #
 #Attempt retrieval without checking system to make sure everything is correct to retrieve the certificate
 
 =pod
 
-=item B<--version>
+=item B<-version>
 
-=item B<--help>
+=item B<-help>
 
 Prints a brief help message and exit.
 
-=item B<--man>
+=item B<-man>
 
 Prints the manual page and exit.
 
