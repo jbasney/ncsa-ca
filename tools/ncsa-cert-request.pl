@@ -12,13 +12,25 @@
 # note: variable binding is something that is just _dying_ to be cleaned
 #       up in this script.
 #
-# DEFAULTS
-# user | $HOME/.globus/user[cert|key].pem
-# host | /etc/g-s/host[cert|key].pem
-# ldap | $GL/etc/server.[cert|key]
+### License info
 #
-# fail if they're already present
-# fail if we can't write to the directory in which they're contained
+# ncsa-cert-request is Copyright 2002 The Board of Trustees of the University
+# of Illinois.
+#
+# All rights to ncsa-cert-request are held by the authors, the National
+# Center for Supercomputing Applications and the University of Illinois.
+#
+# You may freely distribute ncsa-cert-request in any form as along as
+# it is accompanied by this license.
+#
+# You may freely use ncsa-cert-request for non-commercial applications.
+# You are asked, but not required, to inform the authors if you use
+# ncsa-cert-request.
+#
+# You may freely modify ncsa-cert-request and redistribute with your
+# changes as long as you clearly indicate that you have made changes
+# and describe your changes, preferably in a separate README file.
+# Modifications to ncsa-cert-request do not effect this license.
 #
 
 use Getopt::Long;
