@@ -35,7 +35,7 @@ use Getopt::Long;
 use Pod::Usage;
 use Cwd;
 
-$version="0.4.5";
+$version="0.4.6";
 $progname = $0;
 $progname =~ s|.*/||g;
 
@@ -206,7 +206,7 @@ checkGlobusSystem();
 getCertificate();
 
 $def_dir = $default_files->{'dir'};
-if ($cert_file =~ /^$def_dir/) {
+if ($cert_file =~ /^$def_dir$/) {
   print "
 \n\tPLEASE NOTE:\n
 You have chosen to have your certificate placed in the
@@ -699,13 +699,13 @@ sub determinePaths {
 
   # Divine the path to the certificate file
 
-  $tmp = determineFile($default_files->{'cert_file'}, $cl_files->{'cert_file'}, "certificate file");
+  $tmp = determineFile($default_files->{'cert_file'}, $cl_files->{'cert_file'}, "certificate file", "w");
   $files->{'cert_file'} = $dir . "/" . $tmp;
 
 
   # Divine the path to the key file
 
-  $tmp = determineFile($default_files->{'key_file'}, $cl_files->{'key_file'}, "key file");
+  $tmp = determineFile($default_files->{'key_file'}, $cl_files->{'key_file'}, "key file", "r");
   $files->{'key_file'} = $dir . "/" . $tmp;
 
   return $files;
@@ -715,10 +715,12 @@ sub determinePaths {
 #
 # Choose between the default- and the commandline-specified file.
 # Error out if we can't write to our choice.
+# Added $readwrite, to check to see if file needs to be bare minimum
+# readable or minimum writeable (key needs just read, cert needs write)
 #
 
 sub determineFile {
-  my ($default, $cl, $name) = @_;
+  my ($default, $cl, $name, $readwrite) = @_;
   my ($tmp_file);
 
   # If we were passed a commandline choice,
@@ -746,9 +748,17 @@ sub determineFile {
 
   # Check that, if our choice exists, we can write to it
 
-  if ( ( -e $tmp_file ) && ( ! -w $tmp_file ) ) {
-    printf("can't write to $tmp_file");
-    exit;
+  if ( $readwrite eq "r") {
+    if ( ( -e $tmp_file ) && ( ! -r $tmp_file ) ) {
+      printf("can't write to $tmp_file");
+      exit;
+    }
+  }
+  else { # if ($readwrite eq "w")
+    if ( ( -e $tmp_file ) && ( ! -w $tmp_file ) ) {
+      printf("can't write to $tmp_file");
+      exit;
+    }
   }
 
   return $tmp_file;
@@ -834,7 +844,7 @@ ncsa-cert-retrieve [options] -id <id_number>
 
 =item B<-dir <dir_name>>
 
-User-specified certificate directory. (eg. $HOME/.certs or /etc/grid-security)
+User-specified certificate directory. (eg. $HOME/.globus or /etc/grid-security/certificates)
 
 =item B<-cert <filename>>
 
@@ -875,11 +885,11 @@ authority.
 
 You can specify to B<ncsa-cert-retrieve> the name of the B<certificate file>, B<key file>, and/or the B<directory> they will be placed in.  If none of these are specified with the command line flags and arguments, default settings will be used.  Currently, these are:
 
-      certificate: cert.pem
+      certificate: usercert.pem
 
-      key:         key.pem
+      key:         userkey.pem
 
-      directory:   $HOME/.certs
+      directory:   $HOME/.globus
 
 If using the default directory, after you successfully retrieve your certificate, you must move the certificate to the appropriate place on your system, so that it may be used by Globus.
 
