@@ -9,6 +9,9 @@
 # and ldap, the -nopw option is simulated.  This guarantees that the key
 # is not protected by a passphrase.
 #
+# note: variable binding is something that is just _dying_ to be cleaned
+#       up in this script.
+#
 
 use Getopt::Long;
 use Pod::Usage;
@@ -88,8 +91,7 @@ $default_request_id_file = "request_id";
 
 my $subject = "";
 my $userid = "$>";
-my $host = `$gpath/bin/globus-hostname`;
-$host =~ s:^[\n]+|[\n]+$::g;
+my $host = generateHostname();
 
 #
 # various addresses and user agents
@@ -135,7 +137,7 @@ GetOptions( 'name=s' =>
 
                     if ( ( $type ne "gatekeeper" ) && ( $type ne "host" ) && ( $type ne "ldap" ) && ( $type ne "user" ) )
                     {
-                        printf("I don't know anything about a certificate request of type '$type'!\n");
+                        printf("I don't know how to request a certificate of type '$type'!\n");
                         exit;
                     }
                 },
@@ -151,7 +153,7 @@ GetOptions( 'name=s' =>
                     $nopw = $optval;
                     $no_des = "-nodes";
                 },
-            'int|interactive' => \$interactive,
+            'interactive' => \$interactive,
             'force' => \$force,
             'resubmit' => \$resubmit,
             'version' => \$version,
@@ -188,9 +190,41 @@ if ($man)
     pod2usage('-exitval' => 0, '-verbose' => 2);
 }
 
-main();
+#
+# call main, and then exit
+#
+
+main($name);
 
 exit;
+
+### generateHostname( )
+#
+# return a FQDN-version of the local hostname
+#
+
+sub generateHostname
+{
+    my $host;
+
+    $host = `$gpath/bin/globus-hostname`;
+    $host =~ s:^[\n]+|[\n]+$::g;
+
+    if (length($host) eq 0)
+    {
+        $host = `hostname -f`;
+        $host =~ s:^[\n]+|[\n]+$::g;
+
+        if (length($host) eq 0)
+        {
+            printf("Cannot determine a FQDN-version of your hostname.  Does\n");
+            printf("$gpath/bin/globus-hostname exist?\n");
+            exit;
+        }
+    }
+
+    return $host;
+}
 
 ### cleanup( $item0, $item1, ... )
 #
@@ -441,7 +475,7 @@ sub writeFile
     close(OUT);
 }
 
-### createInputFileString( $commonname, $ca_config_filename )
+### createInputFileString( $name, $ca_config_filename )
 #
 # create the inputs to the ssl program at $filename, appending the common name to the
 # stream in the process
@@ -449,7 +483,7 @@ sub writeFile
 
 sub createInputFileString
 {
-    my ($commonname, $ca_config_filename) = @_;
+    my ($name, $ca_config_filename) = @_;
     my ($parsing, @defaults, $output);
 
     #
@@ -504,7 +538,7 @@ sub createInputFileString
         $output .= $value . "\n";
     }
 
-    $output .= $commonname . "\n";
+    $output .= $name . "\n";
 
     return $output;
 }
@@ -727,7 +761,7 @@ sub getUserCN
 
     while ( ! $valid )
     {
-        printf("Enter your name [eg. John Smith]: ");
+        printf("Enter your name (eg. John Smith): ");
         $userinput = <STDIN>;
 
         #
@@ -908,7 +942,7 @@ sub getHostCN
 
     while ( ! $valid )
     {
-        printf("Enter the FQDN of your host [eg. foo.bar.edu]: ");
+        printf("Enter the FQDN of your host (eg. foo.bar.edu): ");
         $userinput = <STDIN>;
 
         #
@@ -959,7 +993,7 @@ sub getLdapCN
 
     while ( ! $valid )
     {
-        printf("Enter the FQDN of your host [eg. foo.bar.edu]: ");
+        printf("Enter the FQDN of your host (eg. foo.bar.edu): ");
         $userinput = <STDIN>;
 
         #
@@ -981,14 +1015,14 @@ sub getLdapCN
     return $name;
 }
 
-### createCerts( $type )
+### createCerts( $type, $name )
 #
 # use $ssl_exec program to create the key and certificate files on a system
 #
 
 sub createCerts
 {
-    my ($type) = @_;
+    my ($type, $name) = @_;
     my ($umsk, $tmpfile);
 
     printf("A certificate request and private key is being created.\n");
@@ -1118,9 +1152,43 @@ sub printPostData
 sub processReqFile
 {
     my ($file) = @_;
-    my ($contents);
+    my ($contents, $parsing, $formatted);
 
     $contents = readFile($file);
+
+    #
+    # You may choose to substitute your own demarcation strings, if you do not
+    # like these.
+    #
+
+    $start_string = "BEGIN CERTIFICATE REQUEST";
+    $end_string = "END CERTIFICATE REQUEST";
+
+    #
+    # Set $contents to be everything that exists between
+    # $start_string and $end_string
+    #
+
+    $formatted = "";
+    $parsing = 0;
+    @data = split(/\n/, $contents);
+    for my $d (@data)
+    {
+        if ( grep(/$start_string/, $d) )
+        {
+            $parsing = 1;
+        }
+
+        if ($parsing)
+        {
+            $formatted .= $d . "\n";
+        }
+
+        if ( grep(/$end_string/, $d) )
+        {
+            $parsing = 0;
+        }
+    }
 
     #
     # Special characters: +, /, =, \n, and spaces (" ") are given their
@@ -1132,66 +1200,23 @@ sub processReqFile
     # encoding for one big shot right before the submittal.
     #
 
-    $contents =~ s/\+/%2B/g;
-    $contents =~ s/ /+/g;
-    $contents =~ s/\//%2F/g;
-    $contents =~ s/=/%3D/g;
-    $contents =~ s/\n/%0D%0A/g;
-
-    #
-    # You may choose to substitute your own demarcation strings, if you do not
-    # like these.
-    #
-
-    $start_string = "BEGIN CERTIFICATE REQUEST";
-    $end_string = "END CERTIFICATE REQUEST";
-
-    #
-    # However, if you do decide to change the above strings, you may have to edit
-    # these regexps to take into account special characters, if you use them.
-    # These expressions are designed to work for strings which use only:
-    #   letters: [A-Z][a-z]
-    #    spaces: " "
-    #
-
-    $start_string =~ s/ /\\+/g;
-    $end_string =~ s/ /\\+/g;
-
-    #
-    # Set $contents to be everything that exists between
-    # $start_string and $end_string
-    #
-
-    $contents =~ s/^.*$start_string(.*)$end_string.*$/$1/g;
-
-    #
-    # These expressions undo some of the changes made above.  After these
-    # expressions are evaluated, $start_string and $end_string no longer
-    # contain the character "\"
-    #
-
-    $start_string =~ s/\\//g;
-    $end_string =~ s/\\//g;
-
-    #
-    # The evaluation above ($contents =~ s/.../$1/g) pulls out everything between
-    # $start_string and $end_string.  In order to have the correct string to
-    # transmit, we need to prepend and append $start_string and $end_string
-    #
-
-    $formatted = $start_string . $contents . $end_string;
+    $formatted =~ s/\+/%2B/g;
+    $formatted =~ s/ /+/g;
+    $formatted =~ s/\//%2F/g;
+    $formatted =~ s/=/%3D/g;
+    $formatted =~ s/\n/%0D%0A/g;
 
     return $formatted;
 }
 
-### handleSuccessfulPost( $post_out_file )
+### handleSuccessfulPost( $post_out_file, $request_id_file )
 #
 # get the request id number from the output file generated via the post
 #
 
 sub handleSuccessfulPost
 {
-    my ($post_out_file) = @_;
+    my ($post_out_file, $request_id_file) = @_;
     my ($data, $request_id);
     my (@strs, @splitdata);
 
@@ -1207,6 +1232,14 @@ sub handleSuccessfulPost
             last;
         }
     }
+
+    #
+    # write the returned request_id to a file, but for no good reason
+    #
+
+    open(OUT, ">$request_id_file");
+    print OUT "$request_id\n";
+    close(OUT);
 
     printf("Your certificate request for an Alliance certificate has been successfully\n");
     printf("sent to the Alliance Certificate Authority (CA).\n");
@@ -1284,7 +1317,7 @@ sub handleFailedPost
     return;
 }
 
-### postReq( $user_email, $user_phone )
+### postReq( $user_email, $user_phone, $request_id_file )
 #
 # Post the req to the web server.
 #
@@ -1293,7 +1326,7 @@ sub handleFailedPost
 
 sub postReq
 {
-    my ($user_email, $user_phone) = @_;
+    my ($user_email, $user_phone, $request_id_file) = @_;
 
     my ($server, $port, $enroll_page);
     my ($post_cmd_file, $post_out_file);
@@ -1316,7 +1349,7 @@ sub postReq
     $postdata .= "pkcs10Request=${req_content}";
     $postdata .= "%0D%0A&";
 
-    $postdata .= printPostData("csrRequestorName", "${common_name}");
+    $postdata .= printPostData("csrRequestorName", "${name}");
     $postdata .= "&";
 
     # Also send email to this address on certificate generation
@@ -1386,15 +1419,15 @@ sub postReq
     #
 
     #- (cat ${POST_CMD_FILE}; sleep 10) | ${SSL_EXEC} s_client -quiet -connect ${SERVER}:${PORT} > ${POST_OUT_FILE} 2>&1
-    action("(cat $post_cmd_file; sleep 10) | ${ssl_exec} s_client -quiet -connect ${server}:${port} > ${post_out_file}");
+    action("${ssl_exec} s_client -quiet -connect ${server}:${port} < ${post_cmd_file} > ${post_out_file}");
 
     $data = readFile($post_out_file);
 
     if ( grep(/CMS Request Pending/, $data) )
     {
-        handleSuccessfulPost($post_out_file);
+        handleSuccessfulPost($post_out_file, $request_id_file);
 
-        cleanup($post_out_file);
+#        cleanup($post_out_file);
     }
     else
     {
@@ -1408,7 +1441,7 @@ sub postReq
         action("cat ${post_cmd_file} >> ${post_out_file}");
     }
 
-    cleanup($post_cmd_file);
+#    cleanup($post_cmd_file);
 }
 
 ### getUserEmail( )
@@ -1419,6 +1452,7 @@ sub postReq
 sub getUserEmail
 {
     my ($userinput, $start, $valid) = ("", 1, 0);
+    my ($name);
 
     #
     # if the value is invalid, or was undefined, we loop over the user's input
@@ -1426,7 +1460,7 @@ sub getUserEmail
 
     while ( ! $valid )
     {
-        printf("Enter your full email address [eg. user\@somewhere.edu]: ");
+        printf("Enter your full email address (eg. user\@somewhere.edu): ");
         $userinput = <STDIN>;
 
         #
@@ -1479,6 +1513,7 @@ sub validateUserEmailString
 sub getUserPhone
 {
     my ($userinput, $start, $valid) = ("", 1, 0);
+    my ($name);
 
     #
     # if the value is invalid, or was undefined, we loop over the user's input
@@ -1678,7 +1713,7 @@ sub action
     }
 }
 
-### main( )
+### main( $name )
 #
 # driver function
 #
@@ -1687,6 +1722,7 @@ sub action
 
 sub main
 {
+    my ($name) = @_;
     my ($user_email, $user_phone);
 
     #
@@ -1697,7 +1733,7 @@ sub main
     $default_files = preparePathsHash($default_dir, $default_cert_file, $default_key_file, $default_request_file, $default_request_id_file);
     $files = determinePaths($default_files, $cl_files);
 
-    printf("%s\n", Dumper($files));
+    #printf("%s\n", Dumper($files));
 
     $cert_file = $files->{'cert_file'};
     $key_file = $files->{'key_file'};
@@ -1709,10 +1745,8 @@ sub main
     #printf("ret = '%s'\n", printPostData("foo%.&.@. .foo", "bar%.&.@. .bar"));
     #handleFailedPost("unsuccess");
     #checkResubmit();
-    #createCerts($type);
+    #createCerts($type, $name);
     #printf("%s\n", processReqFile($request_file));
-
-    #exit;
     # </testing>
 
     checkGlobusSystem($ca_config);
@@ -1728,7 +1762,7 @@ sub main
         $user_phone = getUserPhone();
         printf("\n\n");
 
-        createCerts($type);
+        createCerts($type, $name);
     }
     else
     {
@@ -1738,14 +1772,14 @@ sub main
     #-  COMMON_NAME="`echo ${SUBJECT} | ${GLOBUS_SH_SED-sed} -e 's|^.*/CN=||'`"
     # what do i replace the above with?
 
-    postReq($user_email, $user_phone);
+    postReq($user_email, $user_phone, $request_id_file);
 }
 
 __END__
 
 =head1 NAME
 
-ncsa-cert-request - Request a certificate from the NCSA CA
+ncsa-cert-request - Request a certificate from the NCSA (Alliance) CA
 
 =head1 SYNOPSIS
 
@@ -1761,7 +1795,7 @@ ncsa-cert-request [options]
 
 =item B<--type=<cert_type>>
 
-Create a certificate request of type <type>.
+Create a certificate request of type <cert_type>.
 
 =item B<--name=<name>>
 
@@ -1769,17 +1803,17 @@ Set the name to include in the certificate request to <name>.
 
 =item B<--dir=<dir_name>>
 
-User-specified certificate directory. (e.g. $HOME/.globus)
+User-specified certificate directory. (eg. $HOME/.globus or /etc/grid-security)
 
-=item B<--cert=<file>>
+=item B<--cert=<filename>>
 
 File name of the certificate.
 
-=item B<--key=<file>>
+=item B<--key=<filename>>
 
 File name of the user key.
 
-=item B<--req=<file>>
+=item B<--req=<filename>>
 
 File name of the certificate request.
 
@@ -1789,7 +1823,7 @@ Create the certificate without a password.
 
 =item B<--interactive>
 
-Prompt user for each component of the DN.
+Prompt user for each component of the DN.  (Only use this if you know what you are doing!)
 
 =item B<--force>
 
@@ -1820,25 +1854,53 @@ Print the manual page and exit.
 =head1 DESCRIPTION
 
 B<ncsa-cert-request> will request a certificate from the NCSA certificate
-authority.  This program understands three different types of certificates:
+authority.  This program understands four different types of certificates:
+'user', 'host', 'ldap', and 'gatekeeper'.  The gatekeeper certificate type
+is just an alias to a certificate type of host.  If no type is specified on
+the command-line, the script will attempt to request a certificate of type
+'user'.
 
-    host
-      A certificate of type 'host' represents a validation that the machine
-      is truly affiliated with its current institution.
+By default, this script tries to place its files in $HOME/.globus.  You can
+override this behaviour using the --dir command-line flag.
 
-    user
-      The user certificate is a representation that the NCSA CA has verified
-      a user's affiliation with their organization.
+=head1 EXAMPLES
 
-    ldap
-      The ldap certificate is a representation that the NCSA CA has verified
-      the affiliation between a machine's ldap service and its organization.
+=head2 Requesting a User Certificate
 
-    gatekeeper
-      Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam
-      nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat
-      volutpat.
+To request a user certificate specifying that you want this request's files
+to appear in /home/myhome/.globus/user2, and that the key file should be
+named 'mykey.pem':
 
-Drink your ovaltine!
+B<ncsa-cert-request --dir="/home/myhome/.globus/user2" --key="mykey.pem">
+
+=head2 Requesting an LDAP Certificate
+
+To request an LDAP certificate with the directory to write to set as
+/etc/grid-security, setting the name to myhost.mydomain.edu, overwriting any
+files that match its defaults, and requesting verbose output:
+
+B<ncsa-cert-request --type=ldap --dir="/etc/grid-security" --name="myhost.mydomain.edu" --force --verbose>
+
+(Note that with certificate types of 'host', 'ldap', and 'gatekeeper', the
+key file will be generated unencrypted.  That is, you do not have to specify
+--nopw on the command-line, it will be done for you automatically.  Also note
+that if only root can write to /etc/grid-security, then only root should be
+able to perform this command.)
+
+=head2 Requesting a Host/Gatekeeper Certificate
+
+To request a Host certificate using the default directory of $HOME/.globus,
+and to be prompted for all of the distinguished name information during key
+and request generation:
+
+B<ncsa-cert-request --type=host --interactive>
+
+=head2 Resubmitting a Previously-Generated Request
+
+To resubmit a request which was not sent to the Alliance CA due to some
+connection error, you can use the --resubmit option.  If all of your request
+files exist in, eg. /home/myhome/mycerts:
+
+B<ncsa-cert-request --resubmit --dir="/home/myhome/mycerts">
 
 =cut
