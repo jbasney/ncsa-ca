@@ -101,7 +101,8 @@ SSL_EXEC="${GLOBUS_LOCATION}/bin/openssl"
 CA_CONFIG="${datadir}/gsi_ncsa_ca_tools/ncsa-ca.conf"
 
 # DEFault Generated Files
-DEF_GLOBUS_DIR="${HOME}/.globus"            # as with ncsa-cert-retrieve, do we need to keep this entry?
+DEF_GLOBUS_DIR="${HOME}/.globus"
+
 DEF_CERT_FILE="${secconfdir}/hostcert.pem"
 DEF_KEY_FILE="${secconfdir}/hostkey.pem"
 DEF_REQUEST_FILE="${secconfdir}/hostcert_req.pem"
