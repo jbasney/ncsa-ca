@@ -2,13 +2,12 @@
 #
 # ncsa-cert-request.pl
 #
-# Generate a certificate request which can be sent to the NCSA CA,
-# who may subsequently sign it.  This script uses ncsa-ca.conf.
+# Generate a certificate request which can be sent to the NCSA CA, who may
+# subsequently sign it.  This script uses ncsa-ca.conf.
 #
-# When generating a certificate request for some types of certs
-# (currently gatekeeper, host, and ldap), the -nopw option is
-# simulated.  This guarantees that the key is not protected by a
-# passphrase.
+# When generating a certificate request for some types of certs (currently
+# gatekeeper, host, and ldap), the -nopw option is simulated.  This
+# guarantees that the key is not protected by a passphrase.
 #
 
 use Getopt::Long;
@@ -17,18 +16,22 @@ use Cwd;
 use Data::Dumper;
 
 #
+# the upper portion of this file has a lot of global variable defines.
+#
+
+#
 # verify that globus location is set
 #
 
 $gpath = $ENV{GLOBUS_LOCATION};
 if (!defined($gpath))
 {
-    die "GLOBUS_LOCATION needs to be set before running this script"
+    die("GLOBUS_LOCATION needs to be set before running this script\n");
 }
 
 my ($versionid, $program_name);
 
-$versionid = "0.4.2";
+$versionid = "0.4.5";
 $program_name = $0;
 $program_name =~ s|.*/||g;
 
@@ -37,45 +40,70 @@ $program_name =~ s|.*/||g;
 #
 
 my (
-    $name, $gatekeeper, $type, $user_dir, $user_cert_file, $user_key_file,
-    $user_request_file, $nopw, $interactive, $force, $resubmit, $version,
+    $name, $gatekeeper, $type, $cl_dir, $cl_cert_file, $cl_key_file,
+    $cl_request_file, $nopw, $interactive, $force, $resubmit, $version,
     $help, $man, $verbose
    );
-
-my ($cert_file, $key_file, $request_file);
 
 #
 # default values go here
 #
 
-$man = 0;
-$help = 0;
+#$man = 0;
+#$help = 0;
 
 #
 # for our authentication with the ncsa ca, we're using openssl
 #
 
-$secconfdir = "/etc/grid-security";
-$ssl_exec = "$gpath/bin/openssl";
-$ca_config = "$gpath/share/gsi_ncsa_ca_tools/ncsa-ca.conf";
+my $secconfdir = "/etc/grid-security";
+my $secure_tmpdir = "/tmp";
+my $ssl_exec = "$gpath/bin/openssl";
+my $ca_config = "$gpath/share/gsi_ncsa_ca_tools/ncsa-ca.conf";
 
-$req_input = "$secconfdir/req_input.$$";
-$req_output = "$secconddir/req_output.$$";
-$req_head = "$secconfdir/req_header.$$";
+my $req_input = "$secconfdir/req_input.$$";
+my $req_output = "$secconddir/req_output.$$";
+my $req_head = "$secconfdir/req_header.$$";
+
+#
+# default pathnames to various directories and files
+#
 
 $userhome = $ENV{HOME};
-$def_globus_dir = "$userhome/.globus";
+if ( !defined($userhome) && !defined($cl_dir) )
+{
+    die("HOME needs to be set before running this script without the --dir flag\n");
+}
+
+$default_dir = "$userhome/.certs";
+$default_cert_file = "cert.pem";
+$default_key_file = "key.pem";
+$default_request_file = "req.pem";
+$default_request_id_file = "request_id";
 
 #
-# default service=host pathnames (note that variable interploation occurs,
-# negating the need for the deprecated use of `eval` where paramater
-# expansion appears below)
+# info sent with the certificate
 #
 
-$cert_file = "cert.pem";
-$key_file = "key.pem";
-$request_file = "req.pem";
-$request_id_file = "request_id";
+my $subject = "";
+my $userid = "$>";
+my $host = `$gpath/bin/globus-hostname`;
+$host =~ s:^[\n]+|[\n]+$::g;
+
+#
+# various addresses and user agents
+#
+
+my $contact_email_addr = "consult\@alliance.paci.org";
+my $contact_url = "http://www.ncsa.uiuc.edu/UserInfo/Alliance/GridSecurity/";
+my $user_agent = "ncsa-cert-request/$versionid";
+
+#
+# urls that give more information about submitting and completing requests
+#
+
+my $url_howto_submit = "http://www.ncsa.uiuc.edu/UserInfo/Alliance/GridSecurity/Certificates/Go.html";
+my $url_howto_complete = "http://www.ncsa.uiuc.edu/UserInfo/Alliance/GridSecurity/Certificates/Go2.html\#fax";
 
 #
 # argument specification
@@ -103,10 +131,10 @@ GetOptions( 'name=s' =>
                         $no_des = "-nodes";
                     }
                 },
-            'dir=s' => \$user_dir,
-            'cert|certificate=s' => \$user_cert_file,
-            'key=s' => \$user_key_file,
-            'req|request=s' => \$user_request_file,
+            'dir=s' => \$cl_dir,
+            'cert|certificate=s' => \$cl_cert_file,
+            'key=s' => \$cl_key_file,
+            'req|request=s' => \$cl_request_file,
             'nopw|nodes|nopassphrase' => 
                 sub
                 {
@@ -146,43 +174,6 @@ pod2usage(1) if $help;
 
 pod2usage('-exitval' => 0, '-verbose' => 2) if $man;
 
-# From ncsa-cert-request 0.4.1
-#   Options:
-#     -cn <name>         : Common name of the user
-#     -gatekeeper <name> : Create certificate for a gatekeeper named <name>
-#     -host <name>       : Create host certificate for a host named <name>
-#     -ldap <name>       : Create ldap certificate for a host named <name>
-#     -dir <dir_name>    : User certificate directory [ '$HOME/.globus' ]
-#     -cert <file>       : File name of the certificate
-#     -key <file>        : File name of the user key
-#     -req <file>        : File name of the certificate request
-#     -nopw              : Create certificate without a passwd
-#     -int[eractive]     : Prompt user for each component of the DN
-#     -force             : Overwrites prexisting certifictes
-#     -resubmit          : Resubmit a previously generated certificate request.
-# EOF
-
-#
-# Info sent with the certificate
-#
-
-$subject = "";
-$userid = "$>";
-$host = `$gpath/bin/globus-hostname`;
-
-$contact_email_addr = "consult\@alliance.paci.org";
-$contact_url = "http://www.ncsa.uiuc.edu/UserInfo/Alliance/GridSecurity/";
-$user_agent = "ncsa-cert-request/$versionid";
-
-#
-# urls that give more information about submitting and completing requests
-#
-
-$url_howto_submit = "http://www.ncsa.uiuc.edu/UserInfo/Alliance/GridSecurity/Certificates/Go.html";
-$url_howto_complete = "http://www.ncsa.uiuc.edu/UserInfo/Alliance/GridSecurity/Certificates/Go2.html\#fax";
-
-exit;
-
 main();
 
 exit;
@@ -190,6 +181,8 @@ exit;
 ### cleanup( $item0, $item1, ... )
 #
 # remove some set of files
+#
+# WORKSFORME (cphillip)
 #
 
 sub cleanup
@@ -200,7 +193,7 @@ sub cleanup
     {
         if (-f "$i")
         {
-            action("rm $i");
+            action("rm -f $i");
         }
     }
 }
@@ -284,10 +277,192 @@ sub cleanup
 #-  done
 #- }
 
+### preparePathsHash( $dir, $cert_file, $key_file, $request_file )
+#
+# create a hash based on the arguments passed to the subroutine
+#
+
+sub preparePathsHash
+{
+    my ($dir, $cert_file, $key_file, $request_file ) = @_;
+    my $hash = {};
+
+    $hash->{'dir'} = $dir;
+    $hash->{'cert_file'} = $cert_file;
+    $hash->{'key_file'} = $key_file;
+    $hash->{'request_file'} = $request_file;
+
+    return $hash;
+}
+
+### determinePaths( $default_files, $cl_files )
+#
+# based on the hashes we're given, return a hash which contains the correct set
+# of files (possibly containing a mixture of default- and commandline-specified
+# files)
+#
+
+sub determinePaths
+{
+    my ( $default_files, $cl_files ) = @_;
+    my ( $cert_file );
+    my ( $files );
+
+    $files = {};
+
+    # determine dir
+
+    $tmp_dir = $cl_files->{'dir'};
+    $tmp_dir =~ s:^[\s]+|[\s]+$::g;
+    if ( defined($tmp_dir) )
+    {
+        $dir = $tmp_dir;
+    }
+    else
+    {
+        $dir = $default_files->{'dir'};
+    }
+
+    if ( length($dir) == 0 )
+    {
+        printf("no directory specified!\n");
+        exit;
+    }
+
+    if ( ! grep(/^\//, $dir) )
+    {
+        # make $tmp_dir an absolute path
+        $dir = cwd() . "/" . $dir;
+    }
+
+    # create if it doesn't exist
+
+    if ( ! -e $dir )
+    {
+        makeDir($dir);
+    }
+
+    #
+    # divine the path to the certificate file
+    #
+
+    $tmp = determineFile($default_files->{'cert_file'}, $cl_files->{'cert_file'}, "certificate file");
+    $files->{'cert_file'} = $dir . "/" . $tmp;
+
+    #
+    # divine the path to the key file
+    #
+
+    $tmp = determineFile($default_files->{'key_file'}, $cl_files->{'key_file'}, "key file");
+    $files->{'key_file'} = $dir . "/" . $tmp;
+
+    #
+    # divine the path to the certificate file
+    #
+
+    $tmp = determineFile($default_files->{'request_file'}, $cl_files->{'request_file'}, "request file");
+    $files->{'request_file'} = $dir . "/" . $tmp;
+
+    return $files;
+}
+
+### determineFile( $default, $cl, $name )
+#
+# choose between the default- and the commandline-specified file.  error out if we
+# can't write to our choice.
+#
+
+sub determineFile
+{
+    my ($default, $cl, $name) = @_;
+    my ($tmp_file);
+
+    #
+    # if we were passed a commandline choice, make sure that it's not just whitespace
+    #
+
+    $tmp_file = $cl;
+    if ( defined($tmp_file) )
+    {
+        $tmp_file =~ s:^[\s]+|[\s]+$::g;
+    }
+    else
+    {
+        $tmp_file = $default;
+    }
+
+    if ( length($tmp_file) == 0 )
+    {
+        printf("no $name specified!\n");
+        exit;
+    }
+
+    #
+    # check that the chosen file doesn't have any slashes in it (isn't a path)
+    #
+
+    if ( grep(/\//, $tmp_file) )
+    {
+        printf("$name can only be a filename!\n");
+        exit;
+    }
+
+    #
+    # check that, if our choice exists, we can write to it
+    #
+
+    if ( ( -e $tmp_file ) && ( ! -w $tmp_file ) )
+    {
+        printf("can't write to $tmp_file");
+        exit;
+    }
+
+    return $tmp_file;
+}
+
+### makeDir( $path )
+#
+# creates the directory structure in $path if it doesn't already exist
+#
+
+sub makeDir
+{
+    my ($path) = @_;
+    my (@dirs, $curr_dir);
+
+    if ( ! -e $path )
+    {
+        #
+        # break the directories apart
+        #
+
+        @dirs = split(/\//, $path);
+
+        for my $d (@dirs)
+        {
+            #
+            # if the current directory is non-null
+            #
+
+            if ( length($d) gt 0 )
+            {
+                $curr_dir = $curr_dir . "/" . $d;
+
+                if ( ! -e $curr_dir )
+                {
+                    mkdir($curr_dir) || die "can't make directory $curr_dir: $!\n";
+                }
+            }
+        }
+    }
+}
+
 ### writeFile( $filename, $fileinput )
 #
 # create the inputs to the ssl program at $filename, appending the common name to the
 # stream in the process
+#
+# WORKSFORME (cphillip)
 #
 
 sub writeFile
@@ -303,7 +478,7 @@ sub writeFile
         die "Filename is undefined";
     }
 
-    if ( ! -w "$filename" )
+    if ( ( -e "$filename" ) && ( ! -w "$filename" ) )
     {
         die "Cannot write to filename '$filename'";
     }
@@ -317,21 +492,33 @@ sub writeFile
     close(OUT);
 }
 
-### createInputFileString( $commonname )
+### createInputFileString( $commonname, $ca_config_filename )
 #
 # create the inputs to the ssl program at $filename, appending the common name to the
 # stream in the process
 #
+# WORKSFORME (cphillip)
+#
 
 sub createInputFileString
 {
-    my ($commonname) = @_;
+    my ($commonname, $ca_config_filename) = @_;
+    my ($parsing, @defaults, $output);
+
+    #
+    # test for the existence of the config file
+    #
+
+    if ( ! -r "${ca_config_filename}" )
+    {
+        die("Cannot read ${ca_config_filename}");
+    }
 
     #
     # read the ca config file and extract the default data
     #
 
-    open(IN, "<$ca_config");
+    open(IN, "<${ca_config_filename}");
 
     while (<IN>)
     {
@@ -358,11 +545,11 @@ sub createInputFileString
     # output string
     #
 
-    for my $l (@defaults)
+    for my $line (@defaults)
     {
-        $l =~ s|[\n]+$||g;
+        $line =~ s|[\n]+$||g;
 
-        my ($key, $value) = split(/=/, $l);
+        my ($key, $value) = split(/=/, $line);
 
         $key =~ s:^[\s]+|[\s]+$::g;
         $value =~ s:^[\s]+|[\s]+$::g;
@@ -375,16 +562,20 @@ sub createInputFileString
     return $output;
 }
 
-### createServiceRequestHeader( )
+### createServiceRequestHeader( $request_id_file, $contact_url, $contact_email_addr, $subject )
 #
 # generate the request header for a generic service
+#
+# WORKSFORME (cphillip)
 #
 
 sub createServiceRequestHeader
 {
+    my ($request_id_file, $contact_url, $contact_email_addr, $subject) = @_;
+
     my $str;
 
-    $str .= "This is a Certfiicate Request file for an ALliance Certificate.\n";
+    $str .= "This is a Certficate Request file for an Alliance Certificate.\n";
     $str .= "\n";
     $str .= "This request should already have been submitted to the Alliance\n";
     $str .= "CA for approval and you will be notified by email when your\n";
@@ -405,9 +596,11 @@ sub createServiceRequestHeader
     return $str;
 }
 
-### createRequestHeader( )
+### createRequestHeader( $request_id_file, $contact_url, $contact_email_addr, $subject )
 #
 # generate a request header
+#
+# WORKSFORME (cphillip)
 #
 
 sub createRequestHeader
@@ -439,6 +632,8 @@ sub createRequestHeader
 #
 # reads and returns $filename's contents
 #
+# WORKSFORME (cphillip)
+#
 
 sub readFile
 {
@@ -450,22 +645,25 @@ sub readFile
     # $size = (stat($filename))[7];
     # $rc = read(FILE, $data, $size);
 
+    open (IN, "$filename") || die "Can't open '$filename': $!";
     $/ = undef;
-    open (IN, "$filename") || die "can't open $filename";
     $data = <IN>;
-    close(IN);
     $/ = "\n";
+    close(IN);
 
     return $data;
 }
 
-### checkGlobusSystem( )
+### checkGlobusSystem( $ca_config )
 #
 # verify that the local system has a valid CA configuration file
+#
+# WORKSFORME (cphillip)
 #
 
 sub checkGlobusSystem
 {
+    my ($ca_config) = @_;
     my $size, $data, $rc;
 
     $data = readFile($ca_config);
@@ -479,14 +677,17 @@ sub checkGlobusSystem
     }
 }
 
-### checkCerts( )
+### checkCerts( $cert_file, $key_file, $request_file )
 #
-# check the system for preexisting valid files.  remove them if --force was
-# passed in.
+# check the system for preexisting valid files.  remove them if '--force' was
+# given as an argument.
+#
+# WORKSFORME (cphillip)
 #
 
 sub checkCerts
 {
+    my ($cert_file, $key_file, $request_file) = @_;
     my $found = 0;
     my (@files, @found);
 
@@ -508,7 +709,7 @@ sub checkCerts
         }
         else
         {
-            printf("Found the following file(s):\n");
+            printf("ERROR: Found the following file(s):\n");
             for my $f (@found)
             {
                 printf("\t$f\n");
@@ -520,19 +721,6 @@ sub checkCerts
             printf("use the '-resubmit' option.\n");
             exit;
         }
-    }
-}
-
-### setupGlobusDir( )
-#
-# create our local globus directory if one does not already exist
-#
-
-sub setupGlobusDir
-{
-    if ( ! -d $globus_dir )
-    {
-        action("mkdir $globus_dir");
     }
 }
 
@@ -882,7 +1070,6 @@ sub createCerts
     $umsk = umask();
     umask("022");
     action("touch $cert_file");
-    umask($umsk);
 
     #
     # create the key and request files
@@ -895,13 +1082,63 @@ sub createCerts
     }
     else
     {
-        $tmpstring = createInputFileString( $name );
+        $tmpstring = createInputFileString( $name, $ca_config );
         writeFile($req_input, $tmpstring);
         # REM
         # action("${ssl_exec} req -new -keyout ${key_file} -out ${req_output} -config ${ca_config} ${no_des} < ${req_input}");
  
         cleanup($req_input);
     }
+
+    #- the following code should emulate this routine
+    #- SUBJECT="`${SSL_EXEC} req -text -noout < ${REQ_OUTPUT} 2>&1 |\
+    #-        ${GLOBUS_SH_GREP-grep} 'Subject:' | ${GLOBUS_SH_AWK-awk} -F: '{print $2}' |\
+    #-        ${GLOBUS_SH_CUT-cut} -c2- `"
+
+    action("${ssl_exec} req -text -noout < ${req_output} 2>&1 > ${tmpfile}");
+    $data = readFile($tmpfile);
+
+    @lines = split(/\n/, $data);
+    for my $line (@lines)
+    {
+        if ( grep(/Subject:/, $line) )
+        {
+            @strs = split(/:/, $line);
+            $subject = substr($strs[1], 1);
+            last;
+        }
+    }
+
+    #- the following code should emulate this routine
+    #- #Convert the subject to the correct form.
+    #- SUBJECT=`echo "/"${SUBJECT} | ${GLOBUS_SH_SED-sed} -e 's|, |/|g'`
+
+    $subject = "/" . $subject;
+    $subject =~ s|, |/|g;
+
+    if ($type eq "user")
+    {
+          $str = createRequestHeader( $request_id_file, $contact_url, $contact_email_addr, $subject );
+          open(OUT, ">${req_head}");
+          print OUT $str;
+          close(OUT);
+    }
+    else
+    {
+          $str = createServiceRequestHeader( $request_id_file, $contact_url, $contact_email_addr, $subject );
+          open(OUT, ">${req_head}");
+          print OUT $str;
+          close(OUT);
+    }
+
+    #
+    # finalize the Request file.
+    #
+
+    action("cat $req_head $req_output > $request_file");
+    cleanup($req_head, $req_output);
+
+    umask($umsk);
 }
 
 ### printPostData( $string )
@@ -948,11 +1185,7 @@ sub processReqFile
     my ($file) = @_;
     my ($contents);
 
-    $/ = undef;
-    open (FILE, "$file") || die "can't open $file";
-    $contents = <FILE>;
-    close (FILE);
-    $/ = "\n";
+    $contents = readFile($file);
 
     #
     # Special characters: +, /, =, \n, and spaces (" ") are given their
@@ -1027,9 +1260,7 @@ sub handleSuccessfulPost
     my ($data, $request_id);
     my (@strs, @splitdata);
 
-    open(INPUT, "<$post_out_file");
-    $data = <INPUT>;
-    close(INPUT);
+    readFile($post_out_file);
 
     @strs = split(/\n/, $data);
     for my $s (@strs)
@@ -1069,9 +1300,7 @@ sub handleFailedPost
     my ($post_out_file) = @_;
     my ($data);
 
-    open(INPUT, "<$post_out_file");
-    $data = <INPUT>;
-    close(INPUT);
+    $data = readFile($post_out_file);
 
     if ( grep(/connect/, $data) )
     {
@@ -1220,9 +1449,7 @@ sub postReq
     # REM
     # action("(cat $post_cmd; sleep 10) | ${ssl_exec} s_client -quiet -connect ${server}:${port} > ${post_out_file}");
 
-    open(INPUT, "<$post_out_file");
-    $data = <INPUT>;
-    close(INPUT);
+    $data = readFile($post_out_file);
 
     if ( grep(/CMS Request Pending/, $data) )
     {
@@ -1502,7 +1729,7 @@ sub action
     if ($result or $?)
     {
         # results are bad print them out.
-        die "ERROR: Command failed\n";
+        die("ERROR: Command failed\n");
     }
 
     if (defined $dir)
@@ -1523,43 +1750,27 @@ sub main
     # based on the type, build the path to the certificates
     #
 
-    $cert_file = "$type/$cert_file";
-    $key_file = "$type/$key_file";
-    $request_file = "$type/$request_file";
+    $cl_files = preparePathsHash($cl_dir, $cl_cert_file, $cl_key_file, $cl_request_file);
+    $default_files = preparePathsHash($default_dir, $default_cert_file, $default_key_file, $default_request_file);
+    $files = determinePaths($default_files, $cl_files);
 
-    if ( length($user_dir) gt 0 )
-    {
-        $user_dir = $user_dir . "/";
-    }
+    printf("%s\n", Dumper($files));
 
-    if ( length($user_cert_file) gt 0 )
-    {
-        $cert_file = $user_dir . $user_cert_file;
-    }
+    $cert_file = $files->{'cert_file'};
+    $key_file = $files->{'key_file'};
+    $request_file = $files->{'request_file'};
 
-    if ( length($user_key_file) gt 0 )
-    {
-        $key_file = $user_dir . $user_key_file;
-    }
+    # <testing>
+    checkCerts($cert_file, $key_file, $request_file);
 
-    if ( length($user_request_file) gt 0 )
-    {
-        $request_file = $user_dir . $user_request_file;
-    }
+    exit;
+    # </testing>
 
-    absolutePath( \$cert_file, \$key_file, \$request_file );
-
-    checkGlobusSystem();
+    checkGlobusSystem($ca_config);
 
     if ( ! $resubmit )
     {
-        # Only set up the Globus Directory for users.
-        if ( $type eq "user" )
-        {
-            setupGlobusDir();
-        }
-
-        checkCerts();
+        checkCerts($cert_file, $key_file, $request_file);
     }
 
     if ($resubmit)
@@ -1580,19 +1791,13 @@ sub main
 
     createCerts();
 
-    # </perl>
-
     #-  COMMON_NAME="`echo ${SUBJECT} | ${GLOBUS_SH_SED-sed} -e 's|^.*/CN=||'`"
     # what do i replace the above with?
-
-    # <perl> from here on out
 
     postReq();
 
     cleanup($req_head, $req_output, $req_input);
 }
-
-exit;
 
 __END__
 
