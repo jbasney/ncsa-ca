@@ -1098,7 +1098,7 @@ sub createCerts
     {
         $tmpstring = createInputFileString( $name, $ca_config );
         writeFile($req_input, $tmpstring);
-        action("${ssl_exec} req -new -keyout ${key_file} -out ${req_output} -config ${ca_config} ${no_des} < ${req_input}");
+        action("${ssl_exec} req -new -keyout ${key_file} -out ${req_output} -config ${ca_config} ${no_des} < ${req_input} > /dev/null");
         printf("\n");
  
         cleanup($req_input);
