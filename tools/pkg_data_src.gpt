@@ -4,7 +4,7 @@
 <gpt_package_metadata Format_Version="0.02" Name="gsi_ncsa_ca_tools" >
 
   <Aging_Version Major="0" Minor="3" Age="0" />
-  <Description>GSI NCSA CA certificates, signing policy, and request/retrieve scripts</Description>
+  <Description>GSI NCSA CA request and retrieve scripts</Description>
   <Functional_Group >gsi_ncsa_ca</Functional_Group>
   <Version_Stability Release="beta" />
 
