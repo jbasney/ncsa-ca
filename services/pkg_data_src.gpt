@@ -10,9 +10,9 @@
 
   <src_pkg >
 
-    <Source_Dependencies Type="rtl" >
-      <Dependency Name="globus_core"><Version><Simple_Version Major="2"></Simple_Version></Version></Dependency>
-    </Source_Dependencies>
+    <Source_Setup_Dependencies Type="pgm" >
+      <SetupDependency Name="globus_core"><Version><Simple_Version Major="2"></Simple_Version></Version></Dependency>
+    </Source_Setup_Dependencies>
 
     <Version_Label>0.4.5</Version_Label>
 
