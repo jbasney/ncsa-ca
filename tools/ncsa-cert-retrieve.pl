@@ -35,7 +35,7 @@ use Getopt::Long;
 use Pod::Usage;
 use Cwd;
 
-$version="0.4.9";
+$version="0.4.10";
 $progname = $0;
 $progname =~ s|.*/||g;
 

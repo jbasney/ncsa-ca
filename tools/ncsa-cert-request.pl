@@ -53,7 +53,7 @@ if (!defined($gpath))
 
 my ($versionid, $program_name);
 
-$versionid = "0.4.9";
+$versionid = "0.4.10";
 $program_name = $0;
 $program_name =~ s|.*/||g;
 
