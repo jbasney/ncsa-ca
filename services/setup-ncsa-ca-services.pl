@@ -247,8 +247,8 @@ sub triageDirs
         {
             if ( isCreatable($d) )
             {
-                pushd(@createdirs, $d);
-                pushd(@installdirs, $d);
+                push(@createdirs, $d);
+                push(@installdirs, $d);
                 last;
             }
         }
