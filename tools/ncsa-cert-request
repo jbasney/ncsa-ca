@@ -9,8 +9,7 @@ fi
 
 #
 # Sample script to generate a certificate request which can be sent 
-# to the NCSA CA, who will sign it. This script uses the 
-# ncsa-ssleay.conf. 
+# to the NCSA CA, who will sign it. This script uses ncsa-ca.conf. 
 #
 # When generating a certificate request and private key for a 
 # globus gatekeeper daemon, use the -nopw option, so the
@@ -113,9 +112,9 @@ secconfdir="/etc/grid-security"
 #SSL related needs
 PATH=${GLOBUS_LOCATION}/bin:${PATH}
 SSL_EXEC="${GLOBUS_LOCATION}/bin/openssl"
-# SSL_CONFIG should end up being $GL/share/gsi_ncsa_ca_tools/ncsa-ca.conf
+# CA_CONFIG should end up being $GL/share/gsi_ncsa_ca_tools/ncsa-ca.conf
 # so $datadir should resolve to the share directory in $GL
-SSL_CONFIG="${datadir}/gsi_ncsa_ca_tools/ncsa-ca.conf"
+CA_CONFIG="${datadir}/gsi_ncsa_ca_tools/ncsa-ca.conf"
 
 # TEMP FILES
 REQ_INPUT=${secconfdir}/req_input.$$
@@ -276,7 +275,7 @@ createInputFile () {
 # Parse the ssleay configuration file, to determine the
 # correct default parameters
 
-${GLOBUS_SH_AWK-awk}  < $sysconfdir/globus-ssleay.conf '
+${GLOBUS_SH_AWK-awk}  < ${CA_CONFIG} '
  
   /^\[ req_distinguished_name \]/ {
      start_parsing=1;
@@ -370,7 +369,7 @@ EOF
 ###########################################################
 checkGlobusSystem () {
 
-  _matches=`${GLOBUS_SH_GREP-grep} -c "Not Configured" $SSL_CONFIG 2> /dev/null`
+  _matches=`${GLOBUS_SH_GREP-grep} -c "Not Configured" $CA_CONFIG 2> /dev/null`
   if [ $_matches -ne 0 ] ; then
     echo
     echo "The NCSA Configuration files have not been setup."   1>&2
@@ -560,13 +559,13 @@ createCerts () {
 
   if [ -n "${INTERACTIVE}" ] ; then
     ${SSL_EXEC} req -new -keyout ${KEY_FILE} -out ${REQ_OUTPUT} \
-              -config ${SSL_CONFIG} ${NO_DES}
+              -config ${CA_CONFIG} ${NO_DES}
     RET=$?
   else
     createInputFile "${COMMON_NAME}" >${REQ_INPUT}
 
     ${SSL_EXEC} req -new -keyout ${KEY_FILE} \
-              -out ${REQ_OUTPUT} -config ${SSL_CONFIG} \
+              -out ${REQ_OUTPUT} -config ${CA_CONFIG} \
               ${NO_DES} < ${REQ_INPUT} 
     RET=$?
 

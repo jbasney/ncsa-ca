@@ -96,9 +96,9 @@ secconfdir="/etc/grid-security"
 #SSL related needs
 PATH=${GLOBUS_LOCATION}/bin:${PATH}
 SSL_EXEC="${GLOBUS_LOCATION}/bin/openssl"
-# SSL_CONFIG should end up being $GL/share/gsi_ncsa_ca_tools/ncsa-ca.conf
+# CA_CONFIG should end up being $GL/share/gsi_ncsa_ca_tools/ncsa-ca.conf
 # so $datadir should resolve to the share directory in $GL
-SSL_CONFIG="${datadir}/gsi_ncsa_ca_tools/ncsa-ca.conf"
+CA_CONFIG="${datadir}/gsi_ncsa_ca_tools/ncsa-ca.conf"
 
 # DEFault Generated Files
 DEF_GLOBUS_DIR="${HOME}/.globus"            # as with ncsa-cert-retrieve, do we need to keep this entry?
@@ -185,7 +185,7 @@ readCommandLine () {
 ###########################################################
 checkGlobusSystem () {
 
-  _matches=`${GLOBUS_SH_GREP-grep} -c "Not Configured" $SSL_CONFIG 2> /dev/null`
+  _matches=`${GLOBUS_SH_GREP-grep} -c "Not Configured" $CA_CONFIG 2> /dev/null`
   if [ $_matches -ne 0 ] ; then
     echo
     echo "The NCSA Configuration files have not been setup."   1>&2
