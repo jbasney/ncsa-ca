@@ -1,0 +1,480 @@
+#! /bin/sh
+
+if [ "x${GLOBUS_LOCATION}" = "x" ]; then
+    echo "ERROR: please set GLOBUS_LOCATION before running this script!"
+    exit 1
+fi
+
+. ${GLOBUS_LOCATION}/libexec/globus-script-initializer
+
+
+# Script to retrieve a certificate from the NCSA CA
+VERSION="0.4.1"
+PROGRAM_NAME=`echo $0 | ${GLOBUS_SH_SED-sed} 's|.*/||g'`
+
+short_usage="$PROGRAM_NAME [-help] [ options ...] -id <id>" 
+
+long_usage () {
+    ${GLOBUS_SH_CAT-cat} >&2 <<EOF
+
+${short_usage}
+
+  Options:
+    -dir <dir_name>    : User certificate directory [ '$HOME/.globus' ]
+    -nocheck           : Don\'t do sanity checks on certificate
+EOF
+}
+
+
+	### BEGIN   inserted by configure ###
+
+	globus_args_short_usage()
+	{
+	    ${GLOBUS_SH_CAT-cat} 1>&2 <<EOF
+
+Syntax : ${short_usage}
+
+Use -help to display full usage.
+
+EOF
+	}
+
+	globus_args_option_error()
+	{
+	    ${GLOBUS_SH_CAT-cat} 1>&2 <<EOF
+
+Error, argument $1 : $2
+EOF
+	    globus_args_short_usage
+	    exit 1
+	}
+
+	
+	globus_args_unrecognized_option()
+	{
+	    globus_args_option_error $1 "unrecognized option"
+	    exit 1
+	}	
+
+	_done=no
+	_n=1
+	while [ "$_done" = no -a "$_n" -le "$#" ] ; do
+	    _tmp="echo \"\$${_n}\""
+	    _arg="`eval ${_tmp}`"
+	    case "${_arg}" in
+		-help | -usage)
+		    long_usage
+		    exit 0
+		    ;;
+		-version)
+		    echo "ncsa-cert-retrieve $VERSION"
+		    exit 0
+		    ;;
+	        --)
+		    _done=yes
+		    ;;
+		--*)
+		    globus_args_option_error $1 "double-dashed option syntax is not allowed"
+		    ;;
+		*)
+		    _n=`${GLOBUS_SH_EXPR-expr} $_n + 1`
+		    ;;
+	    esac
+	done
+	_n=
+	_tmp=
+	_arg=
+	_done=
+	### END   inserted by configure ###
+
+
+
+gssapi_authentication=openssl
+
+secconfdir="/etc/grid-security"
+
+#SSL related needs
+PATH=${GLOBUS_LOCATION}/bin:${PATH}
+SSL_EXEC="${GLOBUS_LOCATION}/bin/openssl"
+SSL_CONFIG="${secconfdir}/ncsa-ssl.conf"
+
+
+# DEFault Generated Files
+DEF_GLOBUS_DIR="${HOME}/.globus"                       # cmp: what happens to this directory?
+DEF_CERT_FILE='${secconfdir}/globus-gatekeeper.cert'
+DEF_KEY_FILE='${secconfdir}/globus-gatekeeper.key'
+DEF_REQUEST_FILE='${secconfdir}/globus-gatekeeper.req'
+DEF_REQUEST_ID_FILE='${secconfdir}/ncsa_request_id'
+
+
+CONTACT_EMAIL_ADDR="consult@alliance.paci.org"
+CONTACT_URL="http://www.ncsa.uiuc.edu/SCD/Alliance/GridSecurity/"
+USER_AGENT="ncsa-cert-request/$VERSION"
+
+NOCHECK="FALSE"
+
+cleanup () {
+  : 
+  # ${GLOBUS_SH_RM-rm} -f ${REQ_HEAD} ${REQ_INPUT} ${REQ_OUTPUT}
+}
+
+trap cleanup 0
+
+echo "Checking grid-security.conf file in $secconfdir"
+security_conf=${secconfdir}/grid-security.conf
+
+# See if we can proceed
+. ${security_conf}
+
+
+
+## Other cleanup routines.
+
+
+abort_cleanup () {
+  :
+  cleanup
+}
+
+readCommandLine () {
+  # Expects $* from the shell invocation
+
+  while [ "X$1" !=  "X" ]
+  do
+    case $1 in
+      -\?|-h|-help|-usage)
+         long_usage
+         exit 0
+         ;;
+
+     -dir)
+         DEF_GLOBUS_DIR="$2"
+         shift ; shift
+         ;;
+
+     -id)
+         REQUEST_ID="$2"
+	 shift; shift
+	 ;;
+
+     -nocheck)
+         NOCHECK="TRUE"
+	 shift
+	 ;;
+
+     *)
+	 globus_args_unrecognized_option "$1"
+         ;;
+    esac
+  done
+
+}
+
+###########################################################
+# checkGlobusSystem:  
+#   Ensure that the NCSA OpenSSL Configuration files
+#   have been created by the Globus Sys.Admin
+###########################################################
+checkGlobusSystem () {
+
+  _matches=`${GLOBUS_SH_GREP-grep} -c "Not Configured" $SSL_CONFIG 2> /dev/null`
+  if [ $_matches -ne 0 ] ; then
+    echo
+    echo "The NCSA Configuration files have not been setup."   1>&2
+    echo "Please have your system administrator install the"   1>&2
+    echo "the gsi_ncsa_ca_setup package."                      1>&2
+    exit 1
+  fi
+}
+
+
+###########################################################
+# printPostData
+#
+# Given a variable name and a value print a properly
+# encoded string for inclusion in POST data.
+#
+###########################################################
+printPostData () {
+  var=$1
+  value=$2
+
+  # Stick output into a variable and then print the variable. We
+  # need to do it this way because sed on some systems (e.g. IRIX
+  # 6.5) sticks a carriage return at the end of it's output.
+  #
+  # Double up on percents in sed script since it goes through
+  # a printf.
+
+  _output=`${GLOBUS_SH_PRINTF-printf} "${var}=" ; \
+    ${GLOBUS_SH_PRINTF-printf} "${value}" | \
+      sed -e "s/%/%%25/g" \
+	-e "s/ /+/g" \
+	-e "s/&/%%26/g" \
+	-e "s/@/%%40/g"`
+
+  ${GLOBUS_SH_PRINTF-printf} ${_output}
+}
+
+###########################################################
+# checkState
+#
+# Sanity check to be make sure we look ok to get the
+# certificate.
+###########################################################
+checkState () {
+  _error=0
+
+  if [ ! -r "${KEY_FILE}" ]; then
+    echo "Key file does not exist: ${KEY_FILE}"
+    _error=1
+  fi
+
+  if [ ! -r "${REQUEST_ID_FILE}" ]; then
+    echo "Request ID file does not exist: ${REQUEST_ID_FILE}"
+    _error=1
+  fi
+
+  if [ ${_error} -eq 0 ]; then
+    return 0
+  fi
+
+  # Error
+  cat <<EOF
+
+The above errors indicate that you are not prepared to
+download a certificate. 
+
+Possibly you have not submited a certificate request with
+ncsa-cert-request?
+
+Did you specify a non-standard directory with -dir? In which
+case you need to specify this same directory with
+${PROGRAM_NAME}.
+
+If you want assistance please email ${CONTACT_EMAIL_ADDR}
+or visit
+
+${CONTACT_URL}
+
+EOF
+
+
+  exit 1
+}
+
+###########################################################
+# handleFailedRetrieve
+#
+# Handle a failed retrieval
+###########################################################
+handleFailedRetrieve () {
+  _post_out_file=$1
+
+  # XXX Could probably grep the output and figure out a
+  #     little more here.
+  cat<<EOF
+
+The attempt to retrieve your certificate failed.
+
+If you have not receive notification from the CA that
+your certificate is ready, then it probably isn't and
+you should wait until you receive notifcation and try
+again.
+
+If you have received notification from the CA that your
+certificate is ready, then some other failure occurred.
+This file contains a log of the session with the CA:
+
+${_post_out_file}
+
+You can examine it for the reason for the failure.
+Please include this file with any correspondence
+you have regarding this problem.
+
+If you want assistance please email ${CONTACT_EMAIL_ADDR}
+or visit
+
+http://www.ncsa.uiuc.edu/SCD/Alliance/GridSecurity/Support/                     
+
+EOF
+}
+
+###########################################################
+# handleNewCert
+#
+# Check and install the new certificate
+###########################################################
+handleNewCert () {
+  _new_cert=$1
+
+  # So it would be nice to check to see if the modulus of
+  # the new cert and key match here, but that involves
+  # getting the pass phrase for the key from the user,
+  # which I'll skip
+
+  echo "Installing new certificate in ${CERT_FILE}"
+  ${GLOBUS_SH_MV-mv} ${_new_cert} ${CERT_FILE}
+  ${GLOBUS_SH_CHMOD-chmod} 644 ${CERT_FILE}
+
+  cat<<EOF
+
+
+You have successfully retrieved your Alliance Certificate.
+Please see the following url for information on how to get
+started using your certificate:
+
+http://www.ncsa.uiuc.edu/SCD/Alliance/GridSecurity/Certificates/Go2.html#test   
+
+EOF
+}
+  
+###########################################################
+# getCertificate
+#
+# Get the certificate from the NCSA CA.
+###########################################################
+getCertificate () {
+  # https://ca.ncsa.edu/displayBySerial
+  SERVER="ca.ncsa.edu"
+  PORT="443"
+  PAGE="/displayBySerial"
+
+  echo "Getting certificate ${REQUEST_ID} from CA"
+
+  # Temporary files
+  POST_DATA_FILE=${secure_tmpdir}/$PROGRAM_NAME.$$.post_data
+  POST_CMD_FILE=${secure_tmpdir}/$PROGRAM_NAME.$$.post_cmd
+  POST_OUT_FILE=${secure_tmpdir}/$PROGRAM_NAME.$$.post_out
+  TMP_CERT_FILE=${secure_tmpdir}/$PROGRAM_NAME.$$.cert
+
+  ${GLOBUS_SH_RM-rm} -f ${POST_DATA_FILE}
+
+  # Build the post data
+  printPostData "op" "displayBySerial" >> ${POST_DATA_FILE}
+  ${GLOBUS_SH_PRINTF-printf} "&" >> ${POST_DATA_FILE}
+
+  printPostData "serialNumber" "${REQUEST_ID}" >> ${POST_DATA_FILE}
+  ${GLOBUS_SH_PRINTF-printf} "&" >> ${POST_DATA_FILE}
+
+  printPostData "submit" "Details" >> ${POST_DATA_FILE}
+  ${GLOBUS_SH_PRINTF-printf} "\n\n" >> ${POST_DATA_FILE}
+
+  # Get number of bytes we are posting
+  CONTENT_LEN=`${GLOBUS_SH_WC-wc} -c ${POST_DATA_FILE} | ${GLOBUS_SH_AWK-awk} '{print $1; exit}'`
+
+  # Now build the actual text for sending to the web server
+  echo "POST ${PAGE} HTTP/1.0" > ${POST_CMD_FILE}
+  echo "Content-type: application/x-www-form-urlencoded" >> ${POST_CMD_FILE}
+  echo "Content-length: ${CONTENT_LEN}" >> ${POST_CMD_FILE}
+  echo "User-Agent: ${USER_AGENT}" >> ${POST_CMD_FILE}
+  echo "" >> ${POST_CMD_FILE}
+  cat ${POST_DATA_FILE} >> ${POST_CMD_FILE}
+  rm -f ${POST_DATA_FILE}
+
+  # Sleep to give server a chance to respond
+  (cat ${POST_CMD_FILE}; sleep 10) | ${SSL_EXEC} s_client -quiet -connect ${SERVER}:${PORT} > ${POST_OUT_FILE} 2>&1
+
+  _cert_data=`${GLOBUS_SH_GREP-grep} "certChainBase64 =" ${POST_OUT_FILE} | ${GLOBUS_SH_AWK-awk} -F\" '{print $2; exit}'`
+
+  if [ -n "${_cert_data}" ]; then
+    # No longer need this
+    rm -f ${POST_OUT_FILE}
+
+    echo "-----BEGIN CERTIFICATE-----" > ${TMP_CERT_FILE}
+    ${GLOBUS_SH_PRINTF-printf} ${_cert_data} >> ${TMP_CERT_FILE}
+    echo "" >> ${TMP_CERT_FILE}
+    echo "-----END CERTIFICATE-----" >> ${TMP_CERT_FILE}
+
+    handleNewCert ${TMP_CERT_FILE}
+  else
+    handleFailedRetrieve ${POST_OUT_FILE}
+
+    # Append the POST_CMD_FILE to the POST_OUT_FILE and so
+    # that it can be used for debugging.
+    cat ${POST_CMD_FILE} >> ${POST_OUT_FILE}
+  fi
+
+  rm -f ${POST_CMD_FILE}
+}
+
+###########################################################
+# MAIN
+###########################################################
+
+readCommandLine "$@"
+
+# Set the actual file names
+
+#Make these absolute file names if thy are not
+
+absolutePath () {
+   _file_name="$1"
+
+   case $_file_name in
+      /*)
+        echo ${_file_name}
+        ;;
+      *)
+        echo ${PWD}/${_file_name}
+    esac
+}
+
+
+
+GLOBUS_DIR="`eval echo      ${DEF_GLOBUS_DIR}`"
+CERT_FILE="`eval echo       ${DEF_CERT_FILE}`"
+KEY_FILE="`eval echo        ${DEF_KEY_FILE}`"
+REQUEST_FILE="`eval echo    ${DEF_REQUEST_FILE}`"
+REQUEST_ID_FILE="`eval echo ${DEF_REQUEST_ID_FILE}`"
+
+
+GLOBUS_DIR="`absolutePath      ${GLOBUS_DIR}`"
+CERT_FILE="`absolutePath       ${CERT_FILE}`"
+KEY_FILE="`absolutePath        ${KEY_FILE}`"
+REQUEST_FILE="`absolutePath    ${REQUEST_FILE}`"
+REQUEST_ID_FILE="`absolutePath ${REQUEST_ID_FILE}`"
+
+
+checkGlobusSystem
+
+if [ "${NOCHECK}" = "FALSE" ]; then
+  checkState
+fi
+
+if [ "X${REQUEST_ID}" = "X" ]; then
+  cat<<EOF
+
+Please supply the serial number of your certificate as contained in the
+email you received from the CA. (Note that this is not the same as the
+request number you got when submitting your certificate.)
+
+For example, if your certificate is serial number 45, please run:
+
+${PROGRAM_NAME} -id 45
+
+If you want assistance please email ${CONTACT_EMAIL_ADDR}
+or visit
+
+${CONTACT_URL}
+
+EOF
+  
+  globus_args_short_usage
+  exit 1
+fi
+
+trap abort_cleanup 0
+
+getCertificate
+
+trap cleanup 0
+
+exit 0
+
+
+
+
+
+
+

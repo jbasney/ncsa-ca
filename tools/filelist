@@ -1,0 +1,3 @@
+setup/globus/ncsa/gsi-ncsa-ca/ncsa-cert-request
+setup/globus/ncsa/gsi-ncsa-ca/ncsa-cert-retrieve
+setup/globus/ncsa/gsi-ncsa-ca/ncsa-ssl.conf
