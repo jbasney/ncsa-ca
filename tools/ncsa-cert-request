@@ -112,7 +112,9 @@ secconfdir="/etc/grid-security"
 #SSL related needs
 PATH=${GLOBUS_LOCATION}/bin:${PATH}
 SSL_EXEC="${GLOBUS_LOCATION}/bin/openssl"
-SSL_CONFIG="${secconfdir}/ncsa-ssl.conf"
+# SSL_CONFIG should end up being $GL/share/gsi_ncsa_ca_tools/ncsa-ca.conf
+# so $datadir should resolve to the share directory in $GL
+SSL_CONFIG="${datadir}/gsi_ncsa_ca_tools/ncsa-ca.conf"
 
 # TEMP FILES
 REQ_INPUT=${secconfdir}/req_input.$$
