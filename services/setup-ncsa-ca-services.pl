@@ -8,6 +8,9 @@
 # Chase Phillips <cphillip@ncsa.uiuc.edu>
 #
 
+use Getopt::Long;
+use Cwd;
+
 $gptpath = $ENV{GPT_LOCATION};
 $gpath = $ENV{GLOBUS_LOCATION};
 
@@ -62,19 +65,6 @@ $bindir = "${exec_prefix}/bin";
 
 $curr_time = time();
 $backup_dir = "backup_gsi_ncsa_ca_services_${curr_time}";
-
-#
-# For now, assume that we are root (until we build command-line switches for this
-# sort of thing)
-#
-
-$uid = $>;
-
-if ($uid != 0)
-{
-    print "--> NOTE: You must be root to run this script! <--\n";
-    exit 0;
-}
 
 #
 # define main subroutines
@@ -192,6 +182,8 @@ sub s1_install_certs
 
 sub get_eligible_cert_dirs
 {
+    my @dirlist, @eligible_dirs;
+
     #
     # we've got to do some hand-tailoring, since some of these entries are built
     # from environmental variables, while others are hardcoded.  any tests to ensure
@@ -201,19 +193,74 @@ sub get_eligible_cert_dirs
     my $homedir = $ENV{HOME};
     my $x509_path = $ENV{X509_CERT_DIR};
 
-    my @dirlist, @eligible_dirs;
+    #
+    # prepare for adding $GL/share/certificates to our path
+    #
 
     if ( defined($x509_path) )
     {
-        push(@dirlist, $x509_path);
+        $dir = $x509_path;
+
+        if ( ! -e $dir )
+        {
+            mkdirpath($dir);
+        }
+
+        if ( -d $dir )
+        {
+            push(@dirlist, $dir);
+        }
     }
 
-    push(@dirlist, "/etc/grid-security/certificates");
-    push(@dirlist, "$globusdir/share/certificates");
+    #
+    # prepare for adding /etc/grid-security/certificates to our path
+    #
+
+    $dir = "/etc/grid-security/certificates";
+
+    if ( ! -e $dir )
+    {
+        mkdirpath($dir);
+    }
+
+    if ( -d $dir )
+    {
+        push(@dirlist, $dir);
+    }
+
+    #
+    # prepare for adding $GL/share/certificates to our path
+    #
+
+    $dir = "$globusdir/share/certificates";
+
+    if ( ! -e $dir )
+    {
+        mkdirpath($dir);
+    }
+
+    if ( -d $dir )
+    {
+        push(@dirlist, $dir);
+    }
+
+    #
+    # prepare for adding $HOME/.globus/certificates
+    #
 
     if ( defined($homedir) )
     {
-        push(@dirlist, "$homedir/.globus/certificates");
+        $dir = "$homedir/.globus/certificates";
+
+        if ( ! -e $dir )
+        {
+            mkdirpath($dir);
+        }
+
+        if ( -d $dir )
+        {
+            push(@dirlist, $dir);
+        }
     }
 
     #
@@ -225,13 +272,27 @@ sub get_eligible_cert_dirs
         $d =~ s!//+!/!g; # remove any series of 2 or more forward slashes
         $d =~ s!/$!!g;   # remove any trailing slashes
 
-        if ( -d "$d" )
+        if ( isMutable($d) )
         {
             push(@eligible_dirs, $d);
         }
     }
 
     return @eligible_dirs;
+}
+
+sub isMutable
+{
+    my ($dir) = @_;
+
+    if ( ( -d $dir ) && ( -w $dir ) && ( -r $dir ) )
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 #
@@ -309,6 +370,8 @@ sub backup_cert_dir
         # ouch.  couldn't make backup directories.
         #
 
+        printf("Unable to make backup directory.. not backing up files in ${dir_path}..\n");
+
         return 0;
     }
 
@@ -367,18 +430,16 @@ sub backup_cert_dir
 # phase 2: move (cp files into $GL/bin/)
 #
 
-printf "---------------------------------------------------------------\n";
 printf "$myname: Configuring package gsi_ncsa_ca_services..\n";
-printf "\n";
+printf "---------------------------------------------------------------\n";
 printf "Hi, I'm the setup script for the gsi_ncsa_ca_services package!\n";
 printf "\n";
-
-@certdirlist = get_eligible_cert_dirs();
-
 printf "I do a lot of my work by modifying and then copying a handful of\n";
 printf "files.  The directories that may be affected by this install\n";
 printf "include:\n";
 printf "\n";
+
+@certdirlist = get_eligible_cert_dirs();
 
 for my $d (@certdirlist)
 {
@@ -406,8 +467,8 @@ my $metadata = new Grid::GPT::Setup(package_name => "gsi_ncsa_ca_services");
 $metadata->finish();
 
 print "\n";
-print "$myname: Finished configuring package 'gsi_ncsa_ca_services'.\n";
 print "---------------------------------------------------------------\n";
+print "$myname: Finished configuring package 'gsi_ncsa_ca_services'.\n";
 
 #
 # define support subroutines
@@ -527,52 +588,104 @@ sub s_output
     }
 }
 
+### mkdirpath( $dirpath )
+#
+# given a path of one or more directories, build a complete path in the
+# filesystem to match it.
+#
+
 sub mkdirpath
 {
     my ($dirpath) = @_;
 
-    my $start;
-    my @directories;
-    my $current_path;
+    #
+    # watch out for extra debug stuff
+    #
+
+    $dirpath =~ s:/+:/:g;
+    $absdir = absolutePath($dirpath);
+
+    @directories = split(/\//, $absdir);
+    @newdirs = map { $x = $_; $x =~ s:^\s+|\s+$|\n+::g; $x; }
+               grep { /\S/ } @directories;
+
+    #
+    # prepare for our loop
+    #
 
     $current_path = "";
 
-    @directories = split(/\//, $dirpath);
-
-    $start = 1;
-
-    for my $d (@directories)
+    for my $d (@newdirs)
     {
-        if ($start eq 1)
-        {
-            $start = 0;
-            $current_path = $d;
-        }
-        else
-        {
-            $current_path = $current_path . "/" . $d;
-        }
+        $current_path = $current_path . "/" . $d;
 
-        if ( (length($current_path) eq 0) )
+        #
+        # cases where we should just go to the next iteration
+        #
+
+        if ( -d $current_path )
         {
             next;
         }
 
-        if ( ! -d "$current_path" )
+        #
+        # we bomb out if we find something that exists in the filesystem
+        # (and isn't a directory)
+        #
+
+        if ( -e $current_path )
         {
-            if ( -e "$current_path" )
-            {
-                s_output("error", "Could not make directory: '$current_path'... already exists as non-directory.\n");
+            return 0;
+        }
 
-                return 0;
-            }
+        #
+        # time to get to work
+        #
 
-            s_output("inform", "Could not find directory: '$current_path'... creating.\n");
-            print "Could not find directory: '$current_path'... creating.\n";
-            mkdir($current_path, 16877);
-            # 16877 should be 755, or drwxr-xr-x
+        if ( ! myMkdir($current_path) )
+        {
+            return 0;
         }
     }
 
     return 1;
+}
+
+### myMkdir( $dir )
+#
+# try to create a directory
+#
+
+sub myMkdir
+{
+    my ($dir) = @_;
+    my $result;
+
+    # Perform the mkdir
+    $result = system("mkdir $dir 2>&1");
+
+    if ($result or $?)
+    {
+        return 0;
+    }
+
+    return 1;
+}
+
+### absolutePath( $file )
+#
+# accept a list of files and, based on our current directory, make their pathnames absolute
+#
+
+sub absolutePath
+{
+    my ($file) = @_;
+    my $cwd = cwd();
+
+    if ($file !~ /^\//)
+    {
+        $file = $cwd . "/" . $file;
+    }
+
+    return $file;
 }
