@@ -123,20 +123,25 @@ REQ_HEAD=${secconfdir}/req_header.$$
 
 
 # DEFault Generated Files
-DEF_GLOBUS_DIR="${HOME}/.globus"            # as with ncsa-cert-retrieve, do we need to keep this entry?
-DEF_CERT_FILE="${secconfdir}/hostcert.pem"
-DEF_KEY_FILE="${secconfdir}/hostkey.pem"
-DEF_REQUEST_FILE="${secconfdir}/hostcert_req.pem"
-DEF_REQUEST_ID_FILE="${secconfdir}/ncsa_request_id"
+DEF_GLOBUS_DIR="${HOME}/.globus"
 
 #
-# these need to be added into the code below somewhere - cmp
+# default service=host pathnames (note that variable interploation occurs,
+# negating the need for the deprecated use of `eval` where paramater
+# expansion appears below)
 #
-DEF_LDAP_CERT_FILE="${secconfdir}/ldapservercert.pem"
-DEF_LDAP_KEY_FILE="${secconfdir}/ldapserverkey.pem"
-DEF_LDAP_REQUEST_FILE="${secconfdir}/ldapservercert_req.pem"
+DEF_HOST_CERT_FILE="${secconfdir}/hostcert.pem"
+DEF_HOST_KEY_FILE="${secconfdir}/hostkey.pem"
+DEF_HOST_REQUEST_FILE="${secconfdir}/hostcert_req.pem"
+DEF_HOST_REQUEST_ID_FILE="${secconfdir}/ncsa_request_id"
+
+#
+# default service=ldap pathnames
+#
+DEF_LDAP_CERT_FILE="${secconfdir}/ldapcert.pem"
+DEF_LDAP_KEY_FILE="${secconfdir}/ldapkey.pem"
+DEF_LDAP_REQUEST_FILE="${secconfdir}/ldapcert_req.pem"
 DEF_LDAP_REQUEST_ID_FILE="${secconfdir}/ldap_request_id"
-
 
 # Info sent with the certificate
 SUBJECT=
@@ -217,22 +222,22 @@ readCommandLine () {
          ;;
 
      -dir)
-         DEF_GLOBUS_DIR="$2"
+         CL_GLOBUS_DIR="$2"
          shift ; shift
          ;;
 
      -cert|-certificate)
-         DEF_CERT_FILE="$2"
+         CL_CERT_FILE="$2"
          shift ; shift
         ;;
 
      -key)
-	 DEF_KEY_FILE="$2"
+	 CL_KEY_FILE="$2"
 	 shift ; shift
 	 ;;
 
      -req|-request)
-	 DEF_REQUEST_FILE="$2"
+	 CL_REQUEST_FILE="$2"
 	 shift ; shift
 	 ;;
 
@@ -608,39 +613,6 @@ createCerts () {
   ${GLOBUS_SH_RM-rm} -f ${REQ_HEAD} ${REQ_OUTPUT}
 }
 
-
-
-# DEFUNCT ###
-###########################################################
-# getPassPhrase
-#   Prompt the user for the PEM pass phrase
-###########################################################
-getPassPhrase () {
-
-   _pass_phrase=
-   _double_check=
-
-   ${GLOBUS_SH_PRINTF-printf} "Enter PEM pass phrase:  " 
-   ${GLOBUS_SH_STTY-stty} -echo
-   read _pass_phrase
-   while [ "X${_pass_phrase}" != "X${_double_check}" ]
-   do
-     ${GLOBUS_SH_PRINTF-printf} "\nReenter PEM pass phrase: "
-     read _double_check
-
-     if [ "X${_pass_phrase}" != "X${_double_check}" ] ; then 
-       _double_check=
-       ${GLOBUS_SH_PRINTF-printf} "\nEnter PEM pass phrase:   "
-       read _pass_phrase
-     fi
-   done
-   echo
-   ${GLOBUS_SH_STTY-stty} echo
-
-   PASS_PHRASE="${_pass_phrase}"
-}
-
-
 ###########################################################
 # printPostData
 #
@@ -1014,11 +986,51 @@ EOF
 # MAIN
 ###########################################################
 
+#
+# readCommandLine will will set any CL_ values we need to check for
+# later.  we need this function to generate our $SERVICE variable.
+#
+
 readCommandLine "$@"
 
-# Set the actual file names
+#
+# based on the service (host/ldap), we choose our default output file
+# names.
+#
 
-#Make these absolute file names if thy are not
+if [ -n "${SERVICE}" ] ; then
+    case ${SERVICE} in
+        host)
+            DEF_CERT_FILE=${DEF_HOST_CERT_FILE}
+            DEF_KEY_FILE=${DEF_HOST_KEY_FILE}
+            DEF_REQUEST_FILE=${DEF_HOST_REQUEST_FILE}
+            DEF_REQUEST_ID_FILE=${DEF_HOST_REQUEST_ID_FILE}
+            ;;
+        ldap)
+            DEF_CERT_FILE=${DEF_LDAP_CERT_FILE}
+            DEF_KEY_FILE=${DEF_LDAP_KEY_FILE}
+            DEF_REQUEST_FILE=${DEF_LDAP_REQUEST_FILE}
+            DEF_REQUEST_ID_FILE=${DEF_LDAP_REQUEST_ID_FILE}
+            ;;
+        *)
+            DEF_CERT_FILE=${DEF_HOST_CERT_FILE}
+            DEF_KEY_FILE=${DEF_HOST_KEY_FILE}
+            DEF_REQUEST_FILE=${DEF_HOST_REQUEST_FILE}
+            DEF_REQUEST_ID_FILE=${DEF_HOST_REQUEST_ID_FILE}
+            ;;
+    esac
+else
+    DEF_CERT_FILE=${DEF_HOST_CERT_FILE}
+    DEF_KEY_FILE=${DEF_HOST_KEY_FILE}
+    DEF_REQUEST_FILE=${DEF_HOST_REQUEST_FILE}
+    DEF_REQUEST_ID_FILE=${DEF_HOST_REQUEST_ID_FILE}
+fi
+
+#
+# absolutePath()
+#   $1  a path- or filename.  if $1 is a filename, prepend the current
+#       working directory to it and exit.
+#
 
 absolutePath () {
    _file_name="$1"
@@ -1032,23 +1044,28 @@ absolutePath () {
     esac
 }
 
+#
+# Set the filename variables using parameter expansion.  If the user does
+# not supply commandline arguments that fill in the CL_ variables, then
+# use the default DEF_ variables in their place.
+#
 
+GLOBUS_DIR=${CL_GLOBUS_DIR:-${DEF_GLOBUS_DIR}}
+CERT_FILE=${CL_CERT_FILE:-${DEF_CERT_FILE}}
+KEY_FILE=${CL_KEY_FILE:-${DEF_KEY_FILE}}
+REQUEST_FILE=${CL_REQUEST_FILE:-${DEF_REQUEST_FILE}}
+REQUEST_ID_FILE=${CL_REQUEST_ID_FILE:-${DEF_REQUEST_ID_FILE}}
 
-GLOBUS_DIR="`eval echo      ${DEF_GLOBUS_DIR}`"
-CERT_FILE="`eval echo       ${DEF_CERT_FILE}`"
-KEY_FILE="`eval echo        ${DEF_KEY_FILE}`"
-REQUEST_FILE="`eval echo    ${DEF_REQUEST_FILE}`"
-REQUEST_ID_FILE="`eval echo ${DEF_REQUEST_ID_FILE}`"
-
+#
+# If any of the following variables are not absolute pathnames, then
+# prepend the current working directory and reassign.
+#
 
 GLOBUS_DIR="`absolutePath      ${GLOBUS_DIR}`"
 CERT_FILE="`absolutePath       ${CERT_FILE}`"
 KEY_FILE="`absolutePath        ${KEY_FILE}`"
 REQUEST_FILE="`absolutePath    ${REQUEST_FILE}`"
 REQUEST_ID_FILE="`absolutePath ${REQUEST_ID_FILE}`"
-
-
-
 
 checkGlobusSystem
 
