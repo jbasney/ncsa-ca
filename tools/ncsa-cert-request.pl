@@ -1307,14 +1307,14 @@ sub handleFailedPost
     return;
 }
 
-### postReq( $user_email, $user_phone, $request_id_file, $name )
+### postReq( $user_name, $user_email, $user_phone, $request_id_file )
 #
 # Post the req to the web server.
 #
 
 sub postReq
 {
-    my ($user_email, $user_phone, $request_id_file, $name) = @_;
+    my ($user_name, $user_email, $user_phone, $request_id_file) = @_;
 
     my ($server, $port, $enroll_page);
     my ($post_cmd_file, $post_out_file);
@@ -1337,7 +1337,7 @@ sub postReq
     $postdata .= "pkcs10Request=${req_content}";
     $postdata .= "%0D%0A&";
 
-    $postdata .= printPostData("csrRequestorName", "${name}");
+    $postdata .= printPostData("csrRequestorName", "${user_name}");
     $postdata .= "&";
 
     # Also send email to this address on certificate generation
@@ -1548,6 +1548,60 @@ sub validateUserPhoneString
     return 1;
 }
 
+### getUserName( )
+#
+# get the user's name for the user cert request
+#
+
+sub getUserName
+{
+    my ($userinput, $start, $valid) = ("", 1, 0);
+
+    #
+    # if the value is invalid, or was undefined, we loop over the user's input
+    #
+
+    while ( ! $valid )
+    {
+        printf("Enter your name (eg. John Smith): ");
+        $userinput = <STDIN>;
+
+        #
+        # do some formatting of the user input
+        #
+
+        $userinput =~ s:^[\s]+|[\s]+$|[\n]+$::g;
+
+        $valid = validateUserName($userinput, 0);
+
+        if ( $valid )
+        {
+            $name = $userinput;
+        }
+    }
+
+    return $name;
+}
+
+### validateUserName( $userinput )
+#
+# check $userinput to verify its integrity as a user name.  No transformations
+# should occur in this function.
+#
+
+sub validateUserName
+{
+    my ($userinput, $quiet) = @_;
+
+    if (length($userinput) == 0)
+    {
+        printf("Name is required!\n") unless $quiet;
+        return 0;
+    }
+
+    return 1;
+}
+
 ### checkResubmit( )
 #
 # check to see if we set to try resubmission
@@ -1611,6 +1665,109 @@ sub checkResubmit
     }
 
     # Everything checks out
+
+    $name = getCNFromRequest();
+
+    return $name;
+}
+
+### getCNFromRequest( )
+#
+# read the request file and pull out the CN part of the subject line
+#
+
+sub getCNFromRequest
+{
+    my ($parsing, @strs, $data, @caught, $mycn, $myname);
+
+    #
+    # get all of the data in the $request_file
+    #
+
+    $data = readFile($request_file);
+
+    #
+    # get everything between the 'Certificate Subject' and 'Begin Cert' lines
+    # (non-inclusive)
+    #
+
+    @strs = split(/\n/, $data);
+    $parsing = 0;
+    for my $s (@strs)
+    {
+        if ($s =~ /^-----BEGIN CERTIFICATE REQUEST-----/)
+        {
+            $parsing = 0;
+        }
+
+        if ($parsing)
+        {
+            push(@caught, $s);
+        }
+
+        if ($s =~ /^Certificate Subject/)
+        {
+            $parsing = 1;
+        }
+    }
+
+    $data = join('', @caught);
+    $data =~ s:^[\s]+|[\s]+$|[\n]+::g;
+
+    if (length($data) eq 0)
+    {
+        printf("Found improperly formatted or non-existant subject line in $request_file!\n");
+        exit;
+    }
+
+    #
+    # cleanup variables
+    #
+
+    @strs = ();
+    $parsing = undef;
+    @caught = ();
+
+    #
+    # get everything from the CN to the end of the string
+    #
+
+    @strs = split(/\//, $data);
+    $parsing = 0;
+    for my $s (@strs)
+    {
+        if ($s =~ /^CN/)
+        {
+            $parsing = 1;
+        }
+
+        if ($parsing)
+        {
+            push(@caught, $s);
+        }
+    }
+
+    $data = join('/', @caught);
+
+    if (length($data) eq 0)
+    {
+        printf("Found improperly formatted or non-existant subject line in $request_file!\n");
+        exit;
+    }
+
+    #
+    # get everything after the CN= portion of the subject
+    #
+
+    ($mycn, $myname) = split(/=/, $data);
+
+    if (length($myname) eq 0)
+    {
+        printf("Found improperly formatted or non-existant subject line in $request_file!\n");
+        exit;
+    }
+
+    return $myname;
 }
 
 ### printPreamble( )
@@ -1629,7 +1786,7 @@ sub printPreamble
     printf("\n");
     printf("${url_howto_submit}\n");
     printf("\n");
-    printf("Press return to continue\n");
+    printf("Press return to continue.\n");
 
     $foo = <STDIN>;
 }
@@ -1729,22 +1886,49 @@ sub main
     if ( ! $resubmit )
     {
         checkCerts($cert_file, $key_file, $request_file);
+
         printPreamble();
+
         $name = getCN($type, $name);
 
-        # Additional stuff for ncsa-cert-req
+        #
+        # perform some additional data gathering before we create our certificates
+        #
+
+        #
+        # we should figure out if the csrRequestorName variable sent in the post to the server
+        # is looking for the user's name, or the common name of the certificate.  if it's the
+        # former, then we should uncomment the next piece of code and call postReq() accordingly.
+        #
+        # if ($type eq "user")
+        # {
+        #     $user_name = $name;
+        # }
+        # else
+        # {
+        #     $user_name = getUserName();
+        # }
+
+        $user_name = $name;
         $user_email = getUserEmail();
         $user_phone = getUserPhone();
-        printf("\n\n");
+        printf("\n");
 
         createCerts($type, $name);
     }
     else
     {
-        checkResubmit();
+        $name = checkResubmit();
+
+        printPreamble();
+
+        $user_name = $name;
+        $user_email = getUserEmail();
+        $user_phone = getUserPhone();
+        printf("\n");
     }
 
-    postReq($user_email, $user_phone, $request_id_file, $name);
+    postReq($user_name, $user_email, $user_phone, $request_id_file);
 }
 
 __END__
