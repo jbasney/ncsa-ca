@@ -145,7 +145,7 @@ CERTREQ="${bindir}/grid-cert-request" # note that this variable is not being use
                                       #
 
 CONTACT_EMAIL_ADDR="consult@alliance.paci.org"
-CONTACT_URL="http://www.ncsa.uiuc.edu/SCD/Alliance/GridSecurity/"
+CONTACT_URL="http://www.ncsa.uiuc.edu/UserInfo/Alliance/GridSecurity/"
 USER_AGENT="ncsa-cert-request/$VERSION"
 
 cleanup () {
@@ -699,7 +699,7 @@ sent to the Alliance Certificate Authority (CA).
 You must now follow the directions on the following web page in order
 to complete the request process:
 
-http://www.ncsa.uiuc.edu/SCD/Alliance/GridSecurity/Certificates/Go2.html#fax    
+http://www.ncsa.uiuc.edu/UserInfo/Alliance/GridSecurity/Certificates/Go2.html#fax
  
 If you have any questions or concerns please contact Alliance consulting
 at ${CONTACT_EMAIL_ADDR}
@@ -979,7 +979,7 @@ Certificate Authoriy.
 
 Before preceeding make sure you have read the directions at:
 
-http://www.ncsa.uiuc.edu//SCD/Alliance/GridSecurity/Certificates/Go.html        
+http://www.ncsa.uiuc.edu/UserInfo/Alliance/GridSecurity/Certificates/Go.html
 
 Press return to continue
 EOF
@@ -1075,10 +1075,3 @@ postReq
 trap cleanup 0
 
 exit ${RET}
-
-
-
-
-
-
-

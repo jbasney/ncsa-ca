@@ -109,7 +109,7 @@ DEF_REQUEST_ID_FILE='${secconfdir}/ncsa_request_id'
 
 
 CONTACT_EMAIL_ADDR="consult@alliance.paci.org"
-CONTACT_URL="http://www.ncsa.uiuc.edu/SCD/Alliance/GridSecurity/"
+CONTACT_URL="http://www.ncsa.uiuc.edu/UserInfo/Alliance/GridSecurity/"
 USER_AGENT="ncsa-cert-request/$VERSION"
 
 NOCHECK="FALSE"
@@ -294,9 +294,9 @@ Please include this file with any correspondence
 you have regarding this problem.
 
 If you want assistance please email ${CONTACT_EMAIL_ADDR}
-or visit
+or visit:
 
-http://www.ncsa.uiuc.edu/SCD/Alliance/GridSecurity/Support/                     
+http://www.ncsa.uiuc.edu/UserInfo/Alliance/GridSecurity/Support/
 
 EOF
 }
@@ -325,7 +325,7 @@ You have successfully retrieved your Alliance Certificate.
 Please see the following url for information on how to get
 started using your certificate:
 
-http://www.ncsa.uiuc.edu/SCD/Alliance/GridSecurity/Certificates/Go2.html#test   
+http://www.ncsa.uiuc.edu/UserInfo/Alliance/GridSecurity/Certificates/Go2.html#test
 
 EOF
 }
