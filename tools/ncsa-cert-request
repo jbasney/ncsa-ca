@@ -29,7 +29,8 @@ ${short_usage}
   Options:
     -cn <name>         : Common name of the user
     -gatekeeper <name> : Create certificate for a gatekeeper named <name>
-    -host <name>       : Create certificate for a host named <name>
+    -host <name>       : Create host certificate for a host named <name>
+    -ldap <name>       : Create ldap certificate for a host named <name>
     -dir <dir_name>    : User certificate directory [ '$HOME/.globus' ]
     -cert <file>       : File name of the certificate
     -key <file>        : File name of the user key
@@ -124,10 +125,18 @@ REQ_HEAD=${secconfdir}/req_header.$$
 
 # DEFault Generated Files
 DEF_GLOBUS_DIR="${HOME}/.globus"            # as with ncsa-cert-retrieve, do we need to keep this entry?
-DEF_CERT_FILE='${secconfdir}/globus-gatekeeper.cert'
-DEF_KEY_FILE='${secconfdir}/globus-gatekeeper.key'
-DEF_REQUEST_FILE='${secconfdir}/globus-gatekeeper.req'
-DEF_REQUEST_ID_FILE='${secconfdir}/ncsa_request_id'
+DEF_CERT_FILE="${secconfdir}/hostcert.pem"
+DEF_KEY_FILE="${secconfdir}/hostkey.pem"
+DEF_REQUEST_FILE="${secconfdir}/hostcert_req.pem"
+DEF_REQUEST_ID_FILE="${secconfdir}/ncsa_request_id"
+
+#
+# these need to be added into the code below somewhere - cmp
+#
+DEF_LDAP_CERT_FILE="${secconfdir}/ldapservercert.pem"
+DEF_LDAP_KEY_FILE="${secconfdir}/ldapserverkey.pem"
+DEF_LDAP_REQUEST_FILE="${secconfdir}/ldapservercert_req.pem"
+DEF_LDAP_REQUEST_ID_FILE="${secconfdir}/ldap_request_id"
 
 
 # Info sent with the certificate
@@ -194,12 +203,17 @@ readCommandLine () {
          shift ; shift
          ;;
 
-
      -host)
          SERVICE="host"
 	 SERVICE_HOST="$2"
          NO_DES="-nodes"
+         shift ; shift
+         ;;
 
+     -ldap)
+         SERVICE="ldap"
+         SERVICE_HOST="$2"
+         NO_DES="-nodes"
          shift ; shift
          ;;
 
@@ -498,7 +512,17 @@ getHostCN () {
 	esac
       fi
       
-      _common_name="host/${SERVICE_HOST}"
+      case ${SERVICE} in
+          host)
+              _common_name="host/${SERVICE_HOST}"
+              ;;
+          ldap)
+              _common_name="ldap/${SERVICE_HOST}"
+              ;;
+          *)
+              _common_name="host/${SERVICE_HOST}"
+              ;;
+       esac
    fi
 
    echo ${_common_name}
@@ -1048,15 +1072,14 @@ else
   if [ -z "${SERVICE}" ] ; then
     COMMON_NAME="`getUserCN`"
   else
-    if [ "${SERVICE}" = "host" ] ; then
-      COMMON_NAME="`getHostCN`"
-
-      # Check for abort
-      if [ -z "${COMMON_NAME}" ]; then
-	exit 1
-      fi
-    fi
+    COMMON_NAME="`getHostCN`"
   fi
+
+  # Check for abort
+  if [ -z "${COMMON_NAME}" ]; then
+    exit 1
+  fi
+fi
 
   # Additional stuff for ncsa-cert-req
   USER_EMAIL=`getUserEmail`
@@ -1068,7 +1091,6 @@ else
   RET=$?
 
   COMMON_NAME="`echo ${SUBJECT} | ${GLOBUS_SH_SED-sed} -e 's|^.*/CN=||'`"
-fi
 
 postReq
 
