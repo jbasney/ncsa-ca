@@ -14,7 +14,7 @@ use Pod::Usage;
 use Data::Dumper;
 use Cwd;
 
-$version="0.4.2";
+$version="0.4.5";
 $progname = $0;
 $progname =~ s|.*/||g;
 
@@ -29,11 +29,10 @@ if (!defined($gpath)) {
 
 $secconfdir="/etc/grid-security";
 
-#SSL related needs
+# SSL related needs
 $ssl_exec = "$gpath/bin/openssl";
 
 # $ca_config is $gpath/share/gsi_ncsa_ca_tools/ncsa-ca.conf
-# so $datadir should resolve to the share directory in $gpath
 $ca_config = "$gpath/share/gsi_ncsa_ca_tools/ncsa-ca.conf";
 
 $default_cert_file = "cert.pem";
@@ -51,14 +50,9 @@ $default_dir = "$userhome/.certs";
 #$def_request_file = "req.pem";
 #$def_request_id_file = "request_id";
 
-#$def_ldap_cert_file = "ldapservercert.pem";
-#$def_ldap_key_file = "ldapserverkey.pem";
-#$def_ldap_request_file = "ldapservercert_req.pem";
-#$def_ldap_request_id_file = "ldap_request_id";
-
 $contact_email_addr = "consult\@alliance.paci.org";
 $contact_url = "http://www.ncsa.uiuc.edu/UserInfo/Alliance/GridSecurity/";
-$user_agent="ncsa-cert-request/$version";
+$user_agent="ncsa-cert-retrieve/$version";
 
 # By default, nocheck is 1, and if specified on the cmd line can be set to
 # 0.  if nocheck is 1, then checkState is run later on -- this is a simple
@@ -128,13 +122,14 @@ exit;
 # if ($nocheck) { print "i will run checkState here eventually.\n"; }
 
 # If no command line args specify cert_file and/or key_file,
-# set them to undef, so that we can just pass the empty guys 
+# set them to undef, so that we can just pass the empty guys
 # to preparePathsHash and determinePaths
 if (! $cl_cert_file) { $cl_cert_file = undef; }
 if (! $cl_key_file) { $cl_key_file = undef; }
 
 # Figure out if we are using command line or default files and/or
-# directories.  All these values are stored in the hash $files
+# directories.  These values (the ones we're using) are stored in
+# the hash $files
 
 $cl_files = preparePathsHash($cl_dir, $cl_cert_file, $cl_key_file);
 $default_files = preparePathsHash($default_dir, $default_cert_file, $default_key_file);
@@ -150,7 +145,21 @@ checkGlobusSystem();
 
 getCertificate();
 
+$def_dir = $default_files->{'dir'};
+if ($cert_file =~ /^$def_dir/) {
+  print "
+\n\tPLEASE NOTE:\n
+You seem to have chosen to have your certificate placed
+in the default directory, $def_dir
+
+You will probably want to move this certificate to its
+more appropriate permanent location, so that Globus can
+use it properly.\n";
+}
+
 exit;
+
+##### END MAIN #####
 
 ##########################
 ##########################
@@ -347,18 +356,17 @@ sub checkState {
   }
   else {
 
-    # This is a good candidate of having a file of these messages be
-    # separate and outside of this script.  Then we can just go get
-    # the message, and print it.  This also saves people from editing
-    # this script to change the message -- that way there are no
-    # accidental breakings of this script when people put in stray
-    # characters, delete the wrong line, etc.
+    # In some future version of this script, It would be nice if
+    # long error messages like this could be put in a separate file,
+    # rather than living inside the script.  It would make editing
+    # them easier, w/o worry of accidentally breaking the script, due
+    # to stray characters, misplaced quotes, etc.
 
     my $error_message =
 "The above errors indicate that you are not prepared to
 download a certificate.
 
-Possibly you have not submited a certificate request with
+Possibly you have not submitted a certificate request with
 ncsa-cert-request?
 
 Did you specify a non-standard directory with -dir? In which
@@ -409,29 +417,6 @@ or visit:
 $support_url";
 
   print "$error_message\n";
-}
-
-# globusArgsShortUsage
-sub globusArgsShortUsage {
-  print "Syntax: $short_usage\n";
-  print "\n";
-  print "Use -help to display full usage.\n";
-}
-
-# globusArgsOptionError
-sub globusArgsOptionError {
-  my ($option, $error) = @_;
-
-  print "Error, argument $option : $error\n";
-  globusArgsShortUsage();
-  die "\n";
-}
-
-# globusArgsUnrecognizedOption
-sub globusArgsUnrecognizedOption {
-  my ($option) = shift;
-
-  globusArgsOptionError($option, "unrecognized option");
 }
 
 #########################################
@@ -627,7 +612,7 @@ sub determinePaths {
 
   $files = {};
 
-  # determine dir
+  # Determine dir
 
   $tmp_dir = $cl_files->{'dir'};
   $tmp_dir =~ s:^[\s]+|[\s]+$::g;
@@ -643,26 +628,21 @@ sub determinePaths {
     exit;
   }
 
-  if ( ! grep(/^\//, $dir) ) {
-    # make $tmp_dir an absolute path
-    $dir = cwd() . "/" . $dir;
-  }
+  # Make sure that $dir is an absolute pathname
+  ($dir) = absolutePath($dir);
 
-  # create if it doesn't exist
+  # Create $dir if it doesn't exist
   if ( ! -e $dir ) {
     makeDir($dir);
   }
 
-  #
-  # divine the path to the certificate file
-  #
+  # Divine the path to the certificate file
 
   $tmp = determineFile($default_files->{'cert_file'}, $cl_files->{'cert_file'}, "certificate file");
   $files->{'cert_file'} = $dir . "/" . $tmp;
 
-  #
-  # divine the path to the key file
-  #
+
+  # Divine the path to the key file
 
   $tmp = determineFile($default_files->{'key_file'}, $cl_files->{'key_file'}, "key file");
   $files->{'key_file'} = $dir . "/" . $tmp;
@@ -672,18 +652,16 @@ sub determinePaths {
 
 ### determineFile( $default, $cl, $name )
 #
-# choose between the default- and the commandline-specified file.
-# error out if we can't write to our choice.
+# Choose between the default- and the commandline-specified file.
+# Error out if we can't write to our choice.
 #
 
 sub determineFile {
   my ($default, $cl, $name) = @_;
   my ($tmp_file);
 
-  #
-  # if we were passed a commandline choice,
+  # If we were passed a commandline choice,
   # make sure that it's not just whitespace
-  #
 
   $tmp_file = $cl;
   if ( defined($tmp_file) ) {
@@ -698,18 +676,14 @@ sub determineFile {
     exit;
   }
 
-  #
-  # check that the chosen file doesn't have any slashes in it (isn't a path)
-  #
+  # Check that the chosen file doesn't have any slashes in it (isn't a path)
 
   if ( grep(/\//, $tmp_file) ) {
     printf("$name can only be a filename!\n");
     exit;
   }
 
-  #
-  # check that, if our choice exists, we can write to it
-  #
+  # Check that, if our choice exists, we can write to it
 
   if ( ( -e $tmp_file ) && ( ! -w $tmp_file ) ) {
     printf("can't write to $tmp_file");
@@ -721,7 +695,7 @@ sub determineFile {
 
 ### makeDir( $path )
 #
-# creates the directory structure in $path if it doesn't already exist
+# Creates the directory structure in $path if it doesn't already exist
 #
 
 sub makeDir {
@@ -729,16 +703,14 @@ sub makeDir {
   my (@dirs, $curr_dir);
 
   if ( ! -e $path ) {
-    #
-    # break the directories apart
-    #
+
+    # Break the directories apart
 
     @dirs = split(/\//, $path);
 
     for my $d (@dirs) {
-      #
-      # if the current directory is non-null
-      #
+
+      # If the current directory is non-null
 
       if ( length($d) gt 0 ) {
 	$curr_dir = $curr_dir . "/" . $d;
@@ -769,11 +741,15 @@ __END__
 
 =head1 NAME
 
-ncsa-cert-retrieve - Retrieve a certificate from the NCSA certificate authority
+ncsa-cert-retrieve - Retrieve a certificate from the NCSA (Alliance) CA
 
 =head1 SYNOPSIS
 
 ncsa-cert-retrieve [options] -id <id_number>
+
+   Help-Related Options:
+      --help      brief help message
+      --man       full documentation
 
 =head1 OPTIONS
 
@@ -781,9 +757,15 @@ ncsa-cert-retrieve [options] -id <id_number>
 
 =item B<--dir=<dir_name>>
 
-=item B<--cert=<file>>
+User-specified certificate directory. (eg. $HOME/.certs or /etc/grid-security)
 
-=item B<--key=<file>>
+=item B<--cert=<filename>>
+
+File name of the certificate.
+
+=item B<--key=<filename>>
+
+File name of the user key.
 
 =cut
 
@@ -800,11 +782,11 @@ ncsa-cert-retrieve [options] -id <id_number>
 
 =item B<--help>
 
-Prints a brief help message and exits.
+Prints a brief help message and exit.
 
 =item B<--man>
 
-Prints the manual page and exits.
+Prints the manual page and exit.
 
 
 =back
@@ -820,7 +802,7 @@ You can specify to B<ncsa-cert-retrieve> the name of the B<certificate file>, B<
 
       key:         key.pem
 
-      directory:   ~/.certs
+      directory:   $HOME/.certs
 
 If using the default directory, after you successfully retrieve your certificate, you must move the certificate to the appropriate place on your system, so that it may be used by Globus.
 
