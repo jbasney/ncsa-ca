@@ -5,9 +5,9 @@
 # Generate a certificate request which can be sent to the NCSA CA, who may
 # subsequently sign it.  This script uses ncsa-ca.conf.
 #
-# When generating a certificate request for some types of certs (currently
-# gatekeeper, host, and ldap), the -nopw option is simulated.  This
-# guarantees that the key is not protected by a passphrase.
+# When generating a certificate request for cert types gatekeeper, host,
+# and ldap, the -nopw option is simulated.  This guarantees that the key
+# is not protected by a passphrase.
 #
 
 use Getopt::Long;
@@ -16,7 +16,7 @@ use Cwd;
 use Data::Dumper;
 
 #
-# the upper portion of this file has a lot of global variable defines.
+# the upper portion of this file consists of global variable defines.
 #
 
 #
@@ -49,8 +49,9 @@ my (
 # default values go here
 #
 
-#$man = 0;
-#$help = 0;
+$type = "user";
+$man = 0;
+$help = 0;
 
 #
 # for our authentication with the ncsa ca, we're using openssl
@@ -61,9 +62,9 @@ my $secure_tmpdir = "/tmp";
 my $ssl_exec = "$gpath/bin/openssl";
 my $ca_config = "$gpath/share/gsi_ncsa_ca_tools/ncsa-ca.conf";
 
-my $req_input = "$secconfdir/req_input.$$";
-my $req_output = "$secconddir/req_output.$$";
-my $req_head = "$secconfdir/req_header.$$";
+my $req_input = "$secure_tmpdir/req_input.$$";
+my $req_output = "$secure_tmpdir/req_output.$$";
+my $req_head = "$secure_tmpdir/req_header.$$";
 
 #
 # default pathnames to various directories and files
@@ -75,7 +76,7 @@ if ( !defined($userhome) && !defined($cl_dir) )
     die("HOME needs to be set before running this script without the --dir flag\n");
 }
 
-$default_dir = "$userhome/.certs";
+$default_dir = "$userhome/.globus";
 $default_cert_file = "cert.pem";
 $default_key_file = "key.pem";
 $default_request_file = "req.pem";
@@ -106,7 +107,8 @@ my $url_howto_submit = "http://www.ncsa.uiuc.edu/UserInfo/Alliance/GridSecurity/
 my $url_howto_complete = "http://www.ncsa.uiuc.edu/UserInfo/Alliance/GridSecurity/Certificates/Go2.html\#fax";
 
 #
-# argument specification
+# argument specification.  we offload some processing work from later functions
+# to verify correct args by using anon subs in various places.
 #
 
 GetOptions( 'name=s' =>
@@ -129,6 +131,12 @@ GetOptions( 'name=s' =>
                     {
                         $nopw = 1;
                         $no_des = "-nodes";
+                    }
+
+                    if ( ( $type ne "gatekeeper" ) && ( $type ne "host" ) && ( $type ne "ldap" ) && ( $type ne "user" ) )
+                    {
+                        printf("I don't know anything about a certificate request of type '$type'!\n");
+                        exit;
                     }
                 },
             'dir=s' => \$cl_dir,
@@ -166,13 +174,19 @@ if ($version)
 # if $help is specified, print the synopsis, options, and/or arguments sections
 #
 
-pod2usage(1) if $help;
+if ($help)
+{
+    pod2usage(1);
+}
 
 #
 # if $man is specified, exit with value 0 and print the entire pod document
 #
 
-pod2usage('-exitval' => 0, '-verbose' => 2) if $man;
+if ($man)
+{
+    pod2usage('-exitval' => 0, '-verbose' => 2);
+}
 
 main();
 
@@ -277,20 +291,23 @@ sub cleanup
 #-  done
 #- }
 
-### preparePathsHash( $dir, $cert_file, $key_file, $request_file )
+### preparePathsHash( $dir, $cert_file, $key_file, $request_file, $request_id_file )
 #
 # create a hash based on the arguments passed to the subroutine
+#
+# WORKSFORME (cphillip)
 #
 
 sub preparePathsHash
 {
-    my ($dir, $cert_file, $key_file, $request_file ) = @_;
+    my ($dir, $cert_file, $key_file, $request_file, $request_id_file ) = @_;
     my $hash = {};
 
     $hash->{'dir'} = $dir;
     $hash->{'cert_file'} = $cert_file;
     $hash->{'key_file'} = $key_file;
     $hash->{'request_file'} = $request_file;
+    $hash->{'request_id_file'} = $request_id_file;
 
     return $hash;
 }
@@ -300,6 +317,8 @@ sub preparePathsHash
 # based on the hashes we're given, return a hash which contains the correct set
 # of files (possibly containing a mixture of default- and commandline-specified
 # files)
+#
+# WORKSFORME (cphillip)
 #
 
 sub determinePaths
@@ -313,7 +332,6 @@ sub determinePaths
     # determine dir
 
     $tmp_dir = $cl_files->{'dir'};
-    $tmp_dir =~ s:^[\s]+|[\s]+$::g;
     if ( defined($tmp_dir) )
     {
         $dir = $tmp_dir;
@@ -323,6 +341,7 @@ sub determinePaths
         $dir = $default_files->{'dir'};
     }
 
+    $dir =~ s:^[\s]+|[\s]+$::g;
     if ( length($dir) == 0 )
     {
         printf("no directory specified!\n");
@@ -332,36 +351,40 @@ sub determinePaths
     if ( ! grep(/^\//, $dir) )
     {
         # make $tmp_dir an absolute path
-        $dir = cwd() . "/" . $dir;
+        $dir = absolutePath($dir);
     }
 
-    # create if it doesn't exist
+    # create $dir if it doesn't exist
 
-    if ( ! -e $dir )
-    {
-        makeDir($dir);
-    }
+    makeDir($dir);
 
     #
-    # divine the path to the certificate file
+    # derive the path to the certificate file
     #
 
     $tmp = determineFile($default_files->{'cert_file'}, $cl_files->{'cert_file'}, "certificate file");
     $files->{'cert_file'} = $dir . "/" . $tmp;
 
     #
-    # divine the path to the key file
+    # derive the path to the key file
     #
 
     $tmp = determineFile($default_files->{'key_file'}, $cl_files->{'key_file'}, "key file");
     $files->{'key_file'} = $dir . "/" . $tmp;
 
     #
-    # divine the path to the certificate file
+    # derive the path to the request file
     #
 
     $tmp = determineFile($default_files->{'request_file'}, $cl_files->{'request_file'}, "request file");
     $files->{'request_file'} = $dir . "/" . $tmp;
+
+    #
+    # derive the path to the request file
+    #
+
+    $tmp = determineFile($default_files->{'request_id_file'}, $cl_files->{'request_id_file'}, "request id file");
+    $files->{'request_id_file'} = $dir . "/" . $tmp;
 
     return $files;
 }
@@ -370,6 +393,8 @@ sub determinePaths
 #
 # choose between the default- and the commandline-specified file.  error out if we
 # can't write to our choice.
+#
+# WORKSFORME (cphillip)
 #
 
 sub determineFile
@@ -384,14 +409,15 @@ sub determineFile
     $tmp_file = $cl;
     if ( defined($tmp_file) )
     {
-        $tmp_file =~ s:^[\s]+|[\s]+$::g;
+        $file = $tmp_file;
     }
     else
     {
-        $tmp_file = $default;
+        $file = $default;
     }
 
-    if ( length($tmp_file) == 0 )
+    $file =~ s:^[\s]+|[\s]+$::g;
+    if ( length($file) == 0 )
     {
         printf("no $name specified!\n");
         exit;
@@ -401,7 +427,7 @@ sub determineFile
     # check that the chosen file doesn't have any slashes in it (isn't a path)
     #
 
-    if ( grep(/\//, $tmp_file) )
+    if ( grep(/\//, $file) )
     {
         printf("$name can only be a filename!\n");
         exit;
@@ -411,24 +437,32 @@ sub determineFile
     # check that, if our choice exists, we can write to it
     #
 
-    if ( ( -e $tmp_file ) && ( ! -w $tmp_file ) )
+    if ( ( -e $file ) && ( ! -w $file ) )
     {
-        printf("can't write to $tmp_file");
+        printf("can't write to $file");
         exit;
     }
 
-    return $tmp_file;
+    return $file;
 }
 
 ### makeDir( $path )
 #
 # creates the directory structure in $path if it doesn't already exist
 #
+# WORKSFORME (cphillip)
+#
 
 sub makeDir
 {
     my ($path) = @_;
     my (@dirs, $curr_dir);
+
+    if ( ( -e $path ) && ( ! -d $path ) )
+    {
+        printf("$path exists and isn't a directory!\n");
+        exit;
+    }
 
     if ( ! -e $path )
     {
@@ -447,6 +481,12 @@ sub makeDir
             if ( length($d) gt 0 )
             {
                 $curr_dir = $curr_dir . "/" . $d;
+
+                if ( ( -e $curr_dir ) && ( ! -d $curr_dir ) )
+                {
+                    printf("$curr_dir exists and isn't a directory!\n");
+                    exit;
+                }
 
                 if ( ! -e $curr_dir )
                 {
@@ -728,6 +768,8 @@ sub checkCerts
 #
 # get the name for the cert request based on $type
 #
+# WORKSFORME (cphillip)
+#
 
 sub getCN
 {
@@ -755,7 +797,7 @@ sub getCN
     }
     else
     {
-        die("Do not know how to get CN for type '$type'");
+        die("I don't know how to get the CN for a certificate request of type '$type'!");
     }
 
     return $str;
@@ -764,6 +806,8 @@ sub getCN
 ### getUserCN( $name )
 #
 # get the common name for the user cert request
+#
+# WORKSFORME (cphillip)
 #
 
 sub getUserCN
@@ -815,6 +859,8 @@ sub getUserCN
 # check $userinput to verify its integrity as a user CN.  No transformations should
 # occur in this function.
 #
+# WORKSFORME (cphillip)
+#
 
 sub validateUserString
 {
@@ -833,6 +879,8 @@ sub validateUserString
 #
 # check $userinput to verify its integrity as a host CN.  No transformations should
 # occur in this function.
+#
+# WORKSFORME (cphillip)
 #
 
 sub validateHostString
@@ -894,6 +942,8 @@ sub validateHostString
 #
 # Query the user with a boolean string
 #
+# WORKSFORME (cphillip)
+#
 
 sub query_user_boolean
 {
@@ -946,6 +996,8 @@ sub query_user_boolean
 #
 # get the host name for the host cert request
 #
+# WORKSFORME (cphillip)
+#
 
 sub getHostCN
 {
@@ -997,6 +1049,8 @@ sub getHostCN
 #
 # get the host name for the ldap cert request
 #
+# WORKSFORME (cphillip)
+#
 
 sub getLdapCN
 {
@@ -1044,24 +1098,24 @@ sub getLdapCN
     return $name;
 }
 
-### createCerts( )
+### createCerts( $type )
 #
 # use $ssl_exec program to create the key and certificate files on a system
+#
+# WORKSFORME (cphillip)
 #
 
 sub createCerts
 {
-    my ($umsk);
+    my ($type) = @_;
+    my ($umsk, $tmpfile);
 
-    if (length($type) == 0)
-    {
-        printf("A certificate request and private key is being created.\n");
-        printf("You will be asked to enter a PEM pass phrase.\n");
-        printf("This pass phrase is akin to your account password,\n");
-        printf("and is used to protect your key file.\n");
-        printf("If you forget your pass phrase, you will need to\n");
-        printf("obtain a new certificate.\n");
-    }
+    printf("A certificate request and private key is being created.\n");
+    printf("You will be asked to enter a PEM pass phrase.\n");
+    printf("This pass phrase is akin to your account password,\n");
+    printf("and is used to protect your key file.\n");
+    printf("If you forget your pass phrase, you will need to\n");
+    printf("obtain a new certificate.\n");
 
     #
     # create the certificate file
@@ -1077,15 +1131,14 @@ sub createCerts
  
     if ($interactive)
     {
-        # REM
-        # action("${ssl_exec} req -new -keyout ${key_file} -out ${req_output} -config ${ca_config} ${no_des}");
+        action("${ssl_exec} req -new -keyout ${key_file} -out ${req_output} -config ${ca_config} ${no_des}");
     }
     else
     {
         $tmpstring = createInputFileString( $name, $ca_config );
         writeFile($req_input, $tmpstring);
-        # REM
-        # action("${ssl_exec} req -new -keyout ${key_file} -out ${req_output} -config ${ca_config} ${no_des} < ${req_input}");
+        action("${ssl_exec} req -new -keyout ${key_file} -out ${req_output} -config ${ca_config} ${no_des} < ${req_input}");
+        printf("\n");
  
         cleanup($req_input);
     }
@@ -1095,7 +1148,8 @@ sub createCerts
     #-        ${GLOBUS_SH_GREP-grep} 'Subject:' | ${GLOBUS_SH_AWK-awk} -F: '{print $2}' |\
     #-        ${GLOBUS_SH_CUT-cut} -c2- `"
 
-    action("${ssl_exec} req -text -noout < ${req_output} 2>&1 > ${tmpfile}");
+    $tmpfile = "/tmp/tmp.$$";
+    action("${ssl_exec} req -text -noout < ${req_output} > ${tmpfile}");
     $data = readFile($tmpfile);
 
     @lines = split(/\n/, $data);
@@ -1136,7 +1190,7 @@ sub createCerts
     #
 
     action("cat $req_head $req_output > $request_file");
-    cleanup($req_head, $req_output);
+    cleanup($req_head, $req_output, $tmpfile);
 
     umask($umsk);
 }
@@ -1144,6 +1198,8 @@ sub createCerts
 ### printPostData( $string )
 #
 # returns the concatenation of $var and a url-encoded $value
+#
+# WORKSFORME (cphillip)
 #
 
 sub printPostData
@@ -1164,12 +1220,12 @@ sub printPostData
     # <http://www.w3.org/International/O-URL-code.html>
     #
 
-    $value =~ s/%/%25/g;
-    $value =~ s/@/%40/g;
-    $value =~ s/&/%26/g;
-    $value =~ s/ /+/g;
-
     $str = "$var=$value";
+
+    $str =~ s/%/%25/g;
+    $str =~ s/@/%40/g;
+    $str =~ s/&/%26/g;
+    $str =~ s/ /+/g;
 
     return $str;
 }
@@ -1178,6 +1234,8 @@ sub printPostData
 #
 # given the name of a certreq file, process and print
 # contents suitabily encoded for inclusion in POST data.
+#
+# WORKSFORME (cphillip)
 #
 
 sub processReqFile
@@ -1244,14 +1302,16 @@ sub processReqFile
     # transmit, we need to prepend and append $start_string and $end_string
     #
 
-    $formatted = $start_string.$contents.$end_string;
+    $formatted = $start_string . $contents . $end_string;
 
-    return ($formatted);
+    return $formatted;
 }
 
 ### handleSuccessfulPost( $post_out_file )
 #
 # get the request id number from the output file generated via the post
+#
+# WORKSFORME (cphillip)
 #
 
 sub handleSuccessfulPost
@@ -1260,7 +1320,7 @@ sub handleSuccessfulPost
     my ($data, $request_id);
     my (@strs, @splitdata);
 
-    readFile($post_out_file);
+    $data = readFile($post_out_file);
 
     @strs = split(/\n/, $data);
     for my $s (@strs)
@@ -1282,7 +1342,7 @@ sub handleSuccessfulPost
     printf("${url_howto_complete}\n");
     printf("\n");
     printf("If you have any questions or concerns please contact Alliance consulting\n");
-    printf("at ${contact_email_addr}\n");
+    printf("at ${contact_email_addr}.\n");
     printf("\n");
     printf("You request id is ${request_id}. Please use it in any correspondence\n");
     printf("with Alliance consulting.\n");
@@ -1293,6 +1353,8 @@ sub handleSuccessfulPost
 ### handleFailedPost( $post_out_file )
 #
 # attempt to diagnose the error which occurred during the post to the CA
+#
+# WORKSFORME (cphillip)
 #
 
 sub handleFailedPost
@@ -1335,7 +1397,7 @@ sub handleFailedPost
 
     if ( length($server_error) gt 0 )
     {
-        printf("A server error occurred: ${server_error}\n");
+        printf("A server error occurred: ${server_error}\n\n");
     }
 
     printf("An error occurred attempting to post your certificate request\n");
@@ -1349,15 +1411,17 @@ sub handleFailedPost
     return;
 }
 
-### postReq( )
+### postReq( $user_email, $user_phone )
 #
 # Post the req to the web server.
 #
 
 sub postReq
 {
+    my ($user_email, $user_phone) = @_;
+
     my ($server, $port, $enroll_page);
-    my ($post_data_file, $post_cmd_file, $post_out_file);
+    my ($post_cmd_file, $post_out_file);
     my ($extra_email);
 
     # https://ca.ncsa.edu/NCSAUserGridCertEnroll.html
@@ -1366,15 +1430,12 @@ sub postReq
     $enroll_page = "/enrollment";
 
     # Temporary files
-    $post_data_file = "${secure_tmpdir}/$program_name.$$.post_data";
     $post_cmd_file = "${secure_tmpdir}/$program_name.$$.post_cmd";
     $post_out_file = "${secure_tmpdir}/$program_name.$$.post_out";
 
     $req_content = processReqFile($request_file);
 
     $comment = "host=$host";
-
-    cleanup($post_data_file);
 
     # Build the post data
     $postdata .= "pkcs10Request=${req_content}";
@@ -1424,10 +1485,16 @@ sub postReq
     $postdata .= printPostData("submit", "Submit");
     $postdata .= "\n\n";
 
+    #
     # Get number of bytes we are posting
-    $content_len = (stat($post_data_file))[7];
-		
+    #
+
+    $content_len = length($postdata);
+
+    #
     # Now build the actual text for sending to the web server
+    #
+
     $postcmd .= "POST ${enroll_page} HTTP/1.0\n";
     $postcmd .= "Content-type: application/x-www-form-urlencoded\n";
     $postcmd .= "Content-length: ${content_len}\n";
@@ -1435,10 +1502,8 @@ sub postReq
     $postcmd .= "\n";
     $postcmd .= $postdata;
 
-    cleanup($post_data_file);
-
     open(OUTPUT, ">$post_cmd_file");
-    print OUTPUT $post_cmd_file;
+    print OUTPUT $postcmd;
     close(OUTPUT);
 
     #
@@ -1446,20 +1511,19 @@ sub postReq
     #
 
     #- (cat ${POST_CMD_FILE}; sleep 10) | ${SSL_EXEC} s_client -quiet -connect ${SERVER}:${PORT} > ${POST_OUT_FILE} 2>&1
-    # REM
-    # action("(cat $post_cmd; sleep 10) | ${ssl_exec} s_client -quiet -connect ${server}:${port} > ${post_out_file}");
+    action("(cat $post_cmd_file; sleep 10) | ${ssl_exec} s_client -quiet -connect ${server}:${port} > ${post_out_file}");
 
     $data = readFile($post_out_file);
 
     if ( grep(/CMS Request Pending/, $data) )
     {
-        handleSuccessfulPost(${post_out_file});
+        handleSuccessfulPost($post_out_file);
 
-        cleanup(${post_out_file});
+        cleanup($post_out_file);
     }
     else
     {
-        handleFailedPost(${post_out_file});
+        handleFailedPost($post_out_file);
 
         #
         # Append the POST_CMD_FILE to the POST_OUT_FILE and then leave it so
@@ -1469,12 +1533,14 @@ sub postReq
         action("cat ${post_cmd_file} >> ${post_out_file}");
     }
 
-    cleanup(${post_cmd_file});
+    cleanup($post_cmd_file);
 }
 
 ### getUserEmail( )
 #
 # get the email address for the user cert request
+#
+# WORKSFORME (cphillip)
 #
 
 sub getUserEmail
@@ -1512,6 +1578,8 @@ sub getUserEmail
 # check $userinput to verify its integrity as a user email.  No transformations should
 # occur within this function.
 #
+# WORKSFORME (cphillip)
+#
 
 sub validateUserEmailString
 {
@@ -1519,13 +1587,13 @@ sub validateUserEmailString
 
     if (length($userinput) == 0)
     {
-        printf("A valid email address is required!\n") unless quiet;
+        printf("A valid email address is required!\n") unless $quiet;
         return 0;
     }
 
-    if ( ! grep(/@/, $userinput ) )
+    if ( ! grep(/\@/, $userinput ) )
     {
-        printf("A valid email address is required!\n") unless quiet;
+        printf("A valid email address is required!\n") unless $quiet;
         return 0;
     }
 
@@ -1535,6 +1603,8 @@ sub validateUserEmailString
 ### getUserPhone( )
 #
 # get the phone number of the user
+#
+# WORKSFORME (cphillip)
 #
 
 sub getUserPhone
@@ -1572,6 +1642,8 @@ sub getUserPhone
 # check $userinput to verify its integrity as a user phone.  No transformations should
 # occur within this function.
 #
+# WORKSFORME (cphillip)
+#
 
 sub validateUserPhoneString
 {
@@ -1579,7 +1651,7 @@ sub validateUserPhoneString
 
     if (length($userinput) == 0)
     {
-        printf("A valid phone number is required!\n") unless quiet;
+        printf("A valid phone number is required!\n") unless $quiet;
         return 0;
     }
 
@@ -1589,6 +1661,8 @@ sub validateUserPhoneString
 ### checkResubmit( )
 #
 # check to see if we set to try resubmission
+#
+# WORKSFORME (cphillip)
 #
 
 sub checkResubmit
@@ -1606,21 +1680,22 @@ sub checkResubmit
         $output .= "this file and try resubmitting again.\n";
         $output .= "\n";
         $output .= "If you want assistance please email ${contact_email_addr}\n";
-        $output .= "or visit\n";
+        $output .= "or visit:\n";
         $output .= "\n";
         $output .= "${contact_url}\n";
+        $output .= "\n";
         printf("$output");
         exit;
     }
 
     if ( ! -e $request_file )
     {
-        push(@error, "certificate request file ($request_file)");
+        push(@error, "request file ($request_file)");
     }
 
     if ( ! -e $key_file )
     {
-        push(@error, "certificate key file ($key_file)");
+        push(@error, "key file ($key_file)");
     }
 
     if ( scalar(@error) gt 0 )
@@ -1637,11 +1712,10 @@ sub checkResubmit
     {
         $output .= "\n";
         $output .= "Cannot resubmit.  You apparently have not generated a certificate\n";
-        $output .= "request and apparently need to run ${program_name} without\n";
-        $output .= "-resubmit.\n";
+        $output .= "request and need to run ${program_name} without -resubmit.\n";
         $output .= "\n";
         $output .= "If you want assistance please email ${contact_email_addr}\n";
-        $output .= "or visit\n";
+        $output .= "or visit:\n";
         $output .= "\n";
         $output .= "${contact_url}\n";
         printf("$output");
@@ -1654,6 +1728,8 @@ sub checkResubmit
 ### printPreamble( )
 #
 # print out a generic text message to the user so they may know what is about to happen
+#
+# WORKSFORME (cphillip)
 #
 
 sub printPreamble
@@ -1676,38 +1752,44 @@ sub printPreamble
 #
 # accept a list of files and, based on our current directory, make their pathnames absolute
 #
+# WORKSFORME (cphillip)
+#
 
 sub absolutePath
 {
-    my @files = @_;
-    my $cwd = abs_path();
+    my ($file) = @_;
+    my $cwd = cwd();
 
-    for my $f (@files)
+    if ($file !~ /^\//)
     {
-        if ($f !~ /^\//)
-        {
-            $f = abs_path($f);
-        }
+        $file = $cwd . "/" . $file;
     }
 
-    return @files;
+    return $file;
 }
 
 ### inform( $content, $override )
 #
 # inform the user of an event
 #
+# WORKSFORME (cphillip)
+#
 
 sub inform
 {
     my ($content, $override) = @_;
 
-    print "$content\n" if $verbose or defined $override;
+    if ( $verbose or defined($override) )
+    {
+        print "$content\n";
+    }
 }
 
 ### action( $command, $dir )
 #
 # perform some command and inform the user
+#
+# WORKSFORME (cphillip)
 #
 
 sub action
@@ -1716,8 +1798,8 @@ sub action
     my $pwd;
     if (defined $dir) {
         $pwd = cwd();
-        inform("Changing to $dir");
-        chdir $dir;
+        inform("[ Changing to $dir ]");
+        chdir($dir);
     }
 
     # Log the step
@@ -1734,8 +1816,8 @@ sub action
 
     if (defined $dir)
     {
-        inform("Changing to $pwd");
-        chdir $pwd;
+        inform("[ Changing to $pwd ]");
+        chdir($pwd);
     }
 }
 
@@ -1746,12 +1828,14 @@ sub action
 
 sub main
 {
+    my ($user_email, $user_phone);
+
     #
     # based on the type, build the path to the certificates
     #
 
-    $cl_files = preparePathsHash($cl_dir, $cl_cert_file, $cl_key_file, $cl_request_file);
-    $default_files = preparePathsHash($default_dir, $default_cert_file, $default_key_file, $default_request_file);
+    $cl_files = preparePathsHash($cl_dir, $cl_cert_file, $cl_key_file, $cl_request_file, $cl_request_id_file);
+    $default_files = preparePathsHash($default_dir, $default_cert_file, $default_key_file, $default_request_file, $default_request_id_file);
     $files = determinePaths($default_files, $cl_files);
 
     printf("%s\n", Dumper($files));
@@ -1759,11 +1843,17 @@ sub main
     $cert_file = $files->{'cert_file'};
     $key_file = $files->{'key_file'};
     $request_file = $files->{'request_file'};
+    $request_id_file = $files->{'request_id_file'};
 
     # <testing>
-    checkCerts($cert_file, $key_file, $request_file);
+    #checkCerts($cert_file, $key_file, $request_file);
+    #printf("ret = '%s'\n", printPostData("foo%.&.@. .foo", "bar%.&.@. .bar"));
+    #handleFailedPost("unsuccess");
+    #checkResubmit();
+    #createCerts($type);
+    #printf("%s\n", processReqFile($request_file));
 
-    exit;
+    #exit;
     # </testing>
 
     checkGlobusSystem($ca_config);
@@ -1771,32 +1861,25 @@ sub main
     if ( ! $resubmit )
     {
         checkCerts($cert_file, $key_file, $request_file);
-    }
+        printPreamble();
+        $name = getCN($type, $name);
 
-    if ($resubmit)
-    {
-        checkResubmit();
+        # Additional stuff for ncsa-cert-req
+        $user_email = getUserEmail();
+        $user_phone = getUserPhone();
+        printf("\n\n");
+
+        createCerts($type);
     }
     else
     {
-        printPreamble();
-
-        $name = getCN($type, $name);
+        checkResubmit();
     }
-
-    # Additional stuff for ncsa-cert-req
-    $user_email = getUserEmail();
-    $user_phone = getUserPhone();
-    printf("\n\n");
-
-    createCerts();
 
     #-  COMMON_NAME="`echo ${SUBJECT} | ${GLOBUS_SH_SED-sed} -e 's|^.*/CN=||'`"
     # what do i replace the above with?
 
-    postReq();
-
-    cleanup($req_head, $req_output, $req_input);
+    postReq($user_email, $user_phone);
 }
 
 __END__
