@@ -98,6 +98,7 @@ sub main
     }
 
     $response = query_boolean("Do you wish to continue with the setup package?","y");
+    printf("\n");
 
     if ($response eq "n")
     {
@@ -246,23 +247,26 @@ sub triageDirs
     {
         for my $d (@dirlist)
         {
-            if ( -w $d )
-            {
-                $num_certs = cert_files_present($d);
+            $num_certs = cert_files_present($d);
 
-                if ( $num_certs eq "none" )
+            if ( $num_certs eq "none" )
+            {
+                if ( -w $d )
                 {
                     push(@installdirs, $d);
                 }
-                elsif ( $num_certs eq "some" )
+            }
+            elsif ( $num_certs eq "some" )
+            {
+                if ( -w $d )
                 {
                     push(@backupdirs, $d);
                     push(@installdirs, $d);
                 }
-                else
-                {
-                    push(@presentdirs, $d); # do nothing
-                }
+            }
+            else
+            {
+                push(@presentdirs, $d);
             }
         }
     }
@@ -475,7 +479,7 @@ sub install_certs
 
 sub get_eligible_cert_dirs
 {
-    my @dirlist, @eligible_dirs;
+    my(@dirlist, @eligible_dirs);
 
     #
     # we've got to do some hand-tailoring, since some of these entries are built
@@ -493,11 +497,7 @@ sub get_eligible_cert_dirs
     if ( defined($x509_path) )
     {
         $dir = $x509_path;
-
-        if ( isValidPath($dir) )
-        {
-            push(@dirlist, $dir);
-        }
+        push(@dirlist, $dir);
     }
 
     #
@@ -505,22 +505,14 @@ sub get_eligible_cert_dirs
     #
 
     $dir = "/etc/grid-security/certificates";
-
-    if ( isValidPath($dir) )
-    {
-        push(@dirlist, $dir);
-    }
+    push(@dirlist, $dir);
 
     #
     # prepare for adding $GL/share/certificates to our path
     #
 
     $dir = "$globusdir/share/certificates";
-
-    if ( isValidPath($dir) )
-    {
-        push(@dirlist, $dir);
-    }
+    push(@dirlist, $dir);
 
     #
     # prepare for adding $HOME/.globus/certificates
@@ -529,11 +521,7 @@ sub get_eligible_cert_dirs
     if ( defined($homedir) )
     {
         $dir = "$homedir/.globus/certificates";
-
-        if ( isValidPath($dir) )
-        {
-            push(@dirlist, $dir);
-        }
+        push(@dirlist, $dir);
     }
 
     return @dirlist;
