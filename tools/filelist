@@ -3,4 +3,4 @@ bin/ncsa-cert-request.pl
 bin/ncsa-cert-retrieve
 bin/ncsa-cert-retrieve.pl
 share/gsi_ncsa_ca_tools/ncsa-ca.conf
-doc/gsi_ncsa_ca_tools/LICENSE
+share/gsi_ncsa_ca_tools/LICENSE
