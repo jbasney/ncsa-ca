@@ -204,12 +204,13 @@ sub isCreatable
 sub triageDirs
 {
     my(@dirlist) = @_;
-    my(@backupdirs, @installdirs, @createdirs);
+    my(@backupdirs, @installdirs, @createdirs, @presentdirs);
     my $foo = {};
 
     $foo->{install} = \@installdirs;
     $foo->{backup} = \@backupdirs;
     $foo->{create} = \@createdirs;
+    $foo->{present} = \@presentdirs;
 
     if (@dirlist)
     {
@@ -230,13 +231,13 @@ sub triageDirs
                 }
                 else
                 {
-                    ; # do nothing
+                    push(@presentdirs, $d); # do nothing
                 }
             }
         }
     }
 
-    if (!@installdirs)
+    if (!@installdirs && !@presentdirs)
     {
         #
         # we weren't able to find a directory in which to write our certificate
