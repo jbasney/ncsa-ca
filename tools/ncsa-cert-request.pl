@@ -53,7 +53,7 @@ if (!defined($gpath))
 
 my ($versionid, $program_name);
 
-$versionid = "0.4.5";
+$versionid = "0.4.6";
 $program_name = $0;
 $program_name =~ s|.*/||g;
 
@@ -87,6 +87,12 @@ my $ca_config = "$gpath/share/gsi_ncsa_ca_tools/ncsa-ca.conf";
 my $req_input = "$secure_tmpdir/req_input.$$";
 my $req_output = "$secure_tmpdir/req_output.$$";
 my $req_head = "$secure_tmpdir/req_header.$$";
+
+#
+# rand_temp is a filename of where we will store our seed data
+#
+
+my $rand_temp = "${secure_tmpdir}/${program_name}.$$.random";
 
 #
 # default pathnames to various directories and files
@@ -1087,15 +1093,37 @@ sub createCerts
     action("touch $cert_file");
 
     #
+    # create some semi random data for key generation
+    # (this code is heavily influenced by a later version of Globus's grid-cert-request)
+    #
+
+    umask("066");
+    action("touch ${rand_temp}");
+    if ( -r "/dev/urandom" )
+    {
+        action("head -c 1000 /dev/urandom >> ${rand_temp}");
+    }
+    action("date >> ${rand_temp}");
+    action("netstat -in >> ${rand_temp}");
+    action("ps -ef >> ${rand_temp}");
+    my $home = $ENV{'HOME'};
+    action("ls -ln $home >> ${rand_temp}");
+    action("ls -ln /tmp >> ${rand_temp}");
+
+    #
     # create the key and request files
     #
     # we redirect to /dev/null in one case: where $nopw is set and $interactive isn't.  in all
     # other cases, the user should be seeing the output of the openssl program.
     #
 
+    umask("266");
+
     if ($interactive)
     {
-        action("${ssl_exec} req -new -keyout ${key_file} -out ${req_output} -config ${ca_config} ${no_des}");
+        action("${ssl_exec} req -new -keyout ${key_file} -out ${req_output} \
+                                -rand ${rand_temp}:/var/adm/wtmp:/var/log/messages \
+                                -config ${ca_config} ${no_des}");
     }
     else
     {
@@ -1110,11 +1138,15 @@ sub createCerts
 
         $tmpstring = createInputFileString( $name, $ca_config );
         writeFile($req_input, $tmpstring);
-        action("${ssl_exec} req -new -keyout ${key_file} -out ${req_output} -config ${ca_config} ${no_des} < ${req_input} $addendum");
+        action("${ssl_exec} req -new -keyout ${key_file} -out ${req_output} \
+                                -rand ${rand_temp}:/var/adm/wtmp:/var/log/messages \
+                                -config ${ca_config} ${no_des} < ${req_input} $addendum");
         printf("\n");
  
         cleanup($req_input);
     }
+
+    cleanup($rand_temp);
 
     #- the following code should emulate this routine
     #- SUBJECT="`${SSL_EXEC} req -text -noout < ${REQ_OUTPUT} 2>&1 |\
