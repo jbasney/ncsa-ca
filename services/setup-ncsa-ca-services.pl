@@ -61,7 +61,7 @@ $bindir = "${exec_prefix}/bin";
 #
 
 $curr_time = time();
-$backup_dir = "backup_gsi_ncsa_ca_${curr_time}";
+$backup_dir = "backup_gsi_ncsa_ca_services_${curr_time}";
 
 #
 # For now, assume that we are root (until we build command-line switches for this
@@ -368,9 +368,9 @@ sub backup_cert_dir
 #
 
 printf "---------------------------------------------------------------\n";
-printf "$myname: Configuring package gsi_ncsa_ca..\n";
+printf "$myname: Configuring package gsi_ncsa_ca_services..\n";
 printf "\n";
-printf "Hi, I'm the setup script for the gsi_ncsa_ca package!\n";
+printf "Hi, I'm the setup script for the gsi_ncsa_ca_services package!\n";
 printf "\n";
 
 @certdirlist = get_eligible_cert_dirs();
@@ -396,19 +396,19 @@ $response = query_boolean("Do you wish to continue with the setup package?","y")
 if ($response eq "n")
 {
     print "\n";
-    print "Okay.. exiting gsi_ncsa_ca setup.\n";
+    print "Okay.. exiting gsi_ncsa_ca_services setup.\n";
 
     exit 0;
 }
 
 s1_install_certs(@certdirlist);
 
-my $metadata = new Grid::GPT::Setup(package_name => "gsi_ncsa_ca");
+my $metadata = new Grid::GPT::Setup(package_name => "gsi_ncsa_ca_services");
 
 $metadata->finish();
 
 print "\n";
-print "$myname: Finished configuring package 'gsi_ncsa_ca'.\n";
+print "$myname: Finished configuring package 'gsi_ncsa_ca_services'.\n";
 print "---------------------------------------------------------------\n";
 
 #
