@@ -29,7 +29,7 @@
       <Build_Step>mkdir -p INSTALLDIR_GPTMACRO/share/gsi_ncsa_ca_tools/</Build_Step>
       <Build_Step>cp ncsa-ca.conf INSTALLDIR_GPTMACRO/share/gsi_ncsa_ca_tools/ncsa-ca.conf</Build_Step>
 
-      <Build_Step>mkdir -p INSTALLDIR_GPTMACRO/licenses/</Build_Step>
+      <Build_Step>mkdir -p INSTALLDIR_GPTMACRO/licenses/gsi_ncsa_ca_tools/</Build_Step>
       <Build_Step>cp LICENSE INSTALLDIR_GPTMACRO/licenses/gsi_ncsa_ca_tools/LICENSE</Build_Step>
 
     </Build_Instructions>
