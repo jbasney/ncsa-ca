@@ -329,112 +329,6 @@ sub backup_cert_dir
     return 1;
 }
 
-sub s2_install_ssl_conf
-{
-    my $current_backup_dir;
-    my @curr_files;
-
-    #
-    # grid-security-config modifies and installs grid-security.conf in /etc/grid-security/
-    #
-
-    printf "\nStage 2: ncsa-ssl.conf\n";
-
-    push(@curr_files, "ncsa-ssl.conf");
-
-    $current_backup_dir = "$secconfdir/$backup_dir";
-    for my $f (@curr_files)
-    {
-        if ( -e "$secconfdir/$f" )
-        {
-            printf "\nFound old '$f'.. attempting to backup.\n";
-
-            #
-            # verify that backup directory path exists
-            #
-
-            if ( ! mkdirpath($current_backup_dir) )
-            {
-                #
-                # ouch.  couldn't make backup directories.
-                #
-
-                return 0;
-            }
-
-            printf "\nBacking up ${secconfdir}/$f to ${current_backup_dir}/$f\n";
-
-            #
-            # copy current certs and signing policy to backup dir
-            #
-
-            action("cp ${secconfdir}/$f ${current_backup_dir}/$f");
-
-            printf "\nBacked up '$f' to '${current_backup_dir}'.\n";
-        }
-    }
-
-    printf "\nInstalling ncsa-ssl.conf..\n";
-
-    action("cp ${setupdir}/ncsa-ssl.conf ${secconfdir}/ncsa-ssl.conf");
-    action("chmod 644 ${secconfdir}/ncsa-ssl.conf");
-}
-
-sub s3_install_ncsa_scripts
-{
-    my $current_backup_dir;
-    my @curr_files;
-
-    #
-    # grid-security-config modifies and installs grid-security.conf in /etc/grid-security/
-    #
-
-    printf "\nStage 3: ncsa-cert-request, ncsa-cert-retrieve\n";
-
-    push(@curr_files, "ncsa-cert-request");
-    push(@curr_files, "ncsa-cert-request");
-
-    $current_backup_dir = "$bindir/$backup_dir";
-    for my $f (@curr_files)
-    {
-        if ( -e "$bindir/$f" )
-        {
-            printf "\nFound old '$f'.. attempting to backup.\n";
-
-            #
-            # verify that backup directory path exists
-            #
-
-            if ( ! mkdirpath($current_backup_dir) )
-            {
-                #
-                # ouch.  couldn't make backup directories.
-                #
-
-                return 0;
-            }
-
-            printf "\nBacking up ${secconfdir}/$f to ${current_backup_dir}/$f\n";
-
-            #
-            # copy current certs and signing policy to backup dir
-            #
-
-            action("cp ${secconfdir}/$f ${current_backup_dir}/$f");
-
-            printf "\nBacked up '$f' to '${current_backup_dir}'.\n";
-        }
-    }
-
-    printf "\nInstalling ncsa-cert-request and ncsa-cert-retrieve..\n";
-
-    action("cp ${setupdir}/ncsa-cert-request ${bindir}/ncsa-cert-request");
-    action("chmod 755 ${bindir}/ncsa-cert-request");
-
-    action("cp ${setupdir}/ncsa-cert-retrieve ${bindir}/ncsa-cert-retrieve");
-    action("chmod 755 ${bindir}/ncsa-cert-retrieve");
-}
-
 #
 # begin main
 # ----------
@@ -508,8 +402,6 @@ if ($response eq "n")
 }
 
 s1_install_certs(@certdirlist);
-s2_install_ssl_conf();
-s3_install_ncsa_scripts();
 
 my $metadata = new Grid::GPT::Setup(package_name => "gsi_ncsa_ca");
 
