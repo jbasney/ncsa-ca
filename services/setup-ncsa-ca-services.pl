@@ -318,12 +318,12 @@ sub backup_cert_dir
 
     if ( -e "${dir_path}/5aba75cb.0" )
     {
-        action("cp ${dir_path}/5aba75cb.0 ${current_backup_dir}/5aba75cb.0");
+        action("mv ${dir_path}/5aba75cb.0 ${current_backup_dir}/5aba75cb.0");
     }
 
     if ( -e "${dir_path}/5aba75cb.signing_policy" )
     {
-        action("cp ${dir_path}/5aba75cb.signing_policy ${current_backup_dir}/5aba75cb.signing_policy");
+        action("mv ${dir_path}/5aba75cb.signing_policy ${current_backup_dir}/5aba75cb.signing_policy");
     }
 
     return 1;
