@@ -1065,7 +1065,7 @@ sub getLdapCN
 sub createCerts
 {
     my ($type, $name) = @_;
-    my ($umsk, $tmpfile);
+    my ($umsk, $tmpfile, $addendum);
 
     printf("A certificate request and private key is being created.\n");
 
@@ -1089,16 +1089,28 @@ sub createCerts
     #
     # create the key and request files
     #
- 
+    # we redirect to /dev/null in one case: where $nopw is set and $interactive isn't.  in all
+    # other cases, the user should be seeing the output of the openssl program.
+    #
+
     if ($interactive)
     {
         action("${ssl_exec} req -new -keyout ${key_file} -out ${req_output} -config ${ca_config} ${no_des}");
     }
     else
     {
+        if (defined($nopw))
+        {
+            $addendum = "> /dev/null";
+        }
+        else
+        {
+            $addendum = "";
+        }
+
         $tmpstring = createInputFileString( $name, $ca_config );
         writeFile($req_input, $tmpstring);
-        action("${ssl_exec} req -new -keyout ${key_file} -out ${req_output} -config ${ca_config} ${no_des} < ${req_input} > /dev/null");
+        action("${ssl_exec} req -new -keyout ${key_file} -out ${req_output} -config ${ca_config} ${no_des} < ${req_input} $addendum");
         printf("\n");
  
         cleanup($req_input);
