@@ -1117,12 +1117,12 @@ sub createCerts
     # other cases, the user should be seeing the output of the openssl program.
     #
 
-    umask("266");
+    umask("177");
 
     if ($interactive)
     {
-        action("${ssl_exec} req -new -keyout ${key_file} -out ${req_output} \
-                                -rand ${rand_temp}:/var/adm/wtmp:/var/log/messages \
+        action("${ssl_exec} req -new -keyout ${key_file} -out ${req_output} \\
+                                -rand ${rand_temp}:/var/adm/wtmp:/var/log/messages \\
                                 -config ${ca_config} ${no_des}");
     }
     else
@@ -1138,8 +1138,8 @@ sub createCerts
 
         $tmpstring = createInputFileString( $name, $ca_config );
         writeFile($req_input, $tmpstring);
-        action("${ssl_exec} req -new -keyout ${key_file} -out ${req_output} \
-                                -rand ${rand_temp}:/var/adm/wtmp:/var/log/messages \
+        action("${ssl_exec} req -new -keyout ${key_file} -out ${req_output} \\
+                                -rand ${rand_temp}:/var/adm/wtmp:/var/log/messages \\
                                 -config ${ca_config} ${no_des} < ${req_input} $addendum");
         printf("\n");
  
