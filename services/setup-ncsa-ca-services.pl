@@ -80,25 +80,20 @@ sub main
 
     printf("$myname: Configuring package gsi_ncsa_ca_services...\n");
     printf("-------------------------------------------------------------------------------\n");
-    printf("Being the setup script for the gsi_ncsa_ca_services package, I do\n");
-    printf("all of my work by copying a handful of certificate files into\n");
-    printf("various directories.  In the odd case where I cannot find both the\n");
-    printf("NCSA CA certificate and its signing policy in certain locations,\n");
-    printf("but I do find one or the other alone, I will make a backup directory\n");
-    printf("and copy the file I found into it (just in case).\n");
+    printf("Being the setup script for the gsi_ncsa_ca_services package, I do all of my\n");
+    printf("work by copying a handful of certificate files into various directories.  In\n");
+    printf("the odd case where I cannot find both the NCSA CA certificate and its signing\n");
+    printf("policy in certain locations, but I do find one or the other alone, I will make\n");
+    printf("a backup directory and copy the file I found into it (just in case).\n");
     printf("\n");
 
     @certdirlist = get_eligible_cert_dirs();
     $dirs = triageDirs(@certdirlist);
 
-    if ( ! reviewDirs($dirs) )
+    if ( ! reviewRoutine($dirs) )
     {
-        printf("Your machine either has no eligible certificate directories or\n");
-        printf("already has all of the certificate files and signing policies\n");
-        printf("necessary to work with the NCSA CA.\n");
-
-        printf("\n");
         printf("Exiting gsi_ncsa_ca_services setup.\n");
+
         exit(0);
     }
 
@@ -106,45 +101,80 @@ sub main
 
     if ($response eq "n")
     {
-        print("\n");
         print("Exiting gsi_ncsa_ca_services setup.\n");
 
         exit(0);
     }
 
-    makeDirectories($dirs);
-    install_certs($dirs);
+    performRoutine($dirs);
+    printNotes($dirs);
+
+    printf("\n");
+    printf("-------------------------------------------------------------------------------\n");
+    printf("$myname: Finished configuring package gsi_ncsa_ca_services.\n");
+}
+
+sub performRoutine
+{
+    my( $dirs ) = @_;
+    my( @createdirs, @installdirs, @backupdirs, @presentdirs );
+
+    @createdirs = @{$dirs->{create}};
+    @installdirs = @{$dirs->{install}};
+    @backupdirs = @{$dirs->{backup}};
+    @presentdirs = @{$dirs->{present}};
+
+    if ( @createdirs )
+    {
+        makeDirectories($dirs);
+    }
+
+    if ( @installdirs )
+    {
+        install_certs($dirs);
+    }
 
     my $metadata = new Grid::GPT::Setup(package_name => "gsi_ncsa_ca_services");
     $metadata->finish();
 
-    printf("\n");
+    return 1;
+}
 
-    @installdirs = @{$dirs->{install}};   
-    if (@installdirs)
+sub printNotes
+{
+    my( $dirs ) = @_;
+    my( @createdirs, @installdirs, @backupdirs, @presentdirs );
+
+    @createdirs = @{$dirs->{create}};
+    @installdirs = @{$dirs->{install}};
+    @backupdirs = @{$dirs->{backup}};
+    @presentdirs = @{$dirs->{present}};
+
+    if ( @installdirs or @presentdirs )
     {
+        printf("\n");
         printf("Additional Notes:\n");
         printf("\n");
-        printf("  o A complete set of NCSA CA certificate files should now exist in\n");
-        printf("    each of the directories listed above.  If, based on your local\n");
-        printf("    needs, you need a copy of those CA files in an additional location,\n");
-        printf("    just copy the files\n");
+        printf("  o A complete set of NCSA CA certificate files should now exist in each of the\n");
+        printf("    directories listed above.  If, based on your local needs, you need a copy\n");
+        printf("    of those CA files in an additional location just copy the files\n");
         printf("\n");
-        printf("    \t5aba75cb.0 and\n");
+        printf("    \t5aba75cb.0\n");
         printf("    \t5aba75cb.signing_policy\n");
         printf("\n");
         printf("    from one of the following directories:\n");
         printf("\n");
+
+        for my $dir (@presentdirs)
+        {
+            printf("    \t$dir\n");
+        }
 
         for my $dir (@installdirs)
         {
             printf("    \t$dir\n");
         }
     }
-
-    printf("\n");
-    printf("-------------------------------------------------------------------------------\n");
-    printf("$myname: Finished configuring package gsi_ncsa_ca_services.\n");
 }
 
 sub makeDirectories
@@ -237,7 +267,7 @@ sub triageDirs
         }
     }
 
-    if (!@installdirs && !@presentdirs)
+    if ( !@installdirs && !@presentdirs )
     {
         #
         # we weren't able to find a directory in which to write our certificate
@@ -258,19 +288,78 @@ sub triageDirs
     return $foo;
 }
 
-sub reviewDirs
+sub reviewRoutine
 {
     my($foo) = @_;
-    my(@installdirs, @backupdirs, @createdirs);
+    my(@installdirs, @backupdirs, @createdirs, @presentdirs);
 
     @installdirs = @{$foo->{install}};
     @backupdirs = @{$foo->{backup}};
     @createdirs = @{$foo->{create}};
+    @presentdirs = @{$foo->{present}};
+
+    if ( @presentdirs )
+    {
+        printf("The following directories already have the NCSA CA certificate and signing\n");
+        printf("policy files:\n");
+        printf("\n");
+
+        for my $d (@presentdirs)
+        {
+            printf("\t$d\n");
+        }
+
+        printf("\n");
+
+        if ( @installdirs )
+        {
+            printf("The following directories will have certificate files installed into them:\n");
+            printf("\n");
+
+            for my $d (@installdirs)
+            {
+                if ( ! grep(/^$d$/, @backupdirs) )
+                {
+                    printf("\t$d\n");
+                }
+                else
+                {
+                    printf("\t$d (backup)\n");
+                }
+            }
+
+            printf("\n");
+
+            if ( @backupdirs )
+            {
+                printf("NOTE: Those entries marked with '(backup)' are eligble to have those certificate\n");
+                printf("files present in them be placed in a backup directory contained within their\n");
+                printf("parent directory.  Those entries with no marking beside them suggest that I\n");
+                printf("found no NCSA CA certificate files present in them and do not require any backup.\n");
+                printf("\n");
+            }
+        }
+        else
+        {
+            #
+            # if there are no directories in which to install our certificates, and the host
+            # already has them present in other directories we take a shortcut out since no
+            # further action from us is required.
+            #
+
+            my $metadata = new Grid::GPT::Setup(package_name => "gsi_ncsa_ca_services");
+            $metadata->finish();
+
+            return 0;
+        }
+
+        return 1;
+    }
 
     if ( @createdirs )
     {
-        printf("The following directories will be created and have certificate files\n");
-        printf("installed into them:\n");
+        printf("The following directories will be created and have certificate files installed\n");
+        printf("into them:\n");
         printf("\n");
 
         for my $d (@createdirs)
@@ -282,7 +371,8 @@ sub reviewDirs
 
         return 1;
     }
-    elsif ( @installdirs or @backupdirs )
+
+    if ( @installdirs or @backupdirs )
     {
         printf("The following directories will have certificate files installed into them:\n");
         printf("\n");
@@ -303,20 +393,21 @@ sub reviewDirs
 
         if (@backupdirs)
         {
-            printf("NOTE: Those entries marked with '(backup)' are eligble to have\n");
-            printf("those certificate files present in them be placed in a backup\n");
-            printf("directory contained within their parent directory.  Those entries\n");
-            printf("with no marking beside them suggest that I found no NCSA CA\n");
-            printf("certficate files present in them and do not require any backup.\n");
+            printf("NOTE: Those entries marked with '(backup)' are eligble to have those certificate\n");
+            printf("files present in them be placed in a backup directory contained within their\n");
+            printf("parent directory.  Those entries with no marking beside them suggest that I\n");
+            printf("found no NCSA CA certificate files present in them and do not require any backup.\n");
             printf("\n");
         }
 
         return 1;
     }
-    else
-    {
-        return 0;
-    }
+
+    printf("Your machine has no eligible certificate directories!  Try setting \$HOME or\n");
+    printf("\$X509_CERT_DIR.\n");
+    printf("\n");
+
+    return 0;
 }
 
 sub install_certs
