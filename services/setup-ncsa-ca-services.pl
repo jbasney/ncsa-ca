@@ -44,7 +44,7 @@ require Grid::GPT::Setup;
 #
 
 my $globusdir = $gpath;
-my $setupdir = "$globusdir/setup/ncsa/gsi_ncsa_ca_services";
+my $setupdir = "$globusdir/setup/gsi_ncsa_ca_services";
 my $secconfdir = "/etc/grid-security";
 my $myname = "setup-ncsa-ca-services.pl";
 

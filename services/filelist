@@ -1,4 +1,4 @@
-setup/ncsa/gsi_ncsa_ca_services/5aba75cb.0
-setup/ncsa/gsi_ncsa_ca_services/5aba75cb.signing_policy
-setup/ncsa/gsi_ncsa_ca_services/setup-ncsa-ca-services
-setup/ncsa/gsi_ncsa_ca_services/setup-ncsa-ca-services.pl
+setup/gsi_ncsa_ca_services/5aba75cb.0
+setup/gsi_ncsa_ca_services/5aba75cb.signing_policy
+setup/gsi_ncsa_ca_services/setup-ncsa-ca-services
+setup/gsi_ncsa_ca_services/setup-ncsa-ca-services.pl

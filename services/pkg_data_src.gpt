@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE gpt_package_metadata SYSTEM "package.dtd">
+<!DOCTYPE gpt_package_metadata SYSTEM "globus_package.dtd">
 
-<gpt_package_metadata Format_Version="0.01" Name="gsi_ncsa_ca_services" >
+<gpt_package_metadata Format_Version="0.02" Name="gsi_ncsa_ca_services" >
 
   <Aging_Version Age="0" Major="0" Minor="2" />
   <Description>GSI NCSA CA certificates, signing policy, and request/retrieve scripts</Description>
   <Functional_Group >gsi_ncsa_ca</Functional_Group>
-  <Version_Stability Release="alpha" />
+  <Version_Stability Release="beta" />
 
   <src_pkg >
 
@@ -16,16 +16,19 @@
 
     <Build_Instructions>
 
-      <Build_Step>mkdir -p INSTALLDIR_GPTMACRO/setup/ncsa/gsi_ncsa_ca_services/</Build_Step>
-      <Build_Step>cp 5aba75cb.0 INSTALLDIR_GPTMACRO/setup/ncsa/gsi_ncsa_ca_services/5aba75cb.0</Build_Step>
-      <Build_Step>cp 5aba75cb.signing_policy INSTALLDIR_GPTMACRO/setup/ncsa/gsi_ncsa_ca_services/5aba75cb.signing_policy</Build_Step>
-      <Build_Step>cp setup-ncsa-ca-services INSTALLDIR_GPTMACRO/setup/ncsa/gsi_ncsa_ca_services/setup-ncsa-ca-services</Build_Step>
-      <Build_Step>cp setup-ncsa-ca-services.pl INSTALLDIR_GPTMACRO/setup/ncsa/gsi_ncsa_ca_services/setup-ncsa-ca-services.pl</Build_Step>
+      <Build_Step>mkdir -p INSTALLDIR_GPTMACRO/setup/gsi_ncsa_ca_services/</Build_Step>
+      <Build_Step>cp 5aba75cb.0 INSTALLDIR_GPTMACRO/setup/gsi_ncsa_ca_services/5aba75cb.0</Build_Step>
+      <Build_Step>cp 5aba75cb.signing_policy INSTALLDIR_GPTMACRO/setup/gsi_ncsa_ca_services/5aba75cb.signing_policy</Build_Step>
+      <Build_Step>cp setup-ncsa-ca-services INSTALLDIR_GPTMACRO/setup/gsi_ncsa_ca_services/setup-ncsa-ca-services</Build_Step>
+      <Build_Step>cp setup-ncsa-ca-services.pl INSTALLDIR_GPTMACRO/setup/gsi_ncsa_ca_services/setup-ncsa-ca-services.pl</Build_Step>
+
+      <Build_Step>mkdir -p INSTALLDIR_GPTMACRO/licenses/</Build_Step>
+      <Build_Step>cp LICENSE INSTALLDIR_GPTMACRO/licenses/gsi_ncsa_ca_services.license</Build_Step>
 
     </Build_Instructions>
 
     <Post_Install_Program >
-      ncsa/gsi_ncsa_ca_services/setup-ncsa-ca-services
+      gsi_ncsa_ca_services/setup-ncsa-ca-services
     </Post_Install_Program>
 
     <Post_Install_Message >
