@@ -18,7 +18,7 @@
       <Setup_Dependency Name="globus_core_setup"><Version><Simple_Version Major="2" /></Version></Setup_Dependency>
     </Source_Setup_Dependency>
 
-    <Version_Label>0.2</Version_Label>
+    <Version_Label>0.4.5</Version_Label>
 
     <With_Flavors build="no" />
 
