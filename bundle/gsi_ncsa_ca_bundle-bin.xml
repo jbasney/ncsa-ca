@@ -15,8 +15,8 @@
 <PackageList >
 <IncludedPackages >
 <Package PackageFlavor="noflavor" PackageName="globus_user_env" PackageType="data" PackageVersion="2.2" />
-<Package PackageFlavor="gcc32" PackageName="gsi_ncsa_ca_services" PackageType="pgm" PackageVersion="1.0" />
-<Package PackageFlavor="gcc32" PackageName="gsi_ncsa_ca_tools" PackageType="pgm" PackageVersion="1.0" />
+<Package PackageFlavor="noflavor" PackageName="gsi_ncsa_ca_services" PackageType="pgm" PackageVersion="1.0" />
+<Package PackageFlavor="noflavor" PackageName="gsi_ncsa_ca_tools" PackageType="pgm" PackageVersion="1.0" />
 </IncludedPackages>
 <ExcludedPackages >
 </ExcludedPackages>
