@@ -22,8 +22,8 @@
       <Build_Step>cp setup-ncsa-ca-services INSTALLDIR_GPTMACRO/setup/gsi_ncsa_ca_services/setup-ncsa-ca-services</Build_Step>
       <Build_Step>cp setup-ncsa-ca-services.pl INSTALLDIR_GPTMACRO/setup/gsi_ncsa_ca_services/setup-ncsa-ca-services.pl</Build_Step>
 
-      <Build_Step>mkdir -p INSTALLDIR_GPTMACRO/licenses/gsi_ncsa_ca_services/</Build_Step>
-      <Build_Step>cp LICENSE INSTALLDIR_GPTMACRO/licenses/gsi_ncsa_ca_services/LICENSE</Build_Step>
+      <Build_Step>mkdir -p INSTALLDIR_GPTMACRO/doc/gsi_ncsa_ca_services/</Build_Step>
+      <Build_Step>cp LICENSE INSTALLDIR_GPTMACRO/doc/gsi_ncsa_ca_services/LICENSE</Build_Step>
 
     </Build_Instructions>
 
