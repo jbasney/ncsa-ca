@@ -26,7 +26,9 @@
 
       <Build_Step>mkdir -p INSTALLDIR_GPTMACRO/bin/</Build_Step>
       <Build_Step>cp ncsa-cert-request INSTALLDIR_GPTMACRO/bin/ncsa-cert-request</Build_Step>
+      <Build_Step>cp ncsa-cert-request.pl INSTALLDIR_GPTMACRO/bin/ncsa-cert-request.pl</Build_Step>
       <Build_Step>cp ncsa-cert-retrieve INSTALLDIR_GPTMACRO/bin/ncsa-cert-retrieve</Build_Step>
+      <Build_Step>cp ncsa-cert-retrieve.pl INSTALLDIR_GPTMACRO/bin/ncsa-cert-retrieve.pl</Build_Step>
 
       <Build_Step>mkdir -p INSTALLDIR_GPTMACRO/share/gsi_ncsa_ca_tools/</Build_Step>
       <Build_Step>cp ncsa-ca.conf INSTALLDIR_GPTMACRO/share/gsi_ncsa_ca_tools/ncsa-ca.conf</Build_Step>
