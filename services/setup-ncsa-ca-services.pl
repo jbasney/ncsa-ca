@@ -117,15 +117,15 @@ sub s1_install_certs
     print "\nStage 1: Installing NCSA CA certificate and signing policy files..\n";
     print "\n";
 
+    #
+    # alternatively, we could create separate lists for backups, and installs
+    #
+
+    printf "Looking for directories to install my files into..\n";
+
     for my $d (@dirlist)
     {
         $num_certs = cert_files_present($d);
-
-        #
-        # alternatively, we could create separate lists for backups, and installs
-        #
-
-        printf "Looking for directories to install my files into..\n";
 
         if ( $num_certs eq "none" )
         {
@@ -158,8 +158,8 @@ sub s1_install_certs
         printf "Directories found: $dir_count\n";
         printf "\n";
         printf "Those entries marked with '(backup)' have some certificate files\n";
-        printf "present, but not all.  Those with no marking beside them have no\n";
-        printf "certficate files present in them.\n";
+        printf "present, but not all.  Those with no marking beside them suggest\n";
+        printf "that I found no NCSA CA certficate files present in them.\n";
         printf "\n";
 
         printf "Creating backups of critical files..\n";
