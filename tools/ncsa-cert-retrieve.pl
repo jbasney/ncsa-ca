@@ -708,6 +708,8 @@ sub determinePaths {
   $tmp = determineFile($default_files->{'key_file'}, $cl_files->{'key_file'}, "key file", "r");
   $files->{'key_file'} = $dir . "/" . $tmp;
 
+  chmod(0400, $files->{'key_file'});
+
   return $files;
 }
 
