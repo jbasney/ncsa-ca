@@ -723,7 +723,7 @@ sub checkCerts
     {
         if ($force)
         {
-            cleanup(@files);
+            cleanup(@found);
         }
         else
         {
@@ -1709,25 +1709,6 @@ sub checkResubmit
 {
     my (@error);
 
-    if ( -e $request_id_file )
-    {
-        $output .= "Error: ${request_id_file} exists.\n";
-        $output .= "\n";
-        $output .= "The above file exists, indicating that you have already\n";
-        $output .= "successfully submitted your certificate request.\n";
-        $output .= "\n";
-        $output .= "If you are certain that this is incorrect, you may remove\n";
-        $output .= "this file and try resubmitting again.\n";
-        $output .= "\n";
-        $output .= "If you want assistance please email ${contact_email_addr}\n";
-        $output .= "or visit:\n";
-        $output .= "\n";
-        $output .= "${contact_url}\n";
-        $output .= "\n";
-        printf("$output");
-        exit;
-    }
-
     if ( ! -e $request_file )
     {
         push(@error, "request file ($request_file)");
@@ -1750,7 +1731,7 @@ sub checkResubmit
 
     if ( $error )
     {
-        $output .= "\n";
+        $output  = "\n";
         $output .= "Cannot resubmit.  You apparently have not generated a certificate\n";
         $output .= "request and need to run ${program_name} without -resubmit.\n";
         $output .= "\n";
@@ -1760,6 +1741,33 @@ sub checkResubmit
         $output .= "${contact_url}\n";
         printf("$output");
         exit;
+    }
+
+    if ( -e $request_id_file )
+    {
+        if ($force)
+        {
+            cleanup($request_id_file);
+        }
+        else
+        {
+            $output  = "Error: ${request_id_file} exists.\n";
+            $output .= "\n";
+            $output .= "The above file exists, indicating that you have already\n";
+            $output .= "successfully submitted your certificate request.\n";
+            $output .= "\n";
+            $output .= "If you are certain that this is incorrect, you may remove\n";
+            $output .= "this file and try resubmitting again, or run with the -force\n";
+            $output .= "option.\n";
+            $output .= "\n";
+            $output .= "If you want assistance please email ${contact_email_addr}\n";
+            $output .= "or visit:\n";
+            $output .= "\n";
+            $output .= "${contact_url}\n";
+            $output .= "\n";
+            printf("$output");
+            exit;
+        }
     }
 
     # Everything checks out
@@ -1978,39 +1986,6 @@ sub main
     $key_file = $files->{'key_file'};
     $request_file = $files->{'request_file'};
     $request_id_file = $files->{'request_id_file'};
-
-    if ( -e $cert_file || -e $key_file )
-    {
-        my $files, $error_message;
-
-        $error_message  = "One or more system files already exist at:\n";
-        $error_message .= "\n";
-
-        if ( -e $cert_file )
-        {
-            $error_message .= "\t$cert_file (certificate)\n";
-        }
-
-        if ( -e $key_file )
-        {
-            $error_message .= "\t$key_file (key)\n";
-        }
-
-        $error_message .= "\n";
-        $error_message .= "If you wish to request another certificate and place it in the above\n";
-        $error_message .= "location, you must either move or delete the file(s) that are present.\n";
-        $error_message .= "\n";
-        $error_message .= "If you wish to place this certificate you are trying to request in a\n";
-        $error_message .= "different location, please use the -dir option.\n";
-        $error_message .= "\n";
-        $error_message .= "If you wish to name this certificate differently, please use the -cert\n";
-        $error_message .= "and/or the -key option.\n";
-        $error_message .= "\n";
-        $error_message .= "For more help on these options and others, please run $program_name -help or\n";
-        $error_message .= "$program_name -man.\n";
-
-        die($error_message);
-    }
 
     checkGlobusSystem($ca_config);
 
