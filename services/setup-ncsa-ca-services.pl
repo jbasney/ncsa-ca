@@ -95,6 +95,7 @@ sub main
         exit(0);
     }
 
+    makeDirectories($dirs);
     install_certs($dirs);
 
     my $metadata = new Grid::GPT::Setup(package_name => "gsi_ncsa_ca_services");
@@ -129,10 +130,28 @@ sub main
     printf("$myname: Finished configuring package gsi_ncsa_ca_services.\n");
 }
 
+sub makeDirectories
+{
+    my($dirs) = @_;
+    my(@installdirs);
+
+    #
+    # $dirs->{install} is the union of the directories we've chosen to install into and those
+    # of which we will do a backup.
+    #
+
+    @installdirs = @{$dirs->{install}};
+
+    for my $d (@installdirs)
+    {
+        mkdirPath($d);
+    }
+}
+
 sub triageDirs
 {
-    my (@dirlist) = @_;
-    my @backupdirs, @installdirs;
+    my(@dirlist) = @_;
+    my(@backupdirs, @installdirs);
     my $foo = {};
 
     $foo->{install} = \@installdirs;
@@ -210,8 +229,8 @@ sub reviewDirs
 
 sub install_certs
 {
-    my ($dirs) = @_;
-    my @backupdirs, @installdirs;
+    my($dirs) = @_;
+    my(@backupdirs, @installdirs);
     my $dir_count = 0;
 
     @backupdirs = @{$dirs->{backup}};
@@ -292,9 +311,9 @@ sub get_eligible_cert_dirs
     {
         $dir = $x509_path;
 
-        if ( ! -e $dir )
+        if ( ( ! -e $dir ) && testMkdirPath($dir) )
         {
-            mkdirpath($dir);
+            push(@dirlist, $dir);
         }
 
         if ( -d $dir )
@@ -309,12 +328,7 @@ sub get_eligible_cert_dirs
 
     $dir = "/etc/grid-security/certificates";
 
-    if ( ! -e $dir )
-    {
-        mkdirpath($dir);
-    }
-
-    if ( -d $dir )
+    if ( isValidPath($dir) )
     {
         push(@dirlist, $dir);
     }
@@ -325,12 +339,7 @@ sub get_eligible_cert_dirs
 
     $dir = "$globusdir/share/certificates";
 
-    if ( ! -e $dir )
-    {
-        mkdirpath($dir);
-    }
-
-    if ( -d $dir )
+    if ( isValidPath($dir) )
     {
         push(@dirlist, $dir);
     }
@@ -343,12 +352,7 @@ sub get_eligible_cert_dirs
     {
         $dir = "$homedir/.globus/certificates";
 
-        if ( ! -e $dir )
-        {
-            mkdirpath($dir);
-        }
-
-        if ( -d $dir )
+        if ( isValidPath($dir) )
         {
             push(@dirlist, $dir);
         }
@@ -372,6 +376,30 @@ sub get_eligible_cert_dirs
     return @eligible_dirs;
 }
 
+### isValidPath( $path )
+#
+# given a path, if it doesn't exist, return true if we could make it as a
+# directory.  additionally, return true if it is already a directory.  return
+# false otherwise.
+#
+
+sub isValidPath
+{
+    my ($path) = @_;
+
+    if ( ( ! -e $path ) && testMkdirPath($path) )
+    {
+        return 1;
+    }
+
+    if ( -d $path )
+    {
+        return 1;
+    }
+
+    return 0;
+}
+
 ### isMutable( $dir )
 #
 # this function is used to simplify what could appear to be a complicated conditional
@@ -380,7 +408,7 @@ sub get_eligible_cert_dirs
 
 sub isMutable
 {
-    my ($dir) = @_;
+    my($dir) = @_;
 
     if ( ( -d $dir ) && ( -w $dir ) && ( -r $dir ) )
     {
@@ -400,8 +428,8 @@ sub isMutable
 
 sub cert_files_present
 {
-    my ($dir_path) = @_;
-    my $count, $max_count;
+    my($dir_path) = @_;
+    my($count, $max_count);
 
     $count = $max_count = 0;
 
@@ -445,8 +473,8 @@ sub cert_files_present
 
 sub backup_cert_dir
 {
-    my ($dir_path) = @_;
-    my $current_backup_dir;
+    my($dir_path) = @_;
+    my($current_backup_dir);
 
     $current_backup_dir = "${dir_path}/${backup_dir}";
 
@@ -467,7 +495,7 @@ sub backup_cert_dir
     # verify that backup directory path exists
     #
 
-    if ( ! mkdirpath($current_backup_dir) )
+    if ( ! mkdirPath($current_backup_dir) )
     {
         #
         # ouch.  couldn't make backup directories.
@@ -497,7 +525,7 @@ sub backup_cert_dir
 
 sub action
 {
-    my ($command) = @_;
+    my($command) = @_;
 
     printf "$command\n";
 
@@ -511,8 +539,8 @@ sub action
 
 sub query_boolean
 {
-    my ($query_text, $default) = @_;
-    my $nondefault, $foo, $bar;
+    my($query_text, $default) = @_;
+    my($nondefault, $foo, $bar);
 
     #
     # Set $nondefault to the boolean opposite of $default.
@@ -576,7 +604,7 @@ sub query_boolean
 
 sub s_output
 {
-    my ($msg_type, $msg) = @_;
+    my($msg_type, $msg) = @_;
 
     #
     # for now, we default to not print anything but errors to the user
@@ -607,15 +635,15 @@ sub s_output
     }
 }
 
-### mkdirpath( $dirpath )
+### mkdirPath( $dirpath )
 #
 # given a path of one or more directories, build a complete path in the
 # filesystem to match it.
 #
 
-sub mkdirpath
+sub mkdirPath
 {
-    my ($dirpath) = @_;
+    my($dirpath) = @_;
 
     #
     # watch out for extra debug stuff
@@ -670,6 +698,79 @@ sub mkdirpath
     return 1;
 }
 
+### testMkdirPath( $dirpath )
+#
+# given a path of one or more directories, build a complete path in the
+# filesystem to match it.
+#
+
+sub testMkdirPath
+{
+    my($dirpath) = @_;
+
+    #
+    # watch out for extra debug stuff
+    #
+
+    $dirpath =~ s:/+:/:g;
+    $absdir = absolutePath($dirpath);
+
+    @directories = split(/\//, $absdir);
+    @newdirs = map { $x = $_; $x =~ s:^\s+|\s+$|\n+::g; $x; }
+               grep { /\S/ } @directories;
+
+    #
+    # prepare for our loop
+    #
+
+    $current_path = "";
+
+    for my $d (@newdirs)
+    {
+        $parent_path = $current_path;
+        $current_path = $current_path . "/" . $d;
+
+        #
+        # cases where we should just go to the next iteration
+        #
+
+        if ( -d $current_path )
+        {
+            next;
+        }
+
+        #
+        # we bomb out if we find something that exists in the filesystem
+        # (and isn't a directory)
+        #
+
+        if ( -e $current_path )
+        {
+            return 0;
+        }
+
+        #
+        # time to get to work
+        #
+
+        if ( -w $parent_path )
+        {
+            return 1;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
+    #
+    # if we reach this point, either $dirpath was empty to start with, or it
+    # already exists.
+    #
+
+    return 1;
+}
+
 ### myMkdir( $dir )
 #
 # try to create a directory
@@ -677,7 +778,7 @@ sub mkdirpath
 
 sub myMkdir
 {
-    my ($dir) = @_;
+    my($dir) = @_;
     my $result;
 
     # Perform the mkdir
@@ -698,7 +799,7 @@ sub myMkdir
 
 sub absolutePath
 {
-    my ($file) = @_;
+    my($file) = @_;
     my $cwd = cwd();
 
     if ($file !~ /^\//)
