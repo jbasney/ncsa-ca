@@ -44,9 +44,9 @@ require Grid::GPT::Setup;
 #
 
 my $globusdir = $gpath;
-my $setupdir = "$globusdir/setup/globus/ncsa/gsi-ncsa-ca";
+my $setupdir = "$globusdir/setup/globus/ncsa/gsi-ncsa-ca-services";
 my $secconfdir = "/etc/grid-security";
-my $myname = "setup-ncsa-ca.pl";
+my $myname = "setup-ncsa-ca-services.pl";
 
 #
 # Set up path prefixes for use in the path translations

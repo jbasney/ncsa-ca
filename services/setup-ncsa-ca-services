@@ -64,4 +64,4 @@ if [ "$GLOBUS_LOCATION" = "" ]; then
   exit 1
 fi
 
-perl $GLOBUS_LOCATION/setup/globus/ncsa/gsi-ncsa-ca/setup-ncsa-ca.pl
+perl $GLOBUS_LOCATION/setup/globus/ncsa/gsi-ncsa-ca/setup-ncsa-ca-services.pl
