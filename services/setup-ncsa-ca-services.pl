@@ -311,12 +311,7 @@ sub get_eligible_cert_dirs
     {
         $dir = $x509_path;
 
-        if ( ( ! -e $dir ) && testMkdirPath($dir) )
-        {
-            push(@dirlist, $dir);
-        }
-
-        if ( -d $dir )
+        if ( isValidPath($dir) )
         {
             push(@dirlist, $dir);
         }
@@ -358,22 +353,7 @@ sub get_eligible_cert_dirs
         }
     }
 
-    #
-    # build listing of eligible directories
-    #
-
-    for my $d (@dirlist)
-    {
-        $d =~ s!//+!/!g; # remove any series of 2 or more forward slashes
-        $d =~ s!/$!!g;   # remove any trailing slashes
-
-        if ( isMutable($d) )
-        {
-            push(@eligible_dirs, $d);
-        }
-    }
-
-    return @eligible_dirs;
+    return @dirlist;
 }
 
 ### isValidPath( $path )
@@ -392,7 +372,7 @@ sub isValidPath
         return 1;
     }
 
-    if ( -d $path )
+    if ( isMutable($path) )
     {
         return 1;
     }
