@@ -101,12 +101,19 @@ SSL_EXEC="${GLOBUS_LOCATION}/bin/openssl"
 SSL_CONFIG="${datadir}/gsi_ncsa_ca_tools/ncsa-ca.conf"
 
 # DEFault Generated Files
-DEF_GLOBUS_DIR="${HOME}/.globus"                       # cmp: what happens to this directory?
-DEF_CERT_FILE='${secconfdir}/globus-gatekeeper.cert'
-DEF_KEY_FILE='${secconfdir}/globus-gatekeeper.key'
-DEF_REQUEST_FILE='${secconfdir}/globus-gatekeeper.req'
-DEF_REQUEST_ID_FILE='${secconfdir}/ncsa_request_id'
+DEF_GLOBUS_DIR="${HOME}/.globus"            # as with ncsa-cert-retrieve, do we need to keep this entry?
+DEF_CERT_FILE="${secconfdir}/hostcert.pem"
+DEF_KEY_FILE="${secconfdir}/hostkey.pem"
+DEF_REQUEST_FILE="${secconfdir}/hostcert_req.pem"
+DEF_REQUEST_ID_FILE="${secconfdir}/ncsa_request_id"
 
+#
+# these need to be added into the code below somewhere - cmp
+#
+DEF_LDAP_CERT_FILE="${secconfdir}/ldapservercert.pem"
+DEF_LDAP_KEY_FILE="${secconfdir}/ldapserverkey.pem"
+DEF_LDAP_REQUEST_FILE="${secconfdir}/ldapservercert_req.pem"
+DEF_LDAP_REQUEST_ID_FILE="${secconfdir}/ldap_request_id"
 
 CONTACT_EMAIL_ADDR="consult@alliance.paci.org"
 CONTACT_URL="http://www.ncsa.uiuc.edu/UserInfo/Alliance/GridSecurity/"
