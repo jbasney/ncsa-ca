@@ -1089,15 +1089,15 @@ sub createCerts
     #
 
     $umsk = umask();
-    umask("022");
+    umask(0022);
     action("touch $cert_file");
+    umask(0177);
 
     #
     # create some semi random data for key generation
     # (this code is heavily influenced by a later version of Globus's grid-cert-request)
     #
 
-    umask("066");
     action("touch ${rand_temp}");
     if ( -r "/dev/urandom" )
     {
@@ -1116,8 +1116,6 @@ sub createCerts
     # we redirect to /dev/null in one case: where $nopw is set and $interactive isn't.  in all
     # other cases, the user should be seeing the output of the openssl program.
     #
-
-    umask("177");
 
     if ($interactive)
     {
