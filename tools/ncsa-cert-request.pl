@@ -2052,7 +2052,8 @@ ncsa-cert-request [options]
 
 =item B<-type <cert_type>>
 
-Create a certificate request of type <cert_type>.
+Generate a certificate request of type <cert_type>.  A listing of the types of requests
+this script can generate is available by invoking this program with the '-man' argument.
 
 =item B<-name <name>>
 
