@@ -33,7 +33,6 @@
 
 use Getopt::Long;
 use Pod::Usage;
-use Data::Dumper;
 use Cwd;
 
 $version="0.4.5";
@@ -191,13 +190,13 @@ currently trying to get in that location, you must either move or delete
 the certificate file that is currently there.
 
 If you wish to place this certificate you are trying to retrieve in a
-different location, please use the --dir option.
+different location, please use the -dir option.
 
 If you wish to name this certificate you are trying to retrieve a different
-name, please use the --cert option.
+name, please use the -cert option.
 
-For more help on these options and others, please run $progname --help or
-$progname --man.";
+For more help on these options and others, please run $progname -help or
+$progname -man.";
 
   die "$error_message\n";
 }
