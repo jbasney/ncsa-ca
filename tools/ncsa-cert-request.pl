@@ -12,6 +12,14 @@
 # note: variable binding is something that is just _dying_ to be cleaned
 #       up in this script.
 #
+# DEFAULTS
+# user | $HOME/.globus/user[cert|key].pem
+# host | /etc/g-s/host[cert|key].pem
+# ldap | $GL/etc/server.[cert|key]
+#
+# fail if they're already present
+# fail if we can't write to the directory in which they're contained
+#
 
 use Getopt::Long;
 use Pod::Usage;
