@@ -74,12 +74,23 @@ sub main
     @certdirlist = get_eligible_cert_dirs();
     $dirs = triageDirs(@certdirlist);
 
+    if ( ! reviewDirs($dirs) )
+    {
+        printf("Your machine either has no eligible certificate directories or\n");
+        printf("already has all of the certificate files and signing policies\n");
+        printf("necessary to work with the NCSA CA.\n");
+
+        printf("\n");
+        printf("Exiting gsi_ncsa_ca_services setup.\n");
+        exit(0);
+    }
+
     $response = query_boolean("Do you wish to continue with the setup package?","y");
 
     if ($response eq "n")
     {
         print("\n");
-        print("Okay... exiting gsi_ncsa_ca_services setup.\n");
+        print("Exiting gsi_ncsa_ca_services setup.\n");
 
         exit(0);
     }
@@ -91,7 +102,7 @@ sub main
 
     printf("\n");
 
-    @installdirs = @{$dirs->{install}};
+    @installdirs = @{$dirs->{install}};   
     if (@installdirs)
     {
         printf("Additional Notes:\n");
@@ -107,14 +118,10 @@ sub main
         printf("    from one of the following directories:\n");
         printf("\n");
 
-        for my $dir (@{$dirs->{install}})
+        for my $dir (@installdirs)
         {
             printf("    \t$dir\n");
         }
-    }
-    else
-    {
-        printf("No installation directories were found.\n");
     }
 
     printf("\n");
@@ -133,29 +140,51 @@ sub triageDirs
 
     if (@dirlist)
     {
-        printf("The following directories will have certificate files installed into them:\n");
-        printf("\n");
-
         for my $d (@dirlist)
         {
             $num_certs = cert_files_present($d);
 
             if ( $num_certs eq "none" )
             {
-                printf("\t$d\n");
-
                 push(@installdirs, $d);
             }
             elsif ( $num_certs eq "some" )
             {
-                printf("\t$d (backup)\n");
-
                 push(@backupdirs, $d);
                 push(@installdirs, $d);
             }
             else
             {
                 ; # do nothing
+            }
+        }
+    }
+
+    return $foo;
+}
+
+sub reviewDirs
+{
+    my($foo) = @_;
+    my(@installdirs, @backupdirs);
+
+    @installdirs = @{$foo->{install}};
+    @backupdirs = @{$foo->{backup}};
+
+    if ( @installdirs or @backupdirs )
+    {
+        printf("The following directories will have certificate files installed into them:\n");
+        printf("\n");
+
+        for my $d (@installdirs)
+        {
+            if ( ! grep(/^$d$/, @backupdirs) )
+            {
+                printf("\t$d\n");
+            }
+            else
+            {
+                printf("\t$d (backup)\n");
             }
         }
 
@@ -170,9 +199,13 @@ sub triageDirs
             printf("certficate files present in them and do not require any backup.\n");
             printf("\n");
         }
-    }
 
-    return $foo;
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 sub install_certs
@@ -188,10 +221,11 @@ sub install_certs
     print("\n");
 
     #
-    # alternatively, we could create separate lists for backups, and installs
+    # well, @backupdirs should only ever be true if @installdirs is true, so
+    # apologies.  testing both adds to readability of the code, imo, though.
     #
 
-    if ( @backupdirs or @installdirs )
+    if ( @installdirs or @backupdirs )
     {
         #
         # we've actually got directories to install our files into
@@ -218,12 +252,6 @@ sub install_certs
                 action("chmod 644 ${d}/5aba75cb.signing_policy");
             }
         }
-    }
-    else
-    {
-        printf "Your machine either has no eligible certificate directories or\n";
-        printf "already has all of the certificate files and signing policies\n";
-        printf "necessary to work with the Alliance CA.\n";
     }
 }
 
