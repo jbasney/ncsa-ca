@@ -104,14 +104,15 @@ sub s1_install_certs
     my @backupdirs, @installdirs;
     my $dir_count = 0;
 
-    print "\nStage 1: Installing NCSA CA certificate and signing policy files..\n";
-    print "\n";
+    print("\nInstalling NCSA CA certificate and signing policy files.\n");
+    print("\n");
 
     #
     # alternatively, we could create separate lists for backups, and installs
     #
 
-    printf "Looking for directories to install my files into..\n";
+    printf("Looking for directories in which to install my files...\n");
+    printf("\n");
 
     for my $d (@dirlist)
     {
@@ -119,14 +120,14 @@ sub s1_install_certs
 
         if ( $num_certs eq "none" )
         {
-            printf "  $d\n";
+            printf("\t$d\n");
 
             push(@installdirs, $d);
             $dir_count += 1;
         }
         elsif ( $num_certs eq "some" )
         {
-            printf "  $d (backup)\n";
+            printf("\t$d (backup)\n");
 
             push(@backupdirs, $d);
             push(@installdirs, $d);
@@ -136,40 +137,44 @@ sub s1_install_certs
         {
             ; # do nothing
         }
+
     }
 
-    if ( $dir_count >= 1 )
+    if ( $dir_count > 0 )
     {
         #
         # we've actually got directories to install our files into
         #
 
-        printf "\n";
-        printf "Directories found: $dir_count\n";
-        printf "\n";
-        printf "Those entries marked with '(backup)' have some certificate files\n";
-        printf "present, but not all.  Those with no marking beside them suggest\n";
-        printf "that I found no NCSA CA certficate files present in them.\n";
-        printf "\n";
+        printf("\n");
+        printf("Directories found: $dir_count\n");
+        printf("\n");
 
-        printf "Creating backups of critical files..\n";
-        for my $d (@backupdirs)
+        if (scalar(@backupdirs) > 0)
         {
-            printf "$d\n";
+            printf("Those entries marked with '(backup)' have some certificate files\n");
+            printf("present, but not all.  Those with no marking beside them suggest\n");
+            printf("that I found no NCSA CA certficate files present in them.\n");
+            printf("\n");
 
-            backup_cert_dir($d);
+            printf("Creating backups of critical files...\n");
+            for my $d (@backupdirs)
+            {
+                backup_cert_dir($d);
+            }
         }
 
-        printf "Copying certificates and policies..\n";
-        for my $d (@installdirs)
+        if (scalar(@installdirs) > 0)
         {
-            printf "$d\n";
+            printf("Copying certificates and policies...\n");
+            for my $d (@installdirs)
+            {
+                action("cp ${setupdir}/5aba75cb.0 ${d}/5aba75cb.0");
+                action("chmod 644 ${d}/5aba75cb.0");
 
-            action("cp ${setupdir}/5aba75cb.0 ${d}/5aba75cb.0");
-            action("chmod 644 ${d}/5aba75cb.0");
-
-            action("cp ${setupdir}/5aba75cb.signing_policy ${d}/5aba75cb.signing_policy");
-            action("chmod 644 ${d}/5aba75cb.signing_policy");
+                action("cp ${setupdir}/5aba75cb.signing_policy ${d}/5aba75cb.signing_policy");
+                action("chmod 644 ${d}/5aba75cb.signing_policy");
+            }
         }
     }
     else
@@ -431,7 +436,7 @@ sub backup_cert_dir
 #
 
 printf "$myname: Configuring package gsi_ncsa_ca_services..\n";
-printf "---------------------------------------------------------------\n";
+printf "-----------------------------------------------------------------------\n";
 printf "Hi, I'm the setup script for the gsi_ncsa_ca_services package!\n";
 printf "\n";
 printf "I do a lot of my work by modifying and then copying a handful of\n";
@@ -467,8 +472,8 @@ my $metadata = new Grid::GPT::Setup(package_name => "gsi_ncsa_ca_services");
 $metadata->finish();
 
 print "\n";
-print "---------------------------------------------------------------\n";
-print "$myname: Finished configuring package 'gsi_ncsa_ca_services'.\n";
+print "-----------------------------------------------------------------------\n";
+print "$myname: Finished configuring package gsi_ncsa_ca_services.\n";
 
 #
 # define support subroutines
