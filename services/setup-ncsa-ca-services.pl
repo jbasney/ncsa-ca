@@ -1,8 +1,25 @@
 #
 # setup-ncsa-ca.pl
 # ----------------
-# Adapts the globus/ssl environment to conform with Alliance certs and
-# signing policies.
+# Adapts the globus/ssl environment to conform with Alliance certs and signing
+# policies.
+#
+# Wow has this script gotten complex!  Okay, there are four directories where
+# certificates can go:
+#
+#    $X509_CERT_DIR
+#    /etc/grid-security/certificates
+#    $GLOBUS_LOCATION/share/certificates
+#    $HOME/.globus/certificates
+#
+# The first thing we do is prune this list to eliminate where some environmental
+# variables aren't defined, leaving us with concrete directories to test.  Then
+# we run through each one to see if they exist and we can write to them.  After
+# we're done with that pass, if we have no directories to write to, we go back
+# to test if we can create any of them.  Once we have found a directory to create,
+# we stick to it.  If we can't find a directory to create, we bomb out.  We also
+# bomb out if no certificate files need to be copied to the writable locations
+# we've found (since there's nothing for us to do).
 #
 # Send comments/fixes/suggestions to:
 # Chase Phillips <cphillip@ncsa.uiuc.edu>
@@ -133,48 +150,106 @@ sub main
 sub makeDirectories
 {
     my($dirs) = @_;
-    my(@installdirs);
+    my(@createdirs);
 
     #
     # $dirs->{install} is the union of the directories we've chosen to install into and those
     # of which we will do a backup.
     #
 
-    @installdirs = @{$dirs->{install}};
+    @createdirs = @{$dirs->{create}};
 
-    for my $d (@installdirs)
+    for my $d (@createdirs)
     {
         mkdirPath($d);
+    }
+}
+
+sub isCreatable
+{
+    my( $path ) = @_;
+
+    while (length($path) > 0)
+    {
+        #
+        # we take the easy way out here.  If the path exists and is writable we
+        # return true.  If the path exists but isn't writable, we return false.
+        #
+
+        if ( -e $path )
+        {
+            if ( -w $path )
+            {
+                return 1;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
+        #
+        # strip the last segment off the path to test for the next round.
+        # eg.
+        #     "/foo/bar" should become "/foo"
+        #     "/foo" should become ""
+        #     NOTE: if "/" doesn't exist, it's likely the system has bigger
+        #           problems than trying to get the NCSA CA recognized.
+        #
+
+        $path =~ s:(.*)(/[^/]*)/*$:\1:g;
     }
 }
 
 sub triageDirs
 {
     my(@dirlist) = @_;
-    my(@backupdirs, @installdirs);
+    my(@backupdirs, @installdirs, @createdirs);
     my $foo = {};
 
     $foo->{install} = \@installdirs;
     $foo->{backup} = \@backupdirs;
+    $foo->{create} = \@createdirs;
 
     if (@dirlist)
     {
         for my $d (@dirlist)
         {
-            $num_certs = cert_files_present($d);
+            if ( -w $d )
+            {
+                $num_certs = cert_files_present($d);
 
-            if ( $num_certs eq "none" )
-            {
-                push(@installdirs, $d);
+                if ( $num_certs eq "none" )
+                {
+                    push(@installdirs, $d);
+                }
+                elsif ( $num_certs eq "some" )
+                {
+                    push(@backupdirs, $d);
+                    push(@installdirs, $d);
+                }
+                else
+                {
+                    ; # do nothing
+                }
             }
-            elsif ( $num_certs eq "some" )
+        }
+    }
+
+    if (!@installdirs)
+    {
+        #
+        # we weren't able to find a directory in which to write our certificate
+        # files.  Can we find a path in which we can create a directory?
+        #
+
+        for my $d (@dirlist)
+        {
+            if ( isCreatable($d) )
             {
-                push(@backupdirs, $d);
-                push(@installdirs, $d);
-            }
-            else
-            {
-                ; # do nothing
+                pushd(@createdirs, $d);
+                pushd(@installdirs, $d);
+                last;
             }
         }
     }
@@ -185,12 +260,28 @@ sub triageDirs
 sub reviewDirs
 {
     my($foo) = @_;
-    my(@installdirs, @backupdirs);
+    my(@installdirs, @backupdirs, @createdirs);
 
     @installdirs = @{$foo->{install}};
     @backupdirs = @{$foo->{backup}};
+    @createdirs = @{$foo->{create}};
 
-    if ( @installdirs or @backupdirs )
+    if ( @createdirs )
+    {
+        printf("The following directories will be created and have certificate files\n");
+        printf("installed into them:\n");
+        printf("\n");
+
+        for my $d (@createdirs)
+        {
+            printf("\t$d\n");
+        }
+
+        printf("\n");
+
+        return 1;
+    }
+    elsif ( @installdirs or @backupdirs )
     {
         printf("The following directories will have certificate files installed into them:\n");
         printf("\n");
@@ -304,7 +395,7 @@ sub get_eligible_cert_dirs
     my $x509_path = $ENV{X509_CERT_DIR};
 
     #
-    # prepare for adding $GL/share/certificates to our path
+    # prepare for adding $X509_CERT_DIR to our path
     #
 
     if ( defined($x509_path) )
