@@ -14,7 +14,7 @@
       <Dependency Name="globus_openssl" Package="pgm" ><Version><Version_Range Upper_Major="1000" Lower_Major="0" Upper_Minor="1000" Lower_Minor="8" /></Version></Dependency>
     </Source_Dependencies>
 
-    <Version_Label>0.4.6</Version_Label>
+    <Version_Label>0.4.7</Version_Label>
 
     <With_Flavors build="no" />
 
