@@ -385,8 +385,6 @@ for my $d (@certdirlist)
     printf "  $d\n";
 }
 
-printf "  $secconfdir\n";
-printf "  $bindir\n";
 printf "\n";
 printf "I will make backups of any files that may need to be overwritten.\n";
 printf "\n";
