@@ -2090,7 +2090,7 @@ Prompt user for each component of the DN.  (Only use this if you know what you a
 
 =item B<-force>
 
-Overwrite any prexisting certificates.
+Remove any pre-existing certificates or keys that would block normal operation.
 
 =item B<-resubmit>
 
