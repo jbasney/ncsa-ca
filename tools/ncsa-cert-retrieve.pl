@@ -36,11 +36,13 @@ $ssl_exec = "$gpath/bin/openssl";
 # so $datadir should resolve to the share directory in $gpath
 $ca_config = "$gpath/share/gsi_ncsa_ca_tools/ncsa-ca.conf";
 
-#- # Default Generated Files
-$userhome = $ENV{HOME};
-
 $default_cert_file = "cert.pem";
 $default_key_file = "key.pem";
+
+# User's home directory
+$userhome = $ENV{HOME};
+# which is needed for $default_dir, which is just below this...
+
 # Changing location of retrieved certs so that they can move certs
 # wherever they want, and no accidental overwrites of existing certs
 # in ~/.globus happens
@@ -62,9 +64,21 @@ $user_agent="ncsa-cert-request/$version";
 # 0.  if nocheck is 1, then checkState is run later on -- this is a simple
 # sanity check.
 #
-# For now, must leave nocheck = 0 in all cases, as we have not figure out a 
+# For now, must leave nocheck = 0 in all cases, as we have not figure out a
 # good way to check the state of the system yet.
 $nocheck = 0;
+
+########
+#      #
+# MAIN #
+#      #
+########
+
+# Main is pretty easy:
+#    1) read cmd-line options
+#    2) deal with them appropriately
+#    3) check the system to make sure it can do proper OpenSSL stuff
+#    4) get the certificate
 
 ### READ COMMAND LINE OPTIONS ###
 
@@ -108,8 +122,14 @@ $contact_url\n";
 exit;
 }
 
-#if ($nocheck) { print "i will run checkState here eventually.\n"; }
+# This is where nocheck may eventually be used to run checkState,
+# or some other sanity checking dealie
 
+# if ($nocheck) { print "i will run checkState here eventually.\n"; }
+
+# If no command line args specify cert_file and/or key_file,
+# set them to undef, so that we can just pass the empty guys 
+# to preparePathsHash and determinePaths
 if (! $cl_cert_file) { $cl_cert_file = undef; }
 if (! $cl_key_file) { $cl_key_file = undef; }
 
@@ -457,7 +477,8 @@ sub checkGlobusSystem {
 Please have your system administrator install the
 the gsi_ncsa_ca_setup package.";
 
-  $/ = undef;
+  #  $/ = undef;
+  local $/;
   open (FILE, $ca_config) || die "can't open $ca_config";
   my $contents = <FILE>;
   close (FILE);
@@ -532,9 +553,13 @@ sub getCertificate {
   action("rm -f $post_data_file");
 
   # Sleep to give server a chance to respond
-  action("(cat $post_cmd_file; sleep 10) | $ssl_exec s_client -quiet -connect $server:$port > $post_out_file 2>&1");
+  # action("(cat $post_cmd_file; sleep 10) | $ssl_exec s_client -quiet -connect $server:$port > $post_out_file 2>&1");
 
-  $/ = "\n";
+  # Don't actually need the sleep command.  It works w/o it fine.  Not sure
+  # why it was in there.
+  action("cat $post_cmd_file | $ssl_exec s_client -quiet -connect $server:$port > $post_out_file 2>&1");
+
+  #  $/ = "\n";
   open (POST_OUT_FILE, "$post_out_file") || die "can't open $post_out_file";
   while (<POST_OUT_FILE>) {
     if ($_ =~ /certChainBase64 =/) {
