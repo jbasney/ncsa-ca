@@ -1,9 +1,0 @@
-#! /bin/sh
-#
-
-if [ "$GLOBUS_LOCATION" = "" ]; then
-  echo "Set GLOBUS_LOCATION before running this script"
-  exit 1
-fi
-
-perl $GLOBUS_LOCATION/setup/gsi_ncsa_ca_services/setup-ncsa-ca-services.pl
