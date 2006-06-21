@@ -1,4 +1,21 @@
-all: ncsa-cacl-cp.pdf
+
+M4=m4
+
+TIMESTAMP=`date`
+
+TEX_FILES=ncsa-ca-policy.tex ncsa-slcs-policy.tex
+
+PDF_FILES=$(TEX_FILES:.tex=.pdf)
+DVI_FILES=$(TEX_FILES:.tex=.dvi)
+AUX_FILES=$(TEX_FILES:.tex=.aux)
+PS_FILES=$(TEX_FILES:.tex=.ps)
+
+
+all: pdf
+
+pdf: $(PDF_FILES)
+
+tex: $(TEX_FILES)
 
 %.pdf: %.tex
 	pdflatex $*
@@ -10,16 +27,24 @@ all: ncsa-cacl-cp.pdf
 	pdflatex $*
 
 again:
-	\rm -f $(FILENAME).dvi $(FILENAME).ps $(FILENAME).pdf
+	\rm -f $(DVI_FILES) $(PS_FILES) $(PDF_FILES)
 	$(MAKE) -s
 
 clean:
 	\rm -f *.aux *.inx *.srt *.toc *.dvi *.log *.bbl *.blg *.eps *~
+	\rm -f *.out
+	\rm -f $(TEX_FILES)
 
 reallyclean: clean
-	\rm -f $(FILENAME).ps $(FILENAME).pdf
-
-wc:
-	detex $(FILENAME).tex | wc -w
+	\rm -f $(PS_FILES) $(PDF_FILES)
 
 .PRECIOUS: %.dvi %.bbl
+
+ncsa-ca-policy.tex: ncsa-master-cp.tex.m4 ncsa-ca-appendix.tex.m4
+	$(M4) -DM4_NCSA_CA $< > $@
+
+ncsa-slcs-policy.tex: ncsa-master-cp.tex.m4 ncsa-slcs-appendix.tex.m4
+	$(M4) -DM4_NCSA_SLCS $< > $@
+
+publish: pdf
+	rsync $(PDF_FILES) public-linux.ncsa.uiuc.edu:/afs/ncsa.uiuc.edu/web/security.ncsa.uiuc.edu/htdocs/CA
