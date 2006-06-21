@@ -1526,7 +1526,7 @@ include(ncsa-slcs-appendix.tex.m4)
 This source for this document can be found in the CVSROOT of
 :ext:cvs.ncsa.uiuc.edu:/CVS/ncsa-ca in the ncsa-cp repository.
 
-The CVS version of the source for this document is $Id$. Changes in
+The CVS version of the source for this document is $Revision$. Changes in
 the version of this source could be due to minor editorial changes and
 do not by themselves imply a change of policy.
 
