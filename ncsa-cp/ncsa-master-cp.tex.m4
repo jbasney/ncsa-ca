@@ -11,9 +11,14 @@ m4comment(latex configuration, bracket to protect from m4)
 \usepackage{url}
 \usepackage[pdftex,colorlinks=false]{hyperref}
 \usepackage{epsfig}
+\usepackage{changebar}
 
 %\bibliographystyle{abbrv}
 \bibliographystyle{plain}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{\baselineskip}
+
 \begin{document}
 ]
 
@@ -31,11 +36,21 @@ define(M4_DOC_TITLE, [Certificate Policy and Practice Statement for the NCSA SLC
 define(M4_CA_NAME, [NCSA-SLCS])
 define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.2.1])
 ])
-define(M4_DOC_VERSION, [1.0 DRAFT])
-define(M4_DOC_DATE, [June 14, 2006])
-define(M4_CA_URL, [http://security.ncsa.uiuc.edu/CA/])
 define(M4_TIMESTAMP, [esyscmd(date)])
+define(M4_DOC_VERSION, [1.0 DRAFT-3])
+define(M4_DOC_DATE, [M4_TIMESTAMP])
+define(M4_CA_URL, [http://security.ncsa.uiuc.edu/CA/])
 define(M4_VERSION, [esyscmd(m4 --version)])
+
+define(M4_CHANGEBAR_BEGIN, [\chgbarbegin])
+define(M4_CHANGEBAR_END, [\chgbarend])
+
+define(M4_ITALICS, [\textit{$*}])
+define(M4_SLANTED, [\textsl{$*}])
+define(M4_BOLD, [\textbf{$*}])
+
+m4comment(For quoted terms)
+define(M4_QUOTE, [\textbf{$*}])
 
 \title{M4_DOC_TITLE}
 \author{National Center for Supercomputing Applications (NCSA)}
@@ -85,7 +100,7 @@ compliance.
 
 NCSA runs two CAs, described subsequently. Each CA has it own key and
 certificate and runs on its own computer system (which, as described
-subsequently, servers as a hot space for the other CA). It is expected
+subsequently, serves as a hot spare for the other CA). It is expected
 that relying parties will trust both CAs, though a relying party may
 choose to trust only one CA or the other. These two CAs taken together
 along with the associated software and repositories used to distribute
@@ -139,10 +154,15 @@ In the case of user certificates, the NCSA-CA will automatically issue
 user certificates with a distinguished name based on the user's
 authentication via Kerberos 5 as a user in NCSA's user database.
 
-In the case of server and service certificate requests, the NCSA-CA
-system’s administrators will perform the RA function by validating the
-that the user making the request represents the server or service in
-question.
+In the case of server and service certificate requests, NCSA maintains
+a database of all NCSA hosts and their authorized system
+administrator(s). This database will serve the RA function for
+requests for service certificates. This will allow requests for
+service certificates from a hosts authorized administrator
+(authenticated via NCSA's Kerberos 5 domain) to be automatically
+processed. Requests for hosts that do not appear in this database
+(e.g. services run by NCSA collaborators) will be manually vetted by
+NCSA operations staff.
 ])
 
 M4_SLCS_ONLY([
@@ -224,9 +244,13 @@ M4_CA_NAME is the Head of Security Operations for NCSA. Currently this is
 Jim Barlow.
 
 James J. Barlow
+
 Head of Security Operations and Incident Response
+
 Phone number: 217-244-6403
+
 Postal address: 1205 W. Clark, Urbana IL 61801
+
 E-mail address: jbarlow@ncsa.uiuc.edu
 
 After hours contact information:
@@ -323,16 +347,19 @@ M4_CA_URL
 
 This repository described in the previous section will contain:
 
-* Self-signed, PEM-formatted certificates for all CAs in the NCSA PKI
+\begin{itemize}
+
+\item Self-signed, PEM-formatted certificates for all CAs in the NCSA PKI
 
 M4_CA_ONLY([
-* PEM-formatted CRLs for the M4_CA_NAME
+\item PEM-formatted CRLs for the M4_CA_NAME
 ])
 
-* General information about the NCSA PKI
+\item General information about the NCSA PKI
 
-* The most recent copies of all Certificate Policies for the NCSA PKI
-CAs
+\item The most recent copies of all Certificate Policies for the NCSA PKI CAs
+
+\end{itemize}
 
 \subsection{Time or frequency of publication}
 
@@ -359,9 +386,9 @@ depending on the type of certificate.
 
 \subsubsection{Need for names to be meaningful}
 
-The CN component of the subject name in user certificates has no
-semantic significance, but has a reasonable association with
-the name of the user.
+The common name (CN) component of the subject name in user
+certificates has no semantic significance, but has a reasonable
+association with the name of the user.
 
 M4_CA_ONLY([
 
@@ -382,15 +409,15 @@ All subject distinguished names in certificates issued by the NCSA PKI
 begin with ‘‘C=US, O=National Center for Supercomputing
 Applications’’. The next component will be one of:
 
-OU=Certificate Authorities 
+\begin{itemize}
 
+\item OU=Certificate Authorities :
 for a CA’s certificate. A CN component will follow the OU, naming the
 CA. All CA certificates will be self-signed.
 
 M4_CA_ONLY([
 
-OU=Services 
-
+\item OU=Services :
 for a service (including a host) certificate issued by the NCSA-CA. A
 CN component will follow the OU, naming the service and the fully
 qualified domain name (FQDN) at which the service can be contacted,
@@ -401,12 +428,13 @@ expression in a single CN component.
 
 ])
 
-CN=<User Name>
-
-for a user’s certificate issued by the NCSA-CA or NCSA-SLCS.  A CN
-component will follow containing the user’s full name and, if needed,
+\item CN=M4_QUOTE(User Name) :
+for a user’s certificate issued by the NCSA-CA or NCSA-SLCS.  The CN
+component will contain the user’s full name and, if needed,
 a numeric value to disambiguate the name from other users with the
 same name.
+
+\end{itemize}
 
 \subsubsection{Uniqueness of names}
 
@@ -463,9 +491,9 @@ creation process. Other gathered information is not verified.
 M4_CA_ONLY([
 
 Requests for service certificates must come from a valid NCSA User and
-will be checked against registered system administrator information to
-ensure the user is the legitimately system administrator for the
-service identified in the certificate subject name.
+will be checked against NCSA's database of registered system
+administrators to ensure the user is a legitimate system administrator
+for the service identified in the certificate subject name.
 
 ])
 
@@ -518,20 +546,24 @@ certificate.
 
 \subsubsection{Enrollment process and responsibilities}
 
-To receive an entry in NCSA’s user database, a user must be satisfy
+To receive an entry in NCSA's user database, a user must satisfy
 one of the following conditions:
 
--Be a NCSA employee;
+\begin{itemize}
 
--Be a Principal Investigator (PI) with a allocation on NCSA
+\item Be a NCSA employee;
+
+\item Be a Principal Investigator (PI) with a allocation on NCSA
 computational resources approved through an NSF-approved peer review
 process (e.g. NRAC);
 
--Have a "project account" requested on their behalf by an existing PI
+\item Have a "project account" requested on their behalf by an existing PI
 using that PI’s allocation;
 
--Have a "guest Account" requested by NCSA management for key
+\item Have a "guest Account" requested by NCSA management for key
 collaborators of NCSA.
+
+\end{itemize}
 
 All vetting is done either in person (in the case of employees), by
 peer review allocation (in the case of PIs), or by direct personal
@@ -621,42 +653,50 @@ No notifications to other entities will be performed.
 
 Subscribers must:
 
-* Exercise all reasonable care in protecting the
+\begin{itemize}
+
+\item  Exercise all reasonable care in protecting the
 private keys corresponding to their certificates, including but not
 limited to never storing them on a networked file system or otherwise
 transmitting them over a network.
 
 M4_CA_ONLY([
-* Ensure that the private keys corresponding to their issued service
+\item  Ensure that the private keys corresponding to their issued service
 certificates are stored in a manner that minimizes the risk of
 exposure. 
 ])
 
-* Observe restrictions on private key and certificate use. 
+\item  Observe restrictions on private key and certificate use. 
 
-* Promptly notify the CA operators of any incident involving a
+\item  Promptly notify the CA operators of any incident involving a
 possibility of exposure of a private key. 
+
+\end{itemize}
 
 \subsubsection{Relying party public key and certificate usage}
 
 Relying parties must 
 
-* Be cognizant of the provisions of this document. 
+\begin{itemize}
 
-* Verify any self-signed certificates to their own satisfaction using
+\item  Be cognizant of the provisions of this document. 
+
+\item  Verify any self-signed certificates to their own satisfaction using
 out-of-band means. 
 
 M4_CA_ONLY([
 
-* Accept responsibility for checking any relevant CRLs before
+\item  Accept responsibility for checking any relevant CRLs before
 accepting the validity of a certificate. 
 
 ])
 
-* Observe restrictions on private key and certificate use. 
+\item  Observe restrictions on private key and certificate use. 
 
-* Not presume any authorization of an end entity based on possession
+\item  Not presume any authorization of an end entity based on possession
 of a certificate from the NCSA PKI or its corresponding private key. 
+
+\end{itemize}
 
 \subsection{Certificate renewal}
 
@@ -691,13 +731,19 @@ M4_CA_ONLY([
 Certificates issued by the NCSA-CA will be revoked in any of the
 following circumstances:
 
-* The private key is suspected or reported to be lost or exposed. 
+\begin{itemize}
 
-* The information in the certificate is believed to be, or to have
-become inaccurate. 
+\item  The private key is suspected or reported to be lost or exposed. 
 
-* The certificate is reported to no longer be needed. 
+\item  The information in the certificate is believed to be, or has become
+inaccurate.
+
+\item  The certificate is reported to no longer be needed. 
+
+\end{itemize}
+
 ])
+
 
 \subsubsection{Who can request revocation}
 
@@ -906,18 +952,22 @@ No stipulation.
 
 The following items will be logged:
 
-* Certificate requests
+\begin{itemize}
 
-* Certificate issuance
+\item  Certificate requests
+
+\item  Certificate issuance
 
 M4_CA_ONLY([
-* Certificate revocations
+\item  Certificate revocations
 
-* Issued CRLs
+\item  Issued CRLs
 ])
 
-* Attempted and successful accesses to the systems hosting the NCSA
+\item  Attempted and successful accesses to the systems hosting the NCSA
 PKI
+
+\end{itemize}
 
 \subsubsection{Frequency of processing log}
 
@@ -1134,7 +1184,7 @@ No stipulation.
 The machines operating the NCSA-PKI run no extraneous network services
 and are kept current with respect to relevant security patches. NCSA
 maintains a variety of network intrusion detections systems that will
-be used to monitor the system for attempted unauthorized access.
+be used to monitor the systems for attempted unauthorized access.
 
 Login access is subject to hardware-based one-time password
 authentication using hardware tokens and permitted only for
@@ -1177,23 +1227,24 @@ The version number will have a value of 2 indicating a Version 3 certificate.
 \subsubsection{Certificate extensions}
 
 For user and service certificates:
-   
-Basic Constraints (critical): 
+
+\begin{itemize}
+
+\item Basic Constraints (critical): 
 CA:false 
 
-X509v3 Subject Key Identifier 
+\item X509v3 Subject Key Identifier 
+... 
+\item X509v3 Authority Key Identifier 
 ... 
 
-X509v3 Authority Key Identifier 
-... 
-
-Key Usage (critical): 
+\item Key Usage (critical): 
 Digital Signature, Non Repudiation, Key Encipherment, Data Encipherment
 
-Netscape Cert Type: 
+\item Netscape Cert Type: 
 SSL Client, SSL Server, Object Signing 
 
-Netscape CA Policy URL:
+\item Netscape CA Policy URL:
 M4_CA_ONLY([ 
 http://security.ncsa.uiuc.edu/CA/ncsa-ca-policy.pdf
 ])
@@ -1202,11 +1253,11 @@ http://security.ncsa.uiuc.edu/CA/ncsa-slcs-policy.pdf
 ])
 
 M4_CA_ONLY([
-CRLDistributionPoints:
+\item CRLDistributionPoints:
 URI:http://ca.ncsa.uiuc.edu/4a6cd8b1.r0
 ])
 
-SubjectAltName:
+\item SubjectAltName:
 
 For user certificates, the NCSA Kerberos principal name of the
 subscriber responsible for the certificate.
@@ -1216,45 +1267,64 @@ For service certificates, the NCSA Kerberos principal name of the
 responsible system administer.
 ])
 
+\end{itemize}
+
 \subsubsection{Algorithm object identifiers}
 
-Signature Algorithm: md5WithRSAEncryption
-Public Key Algorithm: rsaEncryption
+\begin{itemize}
+
+\item Hash Function:  id-sha1 1.3.14.3.2.26
+\item RSA Encryption: rsaEncryption 1.2.840.113549.1.1.1
+\item Signature Algorithm: sha1WithRSAEncryption 1.2.840.113549.1.1.5
+
+\end{itemize}
 
 \subsubsection{Name forms}
 
 M4_CA_ONLY([
 All certificates will have one of the following name forms:
 
-C=US, O=National Center for Supercomputing Applications, OU=Services,
-              CN=<svcname>/<fqdn>
-C=US, O=National Center for Supercomputing Applications, OU=Services,
-              CN=<fqdn>
-C=US, O=National Center for Supercomputing Applications, CN=<user name>
-C=US, O=National Center for Supercomputing Applications,
-              OU=Certificate Authorities, CN=<ca name>
+\begin{itemize}
+
+\item C=US, O=National Center for Supercomputing Applications, OU=Services,
+              CN=M4_QUOTE(svcname)/M4_QUOTE(fqdn)
+
+\item C=US, O=National Center for Supercomputing Applications, OU=Services,
+              CN=M4_QUOTE(fqdn)
+
+\item C=US, O=National Center for Supercomputing Applications,
+      	      CN=M4_QUOTE(user name)
+
+\item C=US, O=National Center for Supercomputing Applications,
+              OU=Certificate Authorities, CN=M4_QUOTE(ca name)
+
+\end{itemize}
 
 Where:
 
-  <svcname> is ``host'' or an identifier of the service the
+\begin{itemize}
+
+\item  M4_QUOTE(svcname) is ``host'' or an identifier of the service the
   certificate is associated with.
 
- <fqdn> is the fully qualified domain name of the host on which the
+\item M4_QUOTE(fqdn) is the fully qualified domain name of the host on which the
  service the certificate is associated with is homed.
 
- <user name> is a unique name for the subscriber, which may have
+\item  M4_QUOTE(user name) is a unique name for the subscriber, which may have
  appended digits to disambiguate.
 
- <ca name> is the name of a CA.
+\item  M4_QUOTE(ca name) is the name of a CA.
+
+\end{itemize}
 ])
 M4_SLCS_ONLY([
 All certificates will have the following name form:
 
-C=US, O=National Center for Supercomputing Applications, CN=<user name>
+C=US, O=National Center for Supercomputing Applications, CN=M4_QUOTE(user name)
 
 Where:
 
- <user name> is a unique name for the subscriber, which may have
+ M4_QUOTE(user name) is a unique name for the subscriber, which may have
  appended digits to disambiguate.
 ])
 
@@ -1414,8 +1484,8 @@ of this document.
 
 The M4_CA_NAME and its agents make no guarantee about the security or
 suitability of a service that is identified by a NCSA certificate. The
-certification service is run with a reasonable level of security, but
-it is provided on a best effort only basis. It does not warrant its
+M4_CA_NAME is run with a reasonable level of security, but it is
+provided on a best effort only basis. It does not warrant its
 procedures and it will take no responsibility for problems arising
 from its operation, or for the use made of the certificates it
 provides.
@@ -1427,7 +1497,7 @@ for damages or impairments resulting from its operation.
 
 \subsection{Limitations of liability}
 
-The M4_CA_NAME is operated substantially in accordance with Fermilab’s
+The M4_CA_NAME is operated substantially in accordance with NCSA’s
 own risk analysis. No liability, explicit or implicit, is accepted.
 
 \subsection{Indemnities}
