@@ -1,0 +1,42 @@
+Changes requested by TAGPMA:
+
+- We need to have a dedicated hardware firewall in front of the CA machines.
+
+- We need to document the lifecycle of database entries and Kerberos
+  principals to clearly demonstrate that principal names and DNs are
+  never recycled.
+
+- We need to consider the security of system backups.  Using Tivoli is
+  probably OK, but we need to document how the backups are protected
+  from tampering.
+
+- We should *not* run AFS on the servers.
+
+- The only open ports to the servers should be MyProxy, CACL, SSH, and
+  NTP.  The dedicated hardware firewall should restrict SSH traffic to
+  a specific gateway host.  It should also restrict NTP traffic, and
+  we should consider secure NTP setup.
+
+- All CA documentation should tell users to set 12 character
+  passphrases (or longer) on their private keys.
+
+- how are Kerberos accounts re-activated?
+  need to document this
+
+- secure backups?
+  never restore from insecure backup
+
+- need an addl firewall?
+  put hardware firewall in front of server
+  only allow MyProxy, SLCS, SSH, and NTP in
+
+- need to check certificates against profile
+
+- 2nd factor of authentication? date of birth?  This is a must in 
+  http://www.eugridpma.org/temporary/IGTF-AP-classic-20050930-4-1-b2.pdf
+
+Other issues:
+
+- We need to use service certificates for community accounts.
+
+- renewal? include in re-key section of slcs document?
