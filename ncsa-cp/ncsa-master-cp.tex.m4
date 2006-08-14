@@ -29,15 +29,17 @@ define([M4_SLCS_ONLY], [ifdef([M4_NCSA_SLCS], [$*])])
 M4_CA_ONLY([
 define(M4_DOC_TITLE, [Certificate Policy and Practice Statement for the NCSA CA])
 define(M4_CA_NAME, [NCSA-CA])
+define(M4_CA_DN, [C=US, O=National Center for Supercomputing Applications, OU=Certificate Authorities, CN=CACL])
 define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.1.1])
 ])
 M4_SLCS_ONLY([
-define(M4_DOC_TITLE, [Certificate Policy and Practice Statement for the NCSA SLCS])
+define(M4_DOC_TITLE, [Certificate Policy and Practice Statement for the NCSA MyProxy CA])
 define(M4_CA_NAME, [NCSA-SLCS])
+define(M4_CA_DN, [C=US, O=National Center for Supercomputing Applications, OU=Certificate Authorities, CN=MyProxy])
 define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.2.1])
 ])
 define(M4_TIMESTAMP, [esyscmd(date)])
-define(M4_DOC_VERSION, [1.0 DRAFT-3])
+define(M4_DOC_VERSION, [1.0 DRAFT-4])
 define(M4_DOC_DATE, [M4_TIMESTAMP])
 define(M4_CA_URL, [http://security.ncsa.uiuc.edu/CA/])
 define(M4_VERSION, [esyscmd(m4 --version)])
@@ -77,7 +79,7 @@ contact details).
 The structure and content of that document was derived from the
 Internet Engineering Task Force RFC 3647 (Internet X.509 Public Key
 Infrastructure Certificate Policy and Certification Practices
-Framework, http://www.ietf.org/rfc/rfc3647.txt).
+Framework).
 
 M4_CA_ONLY([
 
@@ -98,21 +100,20 @@ compliance.
 
 ])
 
-NCSA runs two CAs, described subsequently. Each CA has it own key and
-certificate and runs on its own computer system (which, as described
-subsequently, serves as a hot spare for the other CA). It is expected
+NCSA runs two CAs. Each CA has it own key and
+certificate and runs on its own computer system. It is expected
 that relying parties will trust both CAs, though a relying party may
 choose to trust only one CA or the other. These two CAs taken together
 along with the associated software and repositories used to distribute
 policies, CRLs and the like, are referred to as the "NCSA PKI".
 
 One CA issues only short-lived credentials to users and is
-henceforth referred to as the “NCSA Short-lived Certificate Service”
-or “NCSA-SLCS”.
+henceforth referred to as the ``NCSA Short-lived Certificate Service''
+or ``NCSA-SLCS''.
 
 One CA is a traditional CA that issues long-lived certificates to
 hosts, services and users requiring long-lived certificates. This CA
-is henceforth referred to as the “NCSA-CA”. It is expected that users
+is henceforth referred to as the ``NCSA-CA''. It is expected that users
 will use the NCSA-SLCS for user certificates unless they have some
 need for a long-lived certificate.
 
@@ -146,8 +147,8 @@ Kerberos domain, which serves the Registration Authority role and is
 used by the M4_CA_NAME to authenticate certificate requests.
 
 The same user database is used as an authentication service for
-NCSA’s users and staff to access NCSA high-performance computing
-resources, NCSA’s email services and other production services.
+NCSA's users and staff to access NCSA high-performance computing
+resources, NCSA's email services and other production services.
 
 M4_CA_ONLY([
 In the case of user certificates, the NCSA-CA will automatically issue
@@ -158,7 +159,7 @@ In the case of server and service certificate requests, NCSA maintains
 a database of all NCSA hosts and their authorized system
 administrator(s). This database will serve the RA function for
 requests for service certificates. This will allow requests for
-service certificates from a hosts authorized administrator
+service certificates from a host's authorized administrator
 (authenticated via NCSA's Kerberos 5 domain) to be automatically
 processed. Requests for hosts that do not appear in this database
 (e.g. services run by NCSA collaborators) will be manually vetted by
@@ -169,7 +170,7 @@ M4_SLCS_ONLY([
 
 The NCSA-SLCS will automatically issue user certificates with a
 distinguished name based on the user's authentication via Kerberos 5
-as a user in NCSA's user database..
+as a user in NCSA's user database.
 
 ])
 
@@ -189,7 +190,7 @@ operating within the NCSA administrative domain and to computer
 systems from other domains that are providing services in support of
 NCSA projects.
 
-Persons receiving certificates will be users of NCSA’s computational
+Persons receiving certificates will be users of NCSA's computational
 facilities or staff employed at NCSA.
 
 ])
@@ -394,7 +395,7 @@ M4_CA_ONLY([
 
 The CN component of the subject name in service certificates includes
 the fully qualified DNS name of the service, which is usually that of
-the host supporting the service. The structure of a service’s CN is
+the host supporting the service. The structure of a service's CN is
 designed to support SSL, TLS and Globus services.
 
 ])
@@ -406,14 +407,16 @@ Anonymity and pseudonymity are not supported.
 \subsubsection{Rules for interpreting various name forms}
 
 All subject distinguished names in certificates issued by the NCSA PKI
-begin with ‘‘C=US, O=National Center for Supercomputing
-Applications’’. The next component will be one of:
+begin with C=US, O=National Center for Supercomputing
+Applications. The next component will be one of:
 
 \begin{itemize}
 
 \item OU=Certificate Authorities :
-for a CA’s certificate. A CN component will follow the OU, naming the
+for a CA's certificate. A CN component will follow the OU, naming the
 CA. All CA certificates will be self-signed.
+
+The distinguished name for the M4_CA_NAME is M4_CA_DN.
 
 M4_CA_ONLY([
 
@@ -422,15 +425,13 @@ for a service (including a host) certificate issued by the NCSA-CA. A
 CN component will follow the OU, naming the service and the fully
 qualified domain name (FQDN) at which the service can be contacted,
 separated by a slash character. When the service is https, the service
-name and separator will be absent, and there may be multiple FQDNs
-expressed as a sequence of CN components and/or as a regular
-expression in a single CN component.
+name and separator will be absent.
 
 ])
 
-\item CN=M4_QUOTE(User Name) :
-for a user’s certificate issued by the NCSA-CA or NCSA-SLCS.  The CN
-component will contain the user’s full name and, if needed,
+\item CN=M4_ITALICS(User Name) :
+for a user's certificate issued by the NCSA-CA or NCSA-SLCS.  The CN
+component will contain the user's full name and, if needed,
 a numeric value to disambiguate the name from other users with the
 same name.
 
@@ -442,8 +443,8 @@ Each subject name issued by the NCSA PKI will be issued to one and
 only one individual. The NCSA-CA and NCSA-SLCS may issue certificates
 with identical names, but only to the same individual.
 
-All names will be prefixed with the relative DN form of ‘‘C=US,
-O=National Center for Supercomputing Applications’’ to provide a
+All names will be prefixed with the relative DN form of C=US,
+O=National Center for Supercomputing Applications to provide a
 globally unique namespace.
 
 For user certificates, a unique "common name" is assigned to each
@@ -455,7 +456,7 @@ users.
 
 M4_CA_ONLY([
 
-For services certificates, the combination of service name and fully
+For service certificates, the combination of service name and fully
 qualified domain name of the host on which the service resides serves
 to disambiguate the name.
 
@@ -482,7 +483,7 @@ credentials.
 
 \subsubsection{Non-verified subscriber information}
 
-Subscribe name and postal address are verified by NCSA's account
+Subscriber name and postal address are verified by NCSA's account
 creation process. Other gathered information is not verified.
 
 \subsubsection{Validation of authority}
@@ -557,10 +558,10 @@ one of the following conditions:
 computational resources approved through an NSF-approved peer review
 process (e.g. NRAC);
 
-\item Have a "project account" requested on their behalf by an existing PI
-using that PI’s allocation;
+\item Have a ``project account'' requested on their behalf by an existing PI
+using that PI's allocation;
 
-\item Have a "guest Account" requested by NCSA management for key
+\item Have a ``guest Account'' requested by NCSA management for key
 collaborators of NCSA.
 
 \end{itemize}
@@ -852,14 +853,20 @@ No key escrow is performed.
 
 \subsubsection{Site location and construction}
 
-Both the NCSA-CA and the NCSA-SLCS will be operated on identical
-computers with identical hardware storage modules. Both machines will
-be located in the NCSA machine room.
+The M4_CA_NAME will be located in NCSA's machine room in the Advance
+Computation Building (ACB) on the University of Illinois at
+Urbana-Champaign campus.
 
 \subsubsection{Physical access}
 
-The NCSA machine room housing the M4_CA_NAME is staffed 24x7 and
-access limited to personnel cleared by NCSA management.
+NCSA occupies all of ACB with the exception of space dedicated to
+mechanical systems and custodians.  ACB entrances and computer rooms
+are locked at all times and use a keycard system to gain entry.  Video
+cameras are located at all entrances and are monitored by staff in the
+control room.  An intercom and remote lock release system is used at
+the main entrance to allow entry to authorized personnel who do not
+have keycard access.  ACB is not open to the general public and is
+staffed 24x7x365.
 
 \subsubsection{Power and air conditioning}
 
@@ -965,7 +972,7 @@ M4_CA_ONLY([
 ])
 
 \item  Attempted and successful accesses to the systems hosting the NCSA
-PKI
+PKI, and reboots of those systems
 
 \end{itemize}
 
@@ -975,7 +982,7 @@ No stipulation.
 
 \subsubsection{Retention period for audit log}
 
-Audit logs are maintain indefinitely on NCSA's mass storage system.
+Audit logs are maintain indefinitely on NCSA's mass storage system in ACB.
 
 \subsubsection{Protection of audit log}
 
@@ -983,7 +990,9 @@ No stipulation.
 
 \subsubsection{Audit log backup procedures}
 
-No stipulation.
+Audit logs are archived weekly to a secondary storage facility at the
+Beckman Institute on the University of Illinois at
+Urbana-Champaign campus.
 
 \subsubsection{Audit collection system (internal vs. external)}
 
@@ -999,12 +1008,18 @@ No stipulation.
 
 \subsection{Records archival}
 
-No records are archived.
+The CA records and archives all requests for certificates, along with all
+the issued certificates, all the requests for revocation, all the issued
+CRLs and the login/logout/reboot of the issuing machine. 
+
+The CA keeps these records for at least three years.
+These records will be be made available to external auditors in the
+course of their work as auditor.
 
 \subsection{Key changeover}
 
 Best effort will be made to notify relying parties of any new public
-key for the M4_CA_NAME and it may then be obtained in the same manner
+key for the M4_CA_NAME, and it may then be obtained in the same manner
 as the previous M4_CA_NAME certificates.
 
 \subsection{Compromise and disaster recovery}
@@ -1045,17 +1060,16 @@ No stipulation.
 \subsection{Key pair generation and installation}
 \subsubsection{Key pair generation}
 
-The NCSA PKI does not generate any private keys but its own.
+The M4_CA_NAME does not generate any private keys but its own.
 
 User private keys will be generated by client software on the host
 where they will be stored.  They will be stored on non-networked
 filesystems.
 
 M4_SLCS_ONLY([
-Private keys will normally be stored in the clear, but the
-lifetimes of the associated public-key certificates is limited to the
-lifetime of the Kerberos credentials used to obtain them, which is
-currently no more than one week.
+Private keys will normally be stored unencrypted, but the
+lifetime of the associated public-key certificate is limited to 
+no more than one week.
 ])
 
 M4_CA_ONLY([
@@ -1097,8 +1111,8 @@ Signature, Certificate Signing, and CRL Signing.
 \subsection{Private Key Protection and Cryptographic Module Engineering Controls}
 \subsubsection{Cryptographic module standards and controls}
 
-The M4_CA_NAME will use FIPS 140-2 level 3 Hardware Security Modules
-or equivalent for storage of its private keys.
+The M4_CA_NAME will use a FIPS 140-2 level 3 Hardware Security Module
+for storage of its private key.
 
 \subsubsection{Private key (n out of m) multi-person control}
 
@@ -1110,10 +1124,10 @@ M4_CA_NAME private keys are not escrowed.
 
 \subsubsection{Private key backup}
 
-M4_CA_NAME private keys are replicated on two identical cryptographic
+M4_CA_NAME private key is replicated on two identical cryptographic
 modules on two identical hosts in the NCSA machine room to provide for
 failure protection. If a system hosting one CA should fail, that CA
-will temporarily be hosts on the other system until such time as a
+will temporarily be hosted on the other system until such time as a
 replacement system can be arranged.
 
 \subsubsection{Private key archival}
@@ -1129,7 +1143,7 @@ they will not be exported from the cryptographic modules.
 \subsubsection{Private key storage on cryptographic module}
 
 M4_CA_NAME private keys are stored on cryptographic modules meeting
-FIPS 140-2 level 3 or equivalent.
+FIPS 140-2 level 3.
 
 \subsubsection{Method of activating private key}
 
@@ -1145,7 +1159,7 @@ No stipulation.
 
 \subsubsection{Cryptographic Module Rating}
 
-Hardware storage modules will meet or exceed FIPS 140-2 level 3.
+Hardware security modules will meet or exceed FIPS 140-2 level 3.
 
 \subsection{Other aspects of key pair management}
 
@@ -1181,14 +1195,15 @@ No stipulation.
 \subsection{Computer security controls}
 \subsubsection{Specific computer security technical requirements}
 
-The machines operating the NCSA-PKI run no extraneous network services
-and are kept current with respect to relevant security patches. NCSA
-maintains a variety of network intrusion detections systems that will
-be used to monitor the systems for attempted unauthorized access.
-
+The M4_CA_NAME software runs on a dedicated machine, running no other
+services than those needed for the CA operations.
+The server's network is protected by a dedicated hardware firewall,
+and the server itself runs an operating system firewall.
+The server is monitored via both host-based and network-based
+intrusion detection systems.
 Login access is subject to hardware-based one-time password
 authentication using hardware tokens and permitted only for
-‘‘administrative’’ personnel that require access to the system for its
+administrative personnel that require access to the system for its
 operation.
 
 \subsubsection{Computer security rating}
@@ -1259,11 +1274,13 @@ URI:http://ca.ncsa.uiuc.edu/4a6cd8b1.r0
 
 \item SubjectAltName:
 
-For user certificates, the NCSA Kerberos principal name of the
-subscriber responsible for the certificate.
+For user certificates, the NCSA email address and Kerberos principal
+name of the subscriber responsible for the certificate.
 
 M4_CA_ONLY([
-For service certificates, the NCSA Kerberos principal name of the
+For service certificates, the 
+dnsName of the service and
+the NCSA email address and Kerberos principal name of the
 responsible system administer.
 ])
 
@@ -1287,16 +1304,16 @@ All certificates will have one of the following name forms:
 \begin{itemize}
 
 \item C=US, O=National Center for Supercomputing Applications, OU=Services,
-              CN=M4_QUOTE(svcname)/M4_QUOTE(fqdn)
+              CN=M4_QUOTE(svcname)/M4_QUOTE(FQDN)
 
 \item C=US, O=National Center for Supercomputing Applications, OU=Services,
-              CN=M4_QUOTE(fqdn)
+              CN=M4_QUOTE(FQDN)
 
 \item C=US, O=National Center for Supercomputing Applications,
       	      CN=M4_QUOTE(user name)
 
 \item C=US, O=National Center for Supercomputing Applications,
-              OU=Certificate Authorities, CN=M4_QUOTE(ca name)
+              OU=Certificate Authorities, CN=M4_QUOTE(CA name)
 
 \end{itemize}
 
@@ -1307,7 +1324,7 @@ Where:
 \item  M4_QUOTE(svcname) is ``host'' or an identifier of the service the
   certificate is associated with.
 
-\item M4_QUOTE(fqdn) is the fully qualified domain name of the host on which the
+\item M4_QUOTE(FQDN) is the fully qualified domain name of the host on which the
  service the certificate is associated with is homed.
 
 \item  M4_QUOTE(user name) is a unique name for the subscriber, which may have
@@ -1497,7 +1514,7 @@ for damages or impairments resulting from its operation.
 
 \subsection{Limitations of liability}
 
-The M4_CA_NAME is operated substantially in accordance with NCSA’s
+The M4_CA_NAME is operated substantially in accordance with NCSA's
 own risk analysis. No liability, explicit or implicit, is accepted.
 
 \subsection{Indemnities}
@@ -1508,7 +1525,7 @@ No stipulation.
 \subsubsection{Term}
 
 This policy becomes effective on its posting to
-M4_CA_URL
+M4_CA_URL.
 
 \subsubsection{Termination}
 
@@ -1529,7 +1546,7 @@ Changes to this document will be presented to the TAGPMA for approval
 before taking effect.
 
 Changes will go into effect on the publishing of this document to
-M4_CA_NAME
+M4_CA_NAME.
 
 \subsubsection{Notification mechanism and period}
 
