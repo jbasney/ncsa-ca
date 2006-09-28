@@ -40,3 +40,6 @@ Other issues:
 - We need to use service certificates for community accounts.
 
 - renewal? include in re-key section of slcs document?
+
+- CRL MUST be v2?
+
