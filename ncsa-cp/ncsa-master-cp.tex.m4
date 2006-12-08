@@ -1398,8 +1398,7 @@ No stipulation.
 
 \subsubsection{Processing semantics for the critical Certificate Policies extension}
 
-No critical extensions are in use at this time.
-
+No stipulation.
 
 \subsection{CRL profile}
 
