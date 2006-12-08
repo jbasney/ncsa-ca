@@ -12,6 +12,7 @@ m4comment(latex configuration, bracket to protect from m4)
 \usepackage[pdftex,colorlinks=false]{hyperref}
 \usepackage{epsfig}
 \usepackage{changebar}
+\usepackage{tocloft}
 
 %\bibliographystyle{abbrv}
 \bibliographystyle{plain}
@@ -39,7 +40,7 @@ define(M4_CA_DN, [C=US, O=National Center for Supercomputing Applications, OU=Ce
 define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.2.1])
 ])
 define(M4_TIMESTAMP, [esyscmd(date)])
-define(M4_DOC_VERSION, [1.0 DRAFT-4])
+define(M4_DOC_VERSION, [1.0 DRAFT-5])
 define(M4_DOC_DATE, [M4_TIMESTAMP])
 define(M4_CA_URL, [http://security.ncsa.uiuc.edu/CA/])
 define(M4_VERSION, [esyscmd(m4 --version)])
@@ -60,6 +61,9 @@ define(M4_QUOTE, [\textbf{$*}])
 \date{Version M4_DOC_VERSION (M4_DOC_DATE)}
 
 \maketitle
+
+\tableofcontents
+\newpage
 
 \section{INTRODUCTION}
 
@@ -479,7 +483,8 @@ NCSA users are identified by their presence in the NCSA user database.
 \subsubsection{Authentication of individual identity}
 
 User identity will be authenticated through Kerberos 5
-credentials.
+credentials, with the authenticated Kerberos 5 principal
+name mapped to a unique "common name" via the NCSA user database.
 
 \subsubsection{Non-verified subscriber information}
 
@@ -659,7 +664,7 @@ Subscribers must:
 \item  Exercise all reasonable care in protecting the
 private keys corresponding to their certificates, including but not
 limited to never storing them on a networked file system or otherwise
-transmitting them over a network.
+transmitting them over a network and never sharing them between people.
 
 M4_CA_ONLY([
 \item  Ensure that the private keys corresponding to their issued service
@@ -976,6 +981,8 @@ PKI, and reboots of those systems
 
 \end{itemize}
 
+The NCSA user database maintains contact information for all subscribers.
+
 \subsubsection{Frequency of processing log}
 
 No stipulation.
@@ -1093,6 +1100,7 @@ M4_CA_URL
 
 \subsubsection{Key sizes}
 
+The CA private key will be 2048 bits in length.
 Public RSA keys shorter than 1024 bits will not be signed.
 
 \subsubsection{Public key parameters generation and quality checking}
@@ -1112,6 +1120,7 @@ Signature, Certificate Signing, and CRL Signing.
 \subsubsection{Cryptographic module standards and controls}
 
 The M4_CA_NAME will use a FIPS 140-2 level 3 Hardware Security Module
+(SafeNet Luna PCI)
 for storage of its private key.
 
 \subsubsection{Private key (n out of m) multi-person control}
@@ -1235,11 +1244,33 @@ No stipulation.
 
 \section{CERTIFICATE, CRL, AND OCSP PROFILES}
 \subsection{Certificate profile}
+
+End-entity certificates will be in X509v3 format,
+compliant with RFC 3280.
+
 \subsubsection{Version number(s)}
 
 The version number will have a value of 2 indicating a Version 3 certificate.
 
 \subsubsection{Certificate extensions}
+
+For the CA certificate:
+
+\begin{itemize}
+
+\item keyUsage (critical): Digital Signature, Certificate Sign, CRL Sign
+
+\item basicConstraints (critical): CA:true
+
+\item X509v3 Subject Key Identifier 
+\item X509v3 Authority Key Identifier 
+
+M4_CA_ONLY([
+\item CRLDistributionPoints:
+URI:http://ca.ncsa.uiuc.edu/4a6cd8b1.r0
+])
+
+\end{itemize}
 
 For user and service certificates:
 
@@ -1249,9 +1280,10 @@ For user and service certificates:
 CA:false 
 
 \item X509v3 Subject Key Identifier 
-... 
 \item X509v3 Authority Key Identifier 
-... 
+
+\item X509v3 Certificate Policies:
+OID: M4_DOC_OID
 
 \item Key Usage (critical): 
 Digital Signature, Non Repudiation, Key Encipherment, Data Encipherment
@@ -1395,9 +1427,9 @@ OCSP is not supported.
 
 \section{COMPLIANCE AUDIT AND OTHER ASSESSMENTS}
 
-The M4_CA_NAME will not be audited by an outside party. Certifying,
-cross-certifying, and relying organizations may request a review of
-M4_CA_NAME operation.
+M4_CA_NAME will accept being audited by other IGTF accredited CAs to
+verify compliance with the rules and procedures specified in this
+document.
 
 \subsection{Frequency or circumstances of assessment}
 
