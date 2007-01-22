@@ -1496,11 +1496,11 @@ No stipulation.
 
 \subsubsection{Information treated as private}
 
-No private information is collected by the M4_CA_NAME.
+No stipulation.
 
 \subsubsection{Information not deemed private}
 
-No private information is collected by the M4_CA_NAME.
+No stipulation.
 
 \subsubsection{Responsibility to protect private information}
 
