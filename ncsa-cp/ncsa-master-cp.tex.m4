@@ -34,15 +34,15 @@ define(M4_CA_DN, [C=US, O=National Center for Supercomputing Applications, OU=Ce
 define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.1.1])
 ])
 M4_SLCS_ONLY([
-define(M4_DOC_TITLE, [Certificate Policy and Practice Statement for the NCSA MyProxy CA])
+define(M4_DOC_TITLE, [Certificate Policy and Practice Statement for the NCSA SLCS])
 define(M4_CA_NAME, [NCSA-SLCS])
 define(M4_CA_DN, [C=US, O=National Center for Supercomputing Applications, OU=Certificate Authorities, CN=MyProxy])
 define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.2.1])
 ])
 define(M4_TIMESTAMP, [esyscmd(date)])
-define(M4_DOC_VERSION, [1.0 DRAFT-5])
+define(M4_DOC_VERSION, [1.0 DRAFT-6])
 define(M4_DOC_DATE, [M4_TIMESTAMP])
-define(M4_CA_URL, [http://security.ncsa.uiuc.edu/CA/])
+define(M4_CA_URL, [\url{http://security.ncsa.uiuc.edu/CA/}])
 define(M4_VERSION, [esyscmd(m4 --version)])
 
 define(M4_CHANGEBAR_BEGIN, [\chgbarbegin])
@@ -79,42 +79,21 @@ parties) which accept those certificates. The Policy is issued and
 administered under the authority of the NCSA Policy Management
 Authority (herein referred to as the "PMA"; see Section 1.4.2 for
 contact details).
-
-The structure and content of that document was derived from the
+This document is structured according to
 Internet Engineering Task Force RFC 3647 (Internet X.509 Public Key
 Infrastructure Certificate Policy and Certification Practices
 Framework).
 
-M4_CA_ONLY([
-
-This document is compliant with the Profile for Traditional X.509
-Public Key Certificate Authorities with secured infrastructure Version
-4.0, authored by the EUGridPMA. See the appendix for discussion of
-this compliance.
-
-])
-
-M4_SLCS_ONLY([
-
-This document is compliant with the Profile for Short Lived Credential
-Services X.509 Public Key Certification Authorities with secured
-infrastructure Version 1.1, authored by The Americas Grid Policy
-Management Authority. See the appendix for discussion of this
-compliance.
-
-])
-
-NCSA runs two CAs. Each CA has it own key and
-certificate and runs on its own computer system. It is expected
+NCSA runs two CAs. Each CA has it own key and certificate. It is expected
 that relying parties will trust both CAs, though a relying party may
 choose to trust only one CA or the other. These two CAs taken together
 along with the associated software and repositories used to distribute
 policies, CRLs and the like, are referred to as the "NCSA PKI".
-
-One CA issues only short-lived credentials to users and is
+One CA issues only short-lived certificates
+(with one week or shorter lifetime)
+to users and is
 henceforth referred to as the ``NCSA Short-lived Certificate Service''
 or ``NCSA-SLCS''.
-
 One CA is a traditional CA that issues long-lived certificates to
 hosts, services and users requiring long-lived certificates. This CA
 is henceforth referred to as the ``NCSA-CA''. It is expected that users
@@ -122,19 +101,61 @@ will use the NCSA-SLCS for user certificates unless they have some
 need for a long-lived certificate.
 
 This document covers the policy that applies to the M4_CA_NAME.
+Figure \ref{arch-fig} illustrates the overall architecture of the 
+M4_CA_NAME.
+The CA is integrated with the NCSA user database and Kerberos
+authentication service for identity management.
+The NCSA accounting process enrolls users in the user database,
+creates a Kerberos account for them,
+and assigns them a distinguished name.
+To obtain credentials,
+M4_CA_NAME subscribers run software on the host where their
+credentials are to be stored.
+The software generates the subscriber's private key locally,
+authenticates the user to the M4_CA_NAME via Kerberos,
+issues a signed certificate request to the CA,
+and, if the request is approved,
+receives a signed certificate from the CA.
+The M4_CA_NAME authenticates users via Kerberos,
+looks up their corresponding distinguished name in the user database,
+then issues a certificate with the appropriate distinguished name.
+M4_CA_ONLY([For host and service certificate requests, the M4_CA_NAME
+queries the NCSA Host database, maintained by NCSA networking staff,
+to verify the authenticated user is a registered administrator
+for the requested host.])
+Further policy and implementation details are provided
+throughout the document.
+
+M4_CA_ONLY([
+
+\begin{figure}[[ht]]
+\centering
+\includegraphics[[trim = 0 380 0 0]]{ncsa-ca-fig.pdf}
+\caption{NCSA CA Architecture}
+\label{arch-fig}
+\end{figure}
+
+])
+
+M4_SLCS_ONLY([
+
+\begin{figure}[[ht]]
+\centering
+\includegraphics[[trim = 0 420 0 0]]{ncsa-slcs-fig.pdf}
+\caption{NCSA SLCS Architecture}
+\label{arch-fig}
+\end{figure}
+
+])
 
 \subsection{Document name and identification}
 
-Document title: M4_DOC_TITLE
-
+Document title: M4_DOC_TITLE\\
 This Policy is published at:
-M4_CA_URL
-
-Document version: M4_DOC_VERSION
-
-Document date: M4_DOC_DATE
-
-OID: M4_DOC_OID
+M4_CA_URL\\
+Document version: M4_DOC_VERSION\\
+Document date: M4_DOC_DATE\\
+OID: M4_DOC_OID\\
 
 \subsection{PKI participants}
 
@@ -145,39 +166,34 @@ entity certificates. There are no subordinate CAs.
 
 \subsubsection{Registration authorities}
 
-NCSA maintains a user database of legitimate users of NCSA
-computational systems. This user database is exposed through a
-Kerberos domain, which serves the Registration Authority role and is
-used by the M4_CA_NAME to authenticate certificate requests.
-
-The same user database is used as an authentication service for
-NCSA's users and staff to access NCSA high-performance computing
+NCSA allocations group staff serve as registration authorities for the
+M4_CA_NAME.
+They enroll users in the NCSA user database
+according to the enrollment process described in 
+Section \ref{sec:enrollment},
+create Kerberos accounts for new users,
+and assign distinguished names to new users
+according to Section \ref{sec:names}.
+The M4_CA_NAME uses the Kerberos service to authenticate requests
+and queries the database to obtain the proper distinguished name for
+authenticated requesters.
+The NCSA user database and Kerberos service are used to authenticate 
+NCSA's users and staff for access to NCSA high-performance computing
 resources, NCSA's email services and other production services.
 
 M4_CA_ONLY([
-In the case of user certificates, the NCSA-CA will automatically issue
-user certificates with a distinguished name based on the user's
-authentication via Kerberos 5 as a user in NCSA's user database.
-
-In the case of server and service certificate requests, NCSA maintains
+NCSA networking group staff serve a registration authority
+role for host and service certificate requests by
+maintaining
 a database of all NCSA hosts and their authorized system
-administrator(s). This database will serve the RA function for
-requests for service certificates. This will allow requests for
+administrator(s). 
+This will allow requests for
 service certificates from a host's authorized administrator
-(authenticated via NCSA's Kerberos 5 domain) to be automatically
+(authenticated via Kerberos) to be automatically
 processed. Requests for hosts that do not appear in this database
 (e.g. services run by NCSA collaborators) will be manually vetted by
 NCSA operations staff.
 ])
-
-M4_SLCS_ONLY([
-
-The NCSA-SLCS will automatically issue user certificates with a
-distinguished name based on the user's authentication via Kerberos 5
-as a user in NCSA's user database.
-
-])
-
 
 \subsubsection{Subscribers}
 
@@ -236,33 +252,23 @@ are they supported.
 
 \subsubsection{Organization administering the document}
 
-This policy is administered by:
-
-The National Center for Supercomputing Applications
-at the University of Illinois
-1205 W. Clark, Urbana IL 61801
+This policy is administered by
+the National Center for Supercomputing Applications
+at the University of Illinois,
+1205 W. Clark, Urbana IL 61801.
 
 \subsubsection{Contact person}
 
 The point of contact for this Policy and other matters related to the
-M4_CA_NAME is the Head of Security Operations for NCSA. Currently this is
-Jim Barlow.
+M4_CA_NAME is the Head of Security Operations for NCSA:
 
-James J. Barlow
-
-Head of Security Operations and Incident Response
-
-Phone number: 217-244-6403
-
-Postal address: 1205 W. Clark, Urbana IL 61801
-
-E-mail address: jbarlow@ncsa.uiuc.edu
-
-After hours contact information:
-
-NCSA Security Operations and Incident Response: security@ncsa.uiuc.edu
-
-NCSA 24x7 Operations: 217-244-0710
+James J. Barlow\\
+Phone number: 217-244-6403\\
+Postal address: 1205 W. Clark, Urbana IL 61801\\
+E-mail address: jbarlow@ncsa.uiuc.edu\\
+After hours contact information:\\
+NCSA Security Operations and Incident Response: security@ncsa.uiuc.edu\\
+NCSA 24x7 Operations: 217-244-0710\\
 
 \subsubsection{Person determining CPS suitability for the policy}
 
@@ -344,13 +350,11 @@ IPR - Intellectual Property Rights
 
 \subsection{Repositories}
 
-The NCSA PKI will maintain a repository at:
-
-M4_CA_URL
+The NCSA PKI will maintain a repository at M4_CA_URL.
 
 \subsection{Publication of certification information}
 
-This repository described in the previous section will contain:
+This repository will contain:
 
 \begin{itemize}
 
@@ -379,11 +383,13 @@ The Policy shall be published immediately following any update.
 \subsection{Access controls on repositories}
 
 There are no restrictions on access to the repositories.
-
 Best effort will be provided to maintain their availability 24x7.
 
+As a member of the TAGPMA, NCSA grants the IGTF and its
+PMAs the right of unlimited redistribution of this information.
+
 \section{IDENTIFICATION AND AUTHENTICATION}
-\subsection{Naming}
+\subsection{\label{sec:names}Naming}
 \subsubsection{Types of names}
 
 Subject distinguished names are X.500 names, with components varying
@@ -391,9 +397,10 @@ depending on the type of certificate.
 
 \subsubsection{Need for names to be meaningful}
 
-The common name (CN) component of the subject name in user
-certificates has no semantic significance, but has a reasonable
-association with the name of the user.
+A unique (see Section \ref{sec:unique})
+"common name" is assigned to each user consisting of their
+legal name with a serial number appended in the case of name
+conflicts.
 
 M4_CA_ONLY([
 
@@ -429,7 +436,9 @@ for a service (including a host) certificate issued by the NCSA-CA. A
 CN component will follow the OU, naming the service and the fully
 qualified domain name (FQDN) at which the service can be contacted,
 separated by a slash character. When the service is https, the service
-name and separator will be absent.
+name and separator will be absent.  For example:
+
+C=US, O=National Center for Supercomputing Applications, CN=ca.ncsa.uiuc.edu
 
 ])
 
@@ -437,33 +446,35 @@ name and separator will be absent.
 for a user's certificate issued by the NCSA-CA or NCSA-SLCS.  The CN
 component will contain the user's full name and, if needed,
 a numeric value to disambiguate the name from other users with the
-same name.
+same name.  For example:
+
+C=US, O=National Center for Supercomputing Applications, CN=James J. Barlow
 
 \end{itemize}
 
-\subsubsection{Uniqueness of names}
+\subsubsection{\label{sec:unique}Uniqueness of names}
 
 Each subject name issued by the NCSA PKI will be issued to one and
-only one individual. The NCSA-CA and NCSA-SLCS may issue certificates
+only one individual as identified by a record in the user database.
+The user database management system implements checks to ensure the
+uniqueness of assigned distinguished names.
+User records are never purged from the database or reused,
+to ensure that distinguished names will never be reassigned
+to another individual.
+The NCSA-CA and NCSA-SLCS may issue certificates
 with identical names, but only to the same individual.
-
 All names will be prefixed with the relative DN form of C=US,
 O=National Center for Supercomputing Applications to provide a
 globally unique namespace.
-
-For user certificates, a unique "common name" is assigned to each
-user, which is based on their legal name. Conflicts with legal names
-are resolved by appending a number to the name to create a unique
-name. This common name along with the prefix create globally-unique
+A unique "common name" is assigned to each user consisting of their
+legal name with a serial number appended in the case of name
+conflicts.
+This common name along with the prefix create globally-unique
 distinguished names used in certificates issued by the NCSA PKI to
 users.
-
-M4_CA_ONLY([
-
-For service certificates, the combination of service name and fully
+M4_CA_ONLY([For service certificates, the combination of service name and fully
 qualified domain name of the host on which the service resides serves
 to disambiguate the name.
-
 ])
 
 \subsubsection{Recognition, authentication, and role of trademarks}
@@ -474,7 +485,7 @@ No stipulation.
 
 \subsubsection{Method to prove possession of private key}
 
-No stipulation.
+Certificate requests must be digitally signed.
 
 \subsubsection{Authentication of organization identity}
 
@@ -482,9 +493,9 @@ NCSA users are identified by their presence in the NCSA user database.
 
 \subsubsection{Authentication of individual identity}
 
-User identity will be authenticated through Kerberos 5
-credentials, with the authenticated Kerberos 5 principal
-name mapped to a unique "common name" via the NCSA user database.
+User identity will be authenticated via Kerberos,
+with the authenticated Kerberos principal name mapped to a unique
+"common name" via the NCSA user database.
 
 \subsubsection{Non-verified subscriber information}
 
@@ -493,6 +504,8 @@ creation process. Other gathered information is not verified.
 
 \subsubsection{Validation of authority}
 
+Users making requests for user certificates must be authenticated as
+the user identified in the certificate.
 
 M4_CA_ONLY([
 
@@ -502,9 +515,6 @@ administrators to ensure the user is a legitimate system administrator
 for the service identified in the certificate subject name.
 
 ])
-
-Users making requests for user certificates must be authenticated as
-the user identified in the certificate.
 
 \subsubsection{Criteria for interoperation}
 
@@ -521,18 +531,11 @@ Every certificate request is treated as an initial registration.
 
 If the compromise was limited to just the private key, the request for
 re-key will be treated as an initial registration.
-
-If the compromise involved a user's password from the NCSA database,
-that password will be reset based on a postal mail to the user using
-their known postal address.
+If the compromise involved a user's password,
+that password will be reset via postal mail to the user's
+known postal address.
 
 \subsection{Identification and authentication for revocation request}
-
-M4_CA_ONLY([
-Requests for revocation of service certificates from NCSA computer
-security personnel and from administrators of the systems hosting the
-services in question will be honored.
-])
 
 CA Certificates will only be revoked at the instigation of NCSA
 Operational Security personnel.
@@ -540,6 +543,12 @@ Operational Security personnel.
 Users may request revocation by contacting NCSA Security
 Operations. Requests will be handled as deemed appropriate by NCSA
 Security Operations.
+
+M4_CA_ONLY([
+Requests for revocation of service certificates from NCSA computer
+security personnel and from administrators of the systems hosting the
+services in question will be honored.
+])
 
 \section{CERTIFICATE LIFE-CYCLE OPERATIONAL REQUIREMENTS}
 
@@ -550,7 +559,7 @@ Security Operations.
 Any user who appears in NCSA's User Database may request a
 certificate.
 
-\subsubsection{Enrollment process and responsibilities}
+\subsubsection{\label{sec:enrollment}Enrollment process and responsibilities}
 
 To receive an entry in NCSA's user database, a user must satisfy
 one of the following conditions:
@@ -587,15 +596,14 @@ principal and Unix login name.
 
 \subsubsection{Performing identification and authentication functions}
 
-The M4_CA_NAME authenticates all certificate requests using the NCSA
-Kerberos 5 domain.
+The M4_CA_NAME authenticates all certificate requests via Kerberos.
 
 \subsubsection{Approval or rejection of certificate applications}
 
 M4_CA_ONLY([
 
 Certificate applications will be approved if the applicant can be
-authenticated using NCSA's Kerberos domain and, in the case of service
+authenticated via Kerberos and, in the case of service
 certificates, is validated as an authorized system administrator for
 the host in question.
 
@@ -603,35 +611,24 @@ the host in question.
 M4_SLCS_ONLY([
 
 Certificate applications will be approved if the applicant can be
-authenticated using NCSA's Kerberos domain.
+authenticated via Kerberos.
 
 ])
 
 \subsubsection{Time to process certificate applications}
 
-M4_CA_ONLY([
-
-Certificate applications are processed with best effort. It is
-expected that certificates will be issued within one business day.
-
-])
-M4_SLCS_ONLY([
-Certificate applications are processed in real time.
-])
+Certificate applications are processed automatically.
 
 \subsection{Certificate issuance}
 
 \subsubsection{CA actions during certificate issuance}
 
-The application is processed and approved as described in the previous
-section.
+Certificate applications are processed automatically.
 
 \subsubsection{Notification to subscriber by the CA of issuance of certificate}
 
 User certificates are returned directly to the user through the
-application they are using to apply for a certificate.
-
-For other certificates, users will be contacted by email.
+application program they use to apply for a certificate.
 
 \subsection{Certificate acceptance}
 
@@ -643,12 +640,6 @@ Certificate acceptance is assumed.
 
 End entity certificates are not published.
 
-m4comment([
-I cannot see where this is required. Here is the text that used to be here.
-
-Certificates will be published as they are issued at
-M4_CA_URL
-])
 \subsubsection{Notification of certificate issuance by the CA to other entities}
 
 No notifications to other entities will be performed.
@@ -687,7 +678,7 @@ Relying parties must
 
 \item  Be cognizant of the provisions of this document. 
 
-\item  Verify any self-signed certificates to their own satisfaction using
+\item  Verify any self-signed CA certificates to their own satisfaction using
 out-of-band means. 
 
 M4_CA_ONLY([
@@ -724,17 +715,17 @@ process.
 
 \subsection{Certificate revocation and suspension}
 
-Certificates issued by the NCSA PKI will not be suspended.
-
-\subsubsection{Circumstances for revocation}
-
 M4_SLCS_ONLY([
-User certificates, because of their short lifetimes, will not be
-revoked.
+Certificates issued by the M4_CA_NAME will not be suspended or
+revoked, due to their short lifetime.
+Subscribers may end their subscription by allowing their certificate
+to expire and not requesting a new one.
 ])
 
 M4_CA_ONLY([
-Certificates issued by the NCSA-CA will be revoked in any of the
+\subsubsection{Circumstances for revocation}
+
+Certificates issued by the M4_CA_NAME will be revoked in any of the
 following circumstances:
 
 \begin{itemize}
@@ -748,15 +739,10 @@ inaccurate.
 
 \end{itemize}
 
-])
-
-
 \subsubsection{Who can request revocation}
 
-M4_CA_ONLY([
-
 NCSA Security Operations personnel may request revocation of any
-certificate issued by the NCSA PKI.
+certificate issued by the M4_CA_NAME.
 
 The original subscriber for a certificate may request its revocation.
 
@@ -764,63 +750,39 @@ Entities other than the subscriber who suspect a certificate issued by
 the NCSA PKI may be compromised should contact NCSA Security
 Operations.
 
-])
-M4_SLCS_ONLY([Not applicable.])
-
 \subsubsection{Procedure for revocation request}
 
-M4_CA_ONLY([
 Requests for revocation should be made by email to
 security@ncsa.uiuc.edu or by phone to NCSA Operations 217-244-0710.
-])
-M4_SLCS_ONLY([Not applicable.])
 
 \subsubsection{Revocation request grace period}
 
-M4_CA_ONLY([
 No constraints.
-])
-M4_SLCS_ONLY([Not applicable.])
 
 \subsubsection{Time within which CA must process the revocation request}
 
-M4_CA_ONLY([
 Revocation requests will be processed with best effort as quickly as
 possible.
-])
-M4_SLCS_ONLY([Not applicable.])
 
 \subsubsection{Revocation checking requirement for relying parties}
 
-M4_CA_ONLY([
 Relying parties are advised to obtain and consult a valid CRL from
 M4_CA_URL
-])
-M4_SLCS_ONLY([Not applicable.])
 
 \subsubsection{CRL issuance frequency (if applicable)}
 
-M4_CA_ONLY([
 CRLs are issued when a certificate is revoked.
 
 CRLs are issued daily.
-])
-
-M4_SLCS_ONLY([Not applicable.])
 
 \subsubsection{Maximum latency for CRLs (if applicable)}
 
-M4_CA_ONLY([
 One day.
-])
 
 \subsubsection{On-line revocation/status checking availability}
 
-M4_CA_ONLY([
 Aside from the published CRL, no on-line certificate status checking
 is available.
-])
-M4_SLCS_ONLY([None.])
 
 \subsubsection{Other forms of revocation advertisements available}
 
@@ -832,33 +794,27 @@ None.
 
 \subsection{Certificate status services}
 
-
-M4_CA_ONLY([
 Aside from the published CRL, no on-line certificate status checking
 is available.
-])
-M4_SLCS_ONLY([None.])
 
 \subsection{End of subscription}
 
-M4_CA_ONLY([
 Subscribers may end their subscription by requesting revocation of
 their certificate.
-])
-M4_SLCS_ONLY([
-Subscribers may end their subscription by allowing their certificate
-to expire and not requesting a new one.
-])
+
+\subsection{Key escrow and recovery}
 
 No key escrow is performed.
 
-\section{FACILITY, MANAGEMENT, AND OPERATIONAL CONTROLS (11)}
+])
+
+\section{FACILITY, MANAGEMENT, AND OPERATIONAL CONTROLS}
 
 \subsection{Physical controls}
 
 \subsubsection{Site location and construction}
 
-The M4_CA_NAME will be located in NCSA's machine room in the Advance
+The M4_CA_NAME server will be located in NCSA's machine room in the Advance
 Computation Building (ACB) on the University of Illinois at
 Urbana-Champaign campus.
 
@@ -895,7 +851,9 @@ No stipulation.
 
 \subsubsection{Off-site backup}
 
-No stipulation.
+Audit logs are archived weekly to a secondary storage facility at the
+Beckman Institute on the University of Illinois at
+Urbana-Champaign campus.
 
 \subsection{Procedural controls}
 
@@ -907,56 +865,10 @@ When any person with access to the M4_CA_NAME systems leaves NCSA or
 their administrative role, their access will be revoked and any
 relevant passwords changed.
 
-\subsubsection{Trusted roles}
-
-No stipulation.
-
-\subsubsection{Number of persons required per task}
-
-No stipulation.
-
-\subsubsection{Identification and authentication for each role}
-
-No stipulation.
-
-\subsubsection{Roles requiring separation of duties}
-
-No stipulation.
-
 \subsection{Personnel controls}
-
-\subsubsection{Qualifications, experience, and clearance requirements}
 
 Operators of the M4_CA_NAME will be qualified system administrators
 and operators at NCSA.
-
-\subsubsection{Background check procedures}
-
-No stipulation.
-
-\subsubsection{Training requirements}
-
-No stipulation.
-
-\subsubsection{Retraining frequency and requirements}
-
-No stipulation.
-
-\subsubsection{Job rotation frequency and sequence}
-
-No stipulation.
-
-\subsubsection{Sanctions for unauthorized actions}
-
-No stipulation.
-
-\subsubsection{Independent contractor requirements}
-
-No stipulation.
-
-\subsubsection{Documentation supplied to personnel}
-
-No stipulation.
 
 \subsection{Audit logging procedures}
 
@@ -1015,10 +927,10 @@ No stipulation.
 
 \subsection{Records archival}
 
-The CA records and archives all requests for certificates, along with all
-the issued certificates, all the requests for revocation, all the issued
-CRLs and the login/logout/reboot of the issuing machine. 
-
+The CA records and archives all requests for certificates, 
+all issued certificates, 
+M4_CA_ONLY([all revocation requests, all issued CRLs,])
+and the login/logout/reboot of the issuing machine. 
 The CA keeps these records for at least three years.
 These records will be be made available to external auditors in the
 course of their work as auditor.
@@ -1033,7 +945,7 @@ as the previous M4_CA_NAME certificates.
 
 \subsubsection{Incident and compromise handling procedures}
 
-All incidents will be handled by NCSA Security Operation and Incident
+All incidents will be handled by NCSA Security Operations and Incident
 Response as they determine appropriate.
 
 \subsubsection{Computing resources, software, and/or data are corrupted}
@@ -1096,7 +1008,7 @@ protection.
 \subsubsection{CA public key delivery to relying parties}
 
 The public keys of NCSA PKI CAs are available at
-M4_CA_URL
+M4_CA_URL.
 
 \subsubsection{Key sizes}
 
@@ -1125,7 +1037,7 @@ for storage of its private key.
 
 \subsubsection{Private key (n out of m) multi-person control}
 
-There is no multi-person control of the private key.
+No stipulation.
 
 \subsubsection{Private key escrow}
 
@@ -1156,19 +1068,21 @@ FIPS 140-2 level 3.
 
 \subsubsection{Method of activating private key}
 
-No stipulation.
+The private key is activated automatically at server startup to allow
+immediate M4_CA_NAME operation.
 
 \subsubsection{Method of deactivating private key}
 
-No stipulation.
+HSM utilities on the server support deactivating the private key.
 
 \subsubsection{Method of destroying private key}
 
-No stipulation.
+The HSM Security Officer can reinitialize the HSM to destroy the
+private key.
 
 \subsubsection{Cryptographic Module Rating}
 
-Hardware security modules will meet or exceed FIPS 140-2 level 3.
+The hardware security modules meet FIPS 140-2 level 3.
 
 \subsection{Other aspects of key pair management}
 
@@ -1189,15 +1103,6 @@ NCSA-SLCS certificates will have a lifetime of not more than 1 week.
 ])
 
 \subsection{Activation data}
-\subsubsection{Activation data generation and installation}
-
-No stipulation.
-
-\subsubsection{Activation data protection}
-
-No stipulation.
-
-\subsubsection{Other aspects of activation data}
 
 No stipulation.
 
@@ -1220,23 +1125,15 @@ operation.
 No stipulation.
 
 \subsection{Life cycle technical controls}
-\subsubsection{System development controls}
-
-No stipulation.
-
-\subsubsection{Security management controls}
-
-No stipulation.
-
-\subsubsection{Life cycle security controls}
 
 No stipulation.
 
 \subsection{Network security controls}
 
-Other than the access needed to request and obtain certificates, no
-network access to the hosts housing the NCSA PKI will be permitted
-from outside of NCSA's network.
+Network security controls (software and hardware firewalls)
+allow inbound connections only for certificate requests
+and download of CA certificates and CRLs from hosts outside NCSA's
+network.
 
 \subsection{Time-stamping}
 
@@ -1267,12 +1164,12 @@ For the CA certificate:
 
 M4_CA_ONLY([
 \item CRLDistributionPoints:
-URI:http://ca.ncsa.uiuc.edu/4a6cd8b1.r0
+URI:\url{http://ca.ncsa.uiuc.edu/4a6cd8b1.r0}
 ])
 
 \end{itemize}
 
-For user and service certificates:
+For user M4_CA_ONLY([and service]) certificates:
 
 \begin{itemize}
 
@@ -1293,15 +1190,15 @@ SSL Client, SSL Server, Object Signing
 
 \item Netscape CA Policy URL:
 M4_CA_ONLY([ 
-http://security.ncsa.uiuc.edu/CA/ncsa-ca-policy.pdf
+\url{http://security.ncsa.uiuc.edu/CA/ncsa-ca-policy.pdf}
 ])
 M4_SLCS_ONLY([
-http://security.ncsa.uiuc.edu/CA/ncsa-slcs-policy.pdf
+\url{http://security.ncsa.uiuc.edu/CA/ncsa-slcs-policy.pdf}
 ])
 
 M4_CA_ONLY([
 \item CRLDistributionPoints:
-URI:http://ca.ncsa.uiuc.edu/4a6cd8b1.r0
+URI:\url{http://ca.ncsa.uiuc.edu/4a6cd8b1.r0}
 ])
 
 \item SubjectAltName:
@@ -1430,94 +1327,22 @@ M4_CA_NAME will accept being audited by other IGTF accredited CAs to
 verify compliance with the rules and procedures specified in this
 document.
 
-\subsection{Frequency or circumstances of assessment}
-
-No stipulation.
-
-\subsection{Identity/qualifications of assessor}
-
-No stipulation.
-
-\subsection{Assessor's relationship to assessed entity}
-
-No stipulation.
-
-\subsection{Topics covered by assessment}
-
-No stipulation.
-
-\subsection{Actions taken as a result of deficiency}
-
-No stipulation.
-
-\subsection{Communication of results}
-
-No stipulation.
-
 \section{OTHER BUSINESS AND LEGAL MATTERS}
-\subsection{Fees}
 
 No fees will be charged by the M4_CA_NAME nor any refunds given.
-
-\subsection{Financial responsibility}
-
 No financial responsibility is accepted. 
 
-\subsubsection{Insurance coverage}
-
-No stipulation.
-
-\subsubsection{Other assets}
-
-No stipulation.
-
-\subsubsection{Insurance or warranty coverage for end-entities}
-
-No stipulation.
-
 \subsection{Confidentiality of business information}
-\subsubsection{Scope of confidential information}
 
-No stipulation.
-
-\subsubsection{Information not within the scope of confidential information}
-
-No stipulation.
-
-\subsubsection{Responsibility to protect confidential information}
-
-No stipulation.
-
-\subsection{Privacy of personal information}
-
-\subsubsection{Privacy plan}
-
-No stipulation.
-
-\subsubsection{Information treated as private}
-
-No stipulation.
-
-\subsubsection{Information not deemed private}
-
-No stipulation.
-
-\subsubsection{Responsibility to protect private information}
-
-No stipulation.
-
-\subsubsection{Notice and consent to use private information}
-
-No stipulation.
-
-\subsubsection{Disclosure pursuant to judicial or administrative
-  process}
-
-No stipulation.
-
-\subsubsection{Other information disclosure circumstances}
-
-No stipulation.
+Information and data maintained in electronic media on University of Illinois
+computer systems are protected by the same laws and policies, and are
+subject to the same limitations, as information and communications in
+other media. Before storing or sending confidential or personal
+information, M4_CA_NAME users should understand that most materials on
+University systems are, by definition, public records. As such, they
+are subject to laws and policies that may compel the University to
+disclose them. The privacy of materials kept in electronic data
+storage and electronic mail is neither a right nor is it guaranteed.
 
 \subsection{Intellectual property rights}
 
@@ -1604,23 +1429,6 @@ is established.
 No stipulation.
 
 \subsection{Miscellaneous provisions}
-\subsubsection{Entire agreement}
-
-No stipulation.
-
-\subsubsection{Assignment}
-
-No stipulation.
-
-\subsubsection{Severability}
-
-No stipulation.
-
-\subsubsection{Enforcement (attorneys' fees and waiver of rights)}
-
-No stipulation.
-
-\subsubsection{Force Majeure}
 
 No stipulation.
 
@@ -1628,23 +1436,13 @@ No stipulation.
 
 No stipulation.
 
-\appendix
-
-M4_CA_ONLY([
-include(ncsa-ca-appendix.tex.m4)
-])
-
-M4_SLCS_ONLY([
-include(ncsa-slcs-appendix.tex.m4)
-])
-
-\newpage
 \section{DOCUMENT SOURCE} 
 
 This source for this document can be found in the CVSROOT of
-:ext:cvs.ncsa.uiuc.edu:/CVS/ncsa-ca in the ncsa-cp repository.
+:pserver:anonymous@cvs.ncsa.uiuc.edu:/CVS/ncsa-ca in the ncsa-cp repository.
 
-The CVS version of the source for this document is $Revision$. Changes in
+The CVS version of the source for this document is $Revision$.
+Changes in
 the version of this source could be due to minor editorial changes and
 do not by themselves imply a change of policy.
 
