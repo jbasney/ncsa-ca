@@ -2,5 +2,9 @@
 *.bbl
 *.blg
 *.log
-*.pdf
 *.out
+*.pdf
+ncsa-ca-policy.tex
+ncsa-ca-policy.toc
+ncsa-slcs-policy.tex
+ncsa-slcs-policy.toc
