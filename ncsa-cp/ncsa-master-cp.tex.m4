@@ -40,7 +40,7 @@ define(M4_CA_DN, [C=US, O=National Center for Supercomputing Applications, OU=Ce
 define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.2.1])
 ])
 define(M4_TIMESTAMP, [esyscmd(date)])
-define(M4_DOC_VERSION, [1.0 DRAFT-6])
+define(M4_DOC_VERSION, [1.0 DRAFT-7])
 define(M4_DOC_DATE, [M4_TIMESTAMP])
 define(M4_CA_URL, [\url{http://security.ncsa.uiuc.edu/CA/}])
 define(M4_VERSION, [esyscmd(m4 --version)])
@@ -106,21 +106,23 @@ M4_CA_NAME.
 The CA is integrated with the NCSA user database and Kerberos
 authentication service for identity management.
 The NCSA accounting process enrolls users in the user database,
-creates a Kerberos account for them,
+creates a Kerberos account M4_CA_ONLY([with an initial default password]) for them,
 and assigns them a distinguished name.
 To obtain credentials,
 M4_CA_NAME subscribers run software on the host where their
 credentials are to be stored.
 The software generates the subscriber's private key locally,
-authenticates the user to the M4_CA_NAME via Kerberos,
+authenticates the user to the M4_CA_NAME via 
+M4_CA_ONLY([Kerberos and their ``default password'' (two authentication factors),]) M4_SLCS_ONLY([Kerberos,])
 issues a signed certificate request to the CA,
 and, if the request is approved,
 receives a signed certificate from the CA.
-The M4_CA_NAME authenticates users via Kerberos,
-looks up their corresponding distinguished name in the user database,
+The M4_CA_NAME 
+looks up the distinguished name in the user database 
+that corresponds to the user's authenticated identity,
 then issues a certificate with the appropriate distinguished name.
 M4_CA_ONLY([For host and service certificate requests, the M4_CA_NAME
-queries the NCSA Host database, maintained by NCSA networking staff,
+also queries the NCSA Host database, maintained by NCSA networking staff,
 to verify the authenticated user is a registered administrator
 for the requested host.])
 Further policy and implementation details are provided
@@ -164,7 +166,7 @@ OID: M4_DOC_OID\\
 This policy is valid for the M4_CA_NAME. The M4_CA_NAME will only sign end
 entity certificates. There are no subordinate CAs.
 
-\subsubsection{Registration authorities}
+\subsubsection{\label{sec:reg}Registration authorities}
 
 NCSA allocations group staff serve as registration authorities for the
 M4_CA_NAME.
@@ -172,14 +174,24 @@ They enroll users in the NCSA user database
 according to the enrollment process described in 
 Section \ref{sec:enrollment},
 create Kerberos accounts for new users,
-and assign distinguished names to new users
+M4_CA_ONLY([assign a default password for the account,]) and
+assign distinguished names to new users
 according to Section \ref{sec:names}.
 The M4_CA_NAME uses the Kerberos service to authenticate requests
 and queries the database to obtain the proper distinguished name for
-authenticated requesters.
+authenticated requesters. M4_CA_ONLY([The M4_CA_NAME also uses the database to authenticate users' default passwords as a ``second authentication factor''.])
 The NCSA user database and Kerberos service are used to authenticate 
 NCSA's users and staff for access to NCSA high-performance computing
 resources, NCSA's email services and other production services.
+
+M4_CA_ONLY([Users are instructed to change their default password
+immediately upon receiving their account information and to keep their
+default password in a secure place for later reference.
+In the event that their current password is forgotten,
+it will be reset to this default.
+The default password is used as a
+``second authentication factor'' in certificate requests,
+along with the user's current Kerberos password.])
 
 M4_CA_ONLY([
 NCSA networking group staff serve a registration authority
@@ -491,11 +503,14 @@ Certificate requests must be digitally signed.
 
 NCSA users are identified by their presence in the NCSA user database.
 
-\subsubsection{Authentication of individual identity}
+\subsubsection{\label{sec:auth}Authentication of individual identity}
 
 User identity will be authenticated via Kerberos,
 with the authenticated Kerberos principal name mapped to a unique
 "common name" via the NCSA user database.
+M4_CA_ONLY([The M4_CA_NAME also uses the database to authenticate users'
+``default passwords'' as a ``second authentication factor'' as described
+in Section \ref{sec:reg}.])
 
 \subsubsection{Non-verified subscriber information}
 
@@ -596,23 +611,22 @@ principal and Unix login name.
 
 \subsubsection{Performing identification and authentication functions}
 
-The M4_CA_NAME authenticates all certificate requests via Kerberos.
+The M4_CA_NAME authenticates all certificate requests as described in
+Section \ref{sec:auth}.
 
 \subsubsection{Approval or rejection of certificate applications}
 
 M4_CA_ONLY([
 
 Certificate applications will be approved if the applicant can be
-authenticated via Kerberos and, in the case of service
+authenticated and, in the case of service
 certificates, is validated as an authorized system administrator for
-the host in question.
-
+the host in question, as described in Section \ref{sec:auth}.
 ])
-M4_SLCS_ONLY([
 
+M4_SLCS_ONLY([
 Certificate applications will be approved if the applicant can be
 authenticated via Kerberos.
-
 ])
 
 \subsubsection{Time to process certificate applications}
