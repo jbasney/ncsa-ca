@@ -1178,7 +1178,7 @@ For the CA certificate:
 
 M4_CA_ONLY([
 \item CRLDistributionPoints:
-URI:\url{http://ca.ncsa.uiuc.edu/4a6cd8b1.r0}
+URI:\url{http://ca.ncsa.uiuc.edu/9b95bbf2.r0}
 ])
 
 \end{itemize}
@@ -1212,7 +1212,7 @@ M4_SLCS_ONLY([
 
 M4_CA_ONLY([
 \item CRLDistributionPoints:
-URI:\url{http://ca.ncsa.uiuc.edu/4a6cd8b1.r0}
+URI:\url{http://ca.ncsa.uiuc.edu/9b95bbf2.r0}
 ])
 
 \item SubjectAltName:
