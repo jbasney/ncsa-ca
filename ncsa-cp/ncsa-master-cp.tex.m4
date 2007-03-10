@@ -450,7 +450,7 @@ qualified domain name (FQDN) at which the service can be contacted,
 separated by a slash character. When the service is https, the service
 name and separator will be absent.  For example:
 
-C=US, O=National Center for Supercomputing Applications, CN=ca.ncsa.uiuc.edu
+C=US, O=National Center for Supercomputing Applications, OU=Services, CN=ca.ncsa.uiuc.edu
 
 ])
 
@@ -1198,17 +1198,6 @@ OID: M4_DOC_OID
 
 \item Key Usage (critical): 
 Digital Signature, Non Repudiation, Key Encipherment, Data Encipherment
-
-\item Netscape Cert Type: 
-SSL Client, SSL Server, Object Signing 
-
-\item Netscape CA Policy URL:
-M4_CA_ONLY([ 
-\url{http://security.ncsa.uiuc.edu/CA/ncsa-ca-policy.pdf}
-])
-M4_SLCS_ONLY([
-\url{http://security.ncsa.uiuc.edu/CA/ncsa-slcs-policy.pdf}
-])
 
 M4_CA_ONLY([
 \item CRLDistributionPoints:
