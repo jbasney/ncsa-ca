@@ -40,7 +40,7 @@ define(M4_CA_DN, [C=US, O=National Center for Supercomputing Applications, OU=Ce
 define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.2.1])
 ])
 define(M4_TIMESTAMP, [esyscmd(date)])
-define(M4_DOC_VERSION, [1.0 DRAFT-7])
+define(M4_DOC_VERSION, [1.0])
 define(M4_DOC_DATE, [M4_TIMESTAMP])
 define(M4_CA_URL, [\url{http://security.ncsa.uiuc.edu/CA/}])
 define(M4_VERSION, [esyscmd(m4 --version)])
@@ -502,6 +502,10 @@ Certificate requests must be digitally signed.
 \subsubsection{Authentication of organization identity}
 
 NCSA users are identified by their presence in the NCSA user database.
+Users obtain entries in the database according to the procedure
+described in \ref{sec:enrollment}.
+Additional details about the NCSA Allocations process
+are available at \url{http://www.ncsa.uiuc.edu/UserInfo/Allocations/}.
 
 \subsubsection{\label{sec:auth}Authentication of individual identity}
 
@@ -515,7 +519,8 @@ in Section \ref{sec:reg}.])
 \subsubsection{Non-verified subscriber information}
 
 Subscriber name and postal address are verified by NCSA's account
-creation process. Other gathered information is not verified.
+creation process.
+Other gathered information is not verified.
 
 \subsubsection{Validation of authority}
 
@@ -555,11 +560,11 @@ known postal address.
 CA Certificates will only be revoked at the instigation of NCSA
 Operational Security personnel.
 
+M4_CA_ONLY([
 Users may request revocation by contacting NCSA Security
 Operations. Requests will be handled as deemed appropriate by NCSA
 Security Operations.
 
-M4_CA_ONLY([
 Requests for revocation of service certificates from NCSA computer
 security personnel and from administrators of the systems hosting the
 services in question will be honored.
@@ -606,6 +611,9 @@ will only be distributed via U.S. postal mail to their known address.
 
 Each user is assigned a unique username used as their Kerberos
 principal and Unix login name.
+
+Additional details about the NCSA Allocations process
+are available at \url{http://www.ncsa.uiuc.edu/UserInfo/Allocations/}.
 
 \subsection{Certificate application processing}
 
@@ -878,6 +886,11 @@ NCSA Security Operations staff, and NCSA System administration staff.
 When any person with access to the M4_CA_NAME systems leaves NCSA or
 their administrative role, their access will be revoked and any
 relevant passwords changed.
+
+NCSA will perform an operational audit of the CA/RA staff at least
+once per year.
+A list of CA and site identity management personnel will be maintained
+and verified at least once per year.
 
 \subsection{Personnel controls}
 
