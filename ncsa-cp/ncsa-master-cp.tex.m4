@@ -1219,13 +1219,13 @@ URI:\url{http://ca.ncsa.uiuc.edu/9b95bbf2.r0}
 
 \item SubjectAltName:
 
-For user certificates, the NCSA email address and Kerberos principal
-name of the subscriber responsible for the certificate.
+For user certificates, the NCSA email address 
+of the subscriber responsible for the certificate.
 
 M4_CA_ONLY([
 For service certificates, the 
 dnsName of the service and
-the NCSA email address and Kerberos principal name of the
+the NCSA email address of the
 responsible system administer.
 ])
 
