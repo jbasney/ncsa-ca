@@ -269,6 +269,10 @@ the National Center for Supercomputing Applications
 at the University of Illinois,
 1205 W. Clark, Urbana IL 61801 USA.
 
+This policy is accredited by
+The Americas Grid Policy Management Authority (TAGPMA),
+a member of the International Grid Trust Federation (IGTF).
+
 \subsubsection{Contact person}
 
 The point of contact for this Policy and other matters related to the
@@ -287,9 +291,12 @@ NCSA 24x7 Operations: +1 217-244-0710\\
 The Head of Security Operations for NCSA leads the PMA for the CA and
 is ultimately responsible for determining the suitability of the CPS.
 
+As an accredited policy of the TAGPMA,
+all policy changes are subject to TAGPMA review and approval.
+
 \subsubsection{CPS approval procedures}
 
-As determined by the Head of Security Operations for NCSA.
+As determined by TAGPMA and the Head of Security Operations for NCSA.
 
 \subsection{Definitions and acronyms}
 
