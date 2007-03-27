@@ -199,7 +199,7 @@ role for host and service certificate requests by
 maintaining
 a database of all NCSA hosts and their authorized system
 administrator(s). 
-This will allow requests for
+This allows requests for
 service certificates from a host's authorized administrator
 (authenticated via Kerberos) to be automatically
 processed. Requests for hosts that do not appear in this database
@@ -242,7 +242,7 @@ NCSA places no restrictions on who may accept certificates it issues.
 
 \subsubsection{Other participants}
 
-No stipulations.
+No stipulation.
 
 \subsection{Certificate usage}
 
@@ -267,7 +267,7 @@ are they supported.
 This policy is administered by
 the National Center for Supercomputing Applications
 at the University of Illinois,
-1205 W. Clark, Urbana IL 61801.
+1205 W. Clark, Urbana IL 61801 USA.
 
 \subsubsection{Contact person}
 
@@ -275,12 +275,12 @@ The point of contact for this Policy and other matters related to the
 M4_CA_NAME is the Head of Security Operations for NCSA:
 
 James J. Barlow\\
-Phone number: 217-244-6403\\
-Postal address: 1205 W. Clark, Urbana IL 61801\\
+Phone number: +1 217-244-6403\\
+Postal address: 1205 W. Clark, Urbana IL 61801 USA\\
 E-mail address: jbarlow@ncsa.uiuc.edu\\
 After hours contact information:\\
 NCSA Security Operations and Incident Response: security@ncsa.uiuc.edu\\
-NCSA 24x7 Operations: 217-244-0710\\
+NCSA 24x7 Operations: +1 217-244-0710\\
 
 \subsubsection{Person determining CPS suitability for the policy}
 
@@ -388,6 +388,9 @@ M4_CA_ONLY([
 
 The CRL will be published immediately after a certificate has been
 revoked as well as on a daily basis.
+The CRL This Update field will indicate the issue date of the CRL,
+and the Next Update field will be set to one week in the future,
+to indicate a one week validity period for the CRL.
 ])
 
 The Policy shall be published immediately following any update.
