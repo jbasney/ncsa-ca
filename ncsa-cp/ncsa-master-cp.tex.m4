@@ -452,6 +452,14 @@ CA. All CA certificates will be self-signed.
 The distinguished name for the M4_CA_NAME is M4_CA_DN.
 
 M4_CA_ONLY([
+Note: CACL is the name of the software implementing this CA.
+])
+
+M4_SLCS_ONLY([
+Note: MyProxy is the name of the software implementing this CA.
+])
+
+M4_CA_ONLY([
 
 \item OU=Services :
 for a service (including a host) certificate issued by the NCSA-CA. A
@@ -464,13 +472,13 @@ C=US, O=National Center for Supercomputing Applications, OU=Services, CN=ca.ncsa
 
 ])
 
-\item CN=M4_ITALICS(User Name) :
-for a user's certificate issued by the NCSA-CA or NCSA-SLCS.  The CN
-component will contain the user's full name and, if needed,
+\item OU=People :
+for a user's certificate issued by the NCSA-CA or NCSA-SLCS.  A CN
+component will follow the OU, containing the user's full name and, if needed,
 a numeric value to disambiguate the name from other users with the
 same name.  For example:
 
-C=US, O=National Center for Supercomputing Applications, CN=James J. Barlow
+C=US, O=National Center for Supercomputing Applications, OU=People, CN=James J. Barlow
 
 \end{itemize}
 
