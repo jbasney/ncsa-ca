@@ -40,7 +40,7 @@ define(M4_CA_DN, [C=US, O=National Center for Supercomputing Applications, OU=Ce
 define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.2.1])
 ])
 define(M4_TIMESTAMP, [esyscmd(date)])
-define(M4_DOC_VERSION, [1.0])
+define(M4_DOC_VERSION, [1.1])
 define(M4_DOC_DATE, [M4_TIMESTAMP])
 define(M4_CA_URL, [\url{http://security.ncsa.uiuc.edu/CA/}])
 define(M4_VERSION, [esyscmd(m4 --version)])
@@ -203,7 +203,7 @@ This allows requests for
 service certificates from a host's authorized administrator
 (authenticated via Kerberos) to be automatically
 processed. Requests for hosts that do not appear in this database
-(e.g. services run by NCSA collaborators) will be manually vetted by
+(e.g., services run by NCSA collaborators) will be manually vetted by
 NCSA operations staff.
 ])
 
@@ -470,15 +470,27 @@ name and separator will be absent.  For example:
 
 C=US, O=National Center for Supercomputing Applications, OU=Services, CN=ca.ncsa.uiuc.edu
 
-])
-
 \item OU=People :
-for a user's certificate issued by the NCSA-CA or NCSA-SLCS.  A CN
+for a user's certificate issued by the NCSA-CA.  A CN
 component will follow the OU, containing the user's full name and, if needed,
 a numeric value to disambiguate the name from other users with the
 same name.  For example:
 
 C=US, O=National Center for Supercomputing Applications, OU=People, CN=James J. Barlow
+
+])
+
+M4_SLCS_ONLY([
+
+\item CN=M4_ITALICS(User Name) :
+for a user's certificate issued by the NCSA-SLCS.  The CN
+component will contain the user's full name and, if needed,
+a numeric value to disambiguate the name from other users with the
+same name.  For example:
+
+C=US, O=National Center for Supercomputing Applications, CN=James J. Barlow
+
+])
 
 \end{itemize}
 
@@ -522,8 +534,6 @@ Certificate requests must be digitally signed.
 NCSA users are identified by their presence in the NCSA user database.
 Users obtain entries in the database according to the procedure
 described in \ref{sec:enrollment}.
-Additional details about the NCSA Allocations process
-are available at \url{http://www.ncsa.uiuc.edu/UserInfo/Allocations/}.
 
 \subsubsection{\label{sec:auth}Authentication of individual identity}
 
@@ -599,39 +609,92 @@ certificate.
 
 \subsubsection{\label{sec:enrollment}Enrollment process and responsibilities}
 
+NCSA allocations group staff serve as registration authorities for the
+M4_CA_NAME.
+They enroll users in the NCSA user database
+according to the following enrollment process.
+Additional details 
+are available at \url{http://www.ncsa.uiuc.edu/UserInfo/Allocations/}.
+
 To receive an entry in NCSA's user database, a user must satisfy
 one of the following conditions:
 
 \begin{itemize}
 
-\item Be a NCSA employee;
+\item Be an NCSA employee;
+
+\item Have a guest account requested by NCSA management for key
+NCSA collaborators.
 
 \item Be a Principal Investigator (PI) with a allocation on NCSA
 computational resources approved through an NSF-approved peer review
-process (e.g. NRAC);
+process;
 
-\item Have a ``project account'' requested on their behalf by an existing PI
+\item Have a project account requested on their behalf by an existing PI
 using that PI's allocation;
-
-\item Have a ``guest Account'' requested by NCSA management for key
-collaborators of NCSA.
 
 \end{itemize}
 
-All vetting is done either in person (in the case of employees), by
-peer review allocation (in the case of PIs), or by direct personal
-contact of a PI or NCSA staff member (in the case of project or guest
-accounts).
+Identity vetting of NCSA employees is performed in person as part of
+the University of Illinois hiring process, in collaboration with the
+NCSA Human Resources department.
+Identity vetting of guest accounts requires direct personal contact of
+an NCSA staff member, who takes responsibility for that person's
+account.  Guest account requests are reviewed and approved by NCSA
+management and allocations group staff.
 
-All initial user passwords are distributed by US postal mail. If a
-user requires a new password (e.g. they have lost their password), it
+Identity vetting for PIs is performed via peer review.
+PIs submit proposals for supercomputing allocations to a
+Resource Allocations Committee,
+which consists of volunteers selected from the faculty and staff of
+U.S.\ universities, laboratories and other research institutions. All
+members serve a term of 2--5 years and have expertise in computational
+science or engineering.
+Each proposal is assigned to two committee members for review. The
+committee members can also solicit an external review. After several
+weeks of review, the entire committee convenes to discuss the relative
+merits of each proposal and award time based on availability of
+resources.
+To apply, the principal investigator (PI) must be a researcher or
+educator at a U.S.\ academic or non-profit research institution.
+
+Proposals are judged on the following criteria:
+
+\begin{itemize}
+\item Scientific merit: sound scientific goals and approaches of high merit; timely problems of interest to researchers and scientists
+\item Potential for progress: a PI with a verifiable record of success, indicated by publications or other measures, with the necessary resources to conduct the proposed research
+\item Numerical approach: codes that employ correct and efficient numerical algorithms; a selection of temporal/spatial resolution that is appropriate for the research
+\item Justification for resources: an appropriate amount of time has been requested; proposed research requires the use of a supercomputer; applications have been optimized to achieve high single-processor and parallel performance; good scaling of applications on a parallel machine
+\end{itemize}
+
+Allocations are typically awarded for one year,
+though multi-year allocations may be granted for well-known PIs.
+PIs can submit renewal or supplemental proposals to the committee
+to extend their allocation.
+
+PIs are instructed not to share their accounts with others.
+Instead, they use the Add User Form on the TeraGrid User Portal
+to request accounts for their project members.
+PIs can also use this form to remove project members.
+Access to this form requires authentication via Kerberos username and
+password.
+PIs submit name, telephone, and address information for the users on
+their project.
+For users on multiple projects, each project PI must complete the
+required information separately for each user to request the user
+to have access to the project's resources.
+All users are required to sign the TeraGrid User Responsibility Form,
+which educates users about secure and appropriate computing practices.
+
+When a user no longer has any active projects, the user's Kerberos account
+is removed.
+User database entries are kept indefinitely for historical purposes.
+
+All initial user passwords are distributed by postal mail. If a
+user requires a new password (e.g., they have lost their password), it
 will only be distributed via U.S. postal mail to their known address.
-
 Each user is assigned a unique username used as their Kerberos
-principal and Unix login name.
-
-Additional details about the NCSA Allocations process
-are available at \url{http://www.ncsa.uiuc.edu/UserInfo/Allocations/}.
+principal and Unix login name as described in \ref{sec:unique}.
 
 \subsection{Certificate application processing}
 
@@ -1187,7 +1250,7 @@ No stipulation.
 \section{CERTIFICATE, CRL, AND OCSP PROFILES}
 \subsection{Certificate profile}
 
-End-entity certificates will be in X509v3 format,
+End-entity certificates will be X509v3,
 compliant with RFC 3280.
 
 \subsubsection{Version number(s)}
@@ -1272,7 +1335,7 @@ All certificates will have one of the following name forms:
 \item C=US, O=National Center for Supercomputing Applications, OU=Services,
               CN=M4_QUOTE(FQDN)
 
-\item C=US, O=National Center for Supercomputing Applications,
+\item C=US, O=National Center for Supercomputing Applications, OU=People,
       	      CN=M4_QUOTE(user name)
 
 \item C=US, O=National Center for Supercomputing Applications,
@@ -1341,7 +1404,7 @@ The NCSA-SLCS does not issue CRLs.
 
 M4_CA_ONLY([
 
-The version number will be 0 indicating a version 1 CRL.
+The version number will be 1 indicating a version 2 CRL.
 ])
 M4_SLCS_ONLY([
 Not applicable.
