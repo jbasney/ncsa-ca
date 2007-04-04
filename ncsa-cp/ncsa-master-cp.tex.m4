@@ -621,17 +621,17 @@ one of the following conditions:
 
 \begin{itemize}
 
-\item Be an NCSA employee;
+\item Be an NCSA employee
 
 \item Have a guest account requested by NCSA management for key
-NCSA collaborators.
+NCSA collaborators
 
 \item Be a Principal Investigator (PI) with a allocation on NCSA
 computational resources approved through an NSF-approved peer review
-process;
+process
 
 \item Have a project account requested on their behalf by an existing PI
-using that PI's allocation;
+using that PI's allocation
 
 \end{itemize}
 
@@ -683,6 +683,7 @@ their project.
 For users on multiple projects, each project PI must complete the
 required information separately for each user to request the user
 to have access to the project's resources.
+The PI is notified by postal mail whenever a user is added to their project.
 All users are required to sign the TeraGrid User Responsibility Form,
 which educates users about secure and appropriate computing practices.
 
@@ -982,7 +983,7 @@ and operators at NCSA.
 
 \subsubsection{Types of events recorded}
 
-The following items will be logged:
+The following items will be logged and archived:
 
 \begin{itemize}
 
