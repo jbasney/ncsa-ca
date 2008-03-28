@@ -37,10 +37,10 @@ M4_SLCS_ONLY([
 define(M4_DOC_TITLE, [Certificate Policy and Practice Statement for the NCSA SLCS])
 define(M4_CA_NAME, [NCSA-SLCS])
 define(M4_CA_DN, [C=US, O=National Center for Supercomputing Applications, OU=Certificate Authorities, CN=MyProxy])
-define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.2.1])
+define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.2.2])
 ])
 define(M4_TIMESTAMP, [esyscmd(date)])
-define(M4_DOC_VERSION, [1.1])
+define(M4_DOC_VERSION, [1.2])
 define(M4_DOC_DATE, [M4_TIMESTAMP])
 define(M4_CA_URL, [\url{http://security.ncsa.uiuc.edu/CA/}])
 define(M4_VERSION, [esyscmd(m4 --version)])
@@ -580,8 +580,8 @@ Every certificate request is treated as an initial registration.
 If the compromise was limited to just the private key, the request for
 re-key will be treated as an initial registration.
 If the compromise involved a user's password,
-that password will be reset via postal mail to the user's
-known postal address.
+that password will be reset 
+according to Section \ref{sec:enrollment}.
 
 \subsection{Identification and authentication for revocation request}
 
@@ -691,9 +691,21 @@ When a user no longer has any active projects, the user's Kerberos account
 is removed.
 User database entries are kept indefinitely for historical purposes.
 
-All initial user passwords are distributed by postal mail. If a
-user requires a new password (e.g., they have lost their password), it
-will only be distributed via U.S. postal mail to their known address.
+All initial user passwords are distributed by postal mail.
+The letter distributed with the initial password
+instructs the user to change their password and store
+the letter in a secure place.
+If the user forgets their password, they can call the helpdesk
+and request that it be reset to the initial value.
+If the user has lost the letter with the initial password,
+they can call the helpdesk and request that a new letter be
+sent to their address on record.
+M4_SLCS_ONLY([
+Alternatively, the user can reset their password via the TeraGrid User
+Portal, which authenticates the request via the user's registered
+email address.
+])
+
 Each user is assigned a unique username used as their Kerberos
 principal and Unix login name as described in \ref{sec:unique}.
 
@@ -1545,6 +1557,19 @@ the version of this source could be due to minor editorial changes and
 do not by themselves imply a change of policy.
 
 This document was generated from source on M4_TIMESTAMP using M4_VERSION.
+
+\section{REVISION HISTORY}
+
+\begin{description}
+\item[1.2] Updated password reset process in Section \ref{sec:enrollment} to include password resets via the TeraGrid User Portal for the SLCS CA.
+\item[1.1] Approved by TAGPMA April 2007.  Began issuing certificates May 2007.
+\begin{itemize}
+\item Documented allocations process with PIs acting as RAs.
+\item MICS CA updated to issue user certificates with OU=People.
+\item MICS CA issues version 2 CRLs.
+\end{itemize}
+\item[1.0] Presented at TAGPMA Face-to-Face Meeting in Mexico City (March 2007).
+\end{description}
 
 %\bibliography{biblio}
 
