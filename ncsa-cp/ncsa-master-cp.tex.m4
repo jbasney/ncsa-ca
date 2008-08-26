@@ -37,10 +37,10 @@ M4_SLCS_ONLY([
 define(M4_DOC_TITLE, [Certificate Policy and Practice Statement for the NCSA SLCS])
 define(M4_CA_NAME, [NCSA-SLCS])
 define(M4_CA_DN, [C=US, O=National Center for Supercomputing Applications, OU=Certificate Authorities, CN=MyProxy])
-define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.2.2])
+define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.2.3])
 ])
 define(M4_TIMESTAMP, [esyscmd(date)])
-define(M4_DOC_VERSION, [1.2])
+define(M4_DOC_VERSION, [1.3])
 define(M4_DOC_DATE, [M4_TIMESTAMP])
 define(M4_CA_URL, [\url{http://security.ncsa.uiuc.edu/CA/}])
 define(M4_VERSION, [esyscmd(m4 --version)])
@@ -379,9 +379,7 @@ This repository will contain:
 
 \item Self-signed, PEM-formatted certificates for all CAs in the NCSA PKI
 
-M4_CA_ONLY([
 \item PEM-formatted CRLs for the M4_CA_NAME
-])
 
 \item General information about the NCSA PKI
 
@@ -391,14 +389,11 @@ M4_CA_ONLY([
 
 \subsection{Time or frequency of publication}
 
-M4_CA_ONLY([
-
 The CRL will be published immediately after a certificate has been
 revoked as well as on a daily basis.
 The CRL This Update field will indicate the issue date of the CRL,
 and the Next Update field will be set to one week in the future,
 to indicate a one week validity period for the CRL.
-])
 
 The Policy shall be published immediately following any update.
 
@@ -797,12 +792,8 @@ Relying parties must
 \item  Verify any self-signed CA certificates to their own satisfaction using
 out-of-band means. 
 
-M4_CA_ONLY([
-
 \item  Accept responsibility for checking any relevant CRLs before
 accepting the validity of a certificate. 
-
-])
 
 \item  Observe restrictions on private key and certificate use. 
 
@@ -1003,11 +994,9 @@ The following items will be logged and archived:
 
 \item  Certificate issuance
 
-M4_CA_ONLY([
 \item  Certificate revocations
 
 \item  Issued CRLs
-])
 
 \item  Attempted and successful accesses to the systems hosting the NCSA
 PKI, and reboots of those systems
@@ -1050,7 +1039,7 @@ No stipulation.
 
 The CA records and archives all requests for certificates, 
 all issued certificates, 
-M4_CA_ONLY([all revocation requests, all issued CRLs,])
+all revocation requests, all issued CRLs,
 and the login/logout/reboot of the issuing machine. 
 The CA keeps these records for at least three years.
 These records will be be made available to external auditors in the
@@ -1311,6 +1300,11 @@ M4_CA_ONLY([
 URI:\url{http://ca.ncsa.uiuc.edu/9b95bbf2.r0}
 ])
 
+M4_SLCS_ONLY([
+\item CRLDistributionPoints:
+URI:\url{http://ca.ncsa.uiuc.edu/f2e89fe3.r0}
+])
+
 \item SubjectAltName:
 
 For user certificates, the NCSA email address 
@@ -1409,19 +1403,9 @@ No stipulation.
 
 \subsection{CRL profile}
 
-M4_SLCS_ONLY([
-The NCSA-SLCS does not issue CRLs.
-])
-
 \subsubsection{Version number(s)}
 
-M4_CA_ONLY([
-
 The version number will be 1 indicating a version 2 CRL.
-])
-M4_SLCS_ONLY([
-Not applicable.
-])
 
 \subsubsection{CRL and CRL entry extensions}
 
@@ -1561,7 +1545,8 @@ This document was generated from source on M4_TIMESTAMP using M4_VERSION.
 \section{REVISION HISTORY}
 
 \begin{description}
-\item[1.2] Updated password reset process in Section \ref{sec:enrollment} to include password resets via the TeraGrid User Portal for the SLCS CA.
+\item[1.3] The SLCS CA now issues CRLs.
+\item[1.2] Updated password reset process in Section \ref{sec:enrollment} to include password resets via the TeraGrid User Portal for the SLCS CA. Approved by TAGPMA April 2008. Began issuing certificates May 2008.
 \item[1.1] Approved by TAGPMA April 2007.  Began issuing certificates May 2007.
 \begin{itemize}
 \item Documented allocations process with PIs acting as RAs.
