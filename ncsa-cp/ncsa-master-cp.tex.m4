@@ -392,8 +392,8 @@ This repository will contain:
 The CRL will be published immediately after a certificate has been
 revoked as well as on a daily basis.
 The CRL This Update field will indicate the issue date of the CRL,
-and the Next Update field will be set to one week in the future,
-to indicate a one week validity period for the CRL.
+and the Next Update field will be set to two weeks in the future,
+to indicate a two week validity period for the CRL.
 
 The Policy shall be published immediately following any update.
 
