@@ -3,7 +3,7 @@ M4=m4
 
 TIMESTAMP=`date`
 
-TEX_FILES=ncsa-ca-policy.tex ncsa-slcs-policy.tex
+TEX_FILES=ncsa-ca-policy.tex ncsa-slcs-policy.tex ncsa-gridshib-policy.tex
 
 PDF_FILES=$(TEX_FILES:.tex=.pdf)
 DVI_FILES=$(TEX_FILES:.tex=.dvi)
@@ -45,6 +45,9 @@ ncsa-ca-policy.tex: ncsa-master-cp.tex.m4 ncsa-ca-appendix.tex.m4
 
 ncsa-slcs-policy.tex: ncsa-master-cp.tex.m4 ncsa-slcs-appendix.tex.m4
 	$(M4) -DM4_NCSA_SLCS $< > $@
+
+ncsa-gridshib-policy.tex: ncsa-master-cp.tex.m4 ncsa-slcs-appendix.tex.m4
+	$(M4) -DM4_NCSA_GSCA $< > $@
 
 publish: pdf
 	rsync $(PDF_FILES) public-linux.ncsa.uiuc.edu:/afs/ncsa.uiuc.edu/web/security.ncsa.uiuc.edu/htdocs/CA

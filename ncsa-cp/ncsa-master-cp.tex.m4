@@ -23,9 +23,10 @@ m4comment(latex configuration, bracket to protect from m4)
 \begin{document}
 ]
 
-m4comment(Define two macros for specifying CA or SLCS only stuff)
+m4comment(Define macros for specifying CA instance-specific details)
 define([M4_CA_ONLY], [ifdef([M4_NCSA_CA], [$*])])
 define([M4_SLCS_ONLY], [ifdef([M4_NCSA_SLCS], [$*])])
+define([M4_GSCA_ONLY], [ifdef([M4_NCSA_GSCA], [$*])])
 
 M4_CA_ONLY([
 define(M4_DOC_TITLE, [Certificate Policy and Practice Statement for the NCSA CA])
@@ -39,8 +40,14 @@ define(M4_CA_NAME, [NCSA-SLCS])
 define(M4_CA_DN, [C=US, O=National Center for Supercomputing Applications, OU=Certificate Authorities, CN=MyProxy])
 define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.2.3])
 ])
+M4_GSCA_ONLY([
+define(M4_DOC_TITLE, [Certificate Policy and Practice Statement for the GridShib CA])
+define(M4_CA_NAME, [NCSA-GSCA])
+define(M4_CA_DN, [C=US, O=National Center for Supercomputing Applications, OU=Certificate Authorities, CN=GridShib CA])
+define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.3.4])
+])
 define(M4_TIMESTAMP, [esyscmd(date)])
-define(M4_DOC_VERSION, [1.3])
+define(M4_DOC_VERSION, [1.4])
 define(M4_DOC_DATE, [M4_TIMESTAMP])
 define(M4_CA_URL, [\url{http://security.ncsa.uiuc.edu/CA/}])
 define(M4_VERSION, [esyscmd(m4 --version)])
@@ -70,35 +77,48 @@ define(M4_QUOTE, [\textbf{$*}])
 \subsection{Overview}
 
 This Certificate Policy and Practice Statement (herein referred to as
-the "Policy") specifies minimum requirements for the issuance and
+the ``Policy'') specifies minimum requirements for the issuance and
 management of digital certificates that shall be used in
-authenticating users accessing National Center for Supercomputing
-Application at the University of Illinois (herein referred to as
-"NCSA") resources and the resources of other entities (relying
+authenticating users accessing resources of the
+National Center for Supercomputing Applications
+at the University of Illinois (herein referred to as ``NCSA'') 
+and the resources of other entities (relying
 parties) which accept those certificates. The Policy is issued and
 administered under the authority of the NCSA Policy Management
-Authority (herein referred to as the "PMA"; see Section 1.4.2 for
+Authority (herein referred to as the ``PMA''; see Section 1.4.2 for
 contact details).
 This document is structured according to
 Internet Engineering Task Force RFC 3647 (Internet X.509 Public Key
 Infrastructure Certificate Policy and Certification Practices
 Framework).
 
-NCSA runs two CAs. Each CA has it own key and certificate. It is expected
-that relying parties will trust both CAs, though a relying party may
-choose to trust only one CA or the other. These two CAs taken together
+NCSA runs three CAs. Each CA has its own private key and certificate. 
+It is expected
+that relying parties will trust all NCSA CAs, though a relying party may
+choose to trust any NCSA CA separately. These CAs taken together
 along with the associated software and repositories used to distribute
-policies, CRLs and the like, are referred to as the "NCSA PKI".
+policies, CRLs and the like, are referred to as the ``NCSA PKI''.
 One CA issues only short-lived certificates
 (with one week or shorter lifetime)
-to users and is
+to users
+based on Kerberos authentication
+and is
 henceforth referred to as the ``NCSA Short-lived Certificate Service''
 or ``NCSA-SLCS''.
+One CA issues only short-lived certificates
+(with one week or shorter lifetime)
+to users
+based on federated web authentication
+and is
+henceforth referred to as the ``NCSA GridShib CA''
+or ``NCSA-GSCA''.
 One CA is a traditional CA that issues long-lived certificates to
 hosts, services and users requiring long-lived certificates. This CA
-is henceforth referred to as the ``NCSA-CA''. It is expected that users
-will use the NCSA-SLCS for user certificates unless they have some
-need for a long-lived certificate.
+is henceforth referred to as the ``NCSA-CA''.
+It is expected that users
+will use the NCSA-SLCS and NCSA-GSCA
+for user certificates unless they have some
+need for a long-lived certificate from the NCSA-CA.
 
 This document covers the policy that applies to the M4_CA_NAME.
 Figure \ref{arch-fig} illustrates the overall architecture of the 
@@ -106,21 +126,45 @@ M4_CA_NAME.
 The CA is integrated with the NCSA user database and Kerberos
 authentication service for identity management.
 The NCSA accounting process enrolls users in the user database,
-creates a Kerberos account M4_CA_ONLY([with an initial default password]) for them,
+creates a Kerberos account 
+M4_CA_ONLY([with an initial default password]) for them,
 and assigns them a distinguished name.
+M4_CA_ONLY([
 To obtain credentials,
 M4_CA_NAME subscribers run software on the host where their
 credentials are to be stored.
 The software generates the subscriber's private key locally,
 authenticates the user to the M4_CA_NAME via 
-M4_CA_ONLY([Kerberos and their ``default password'' (two authentication factors),]) M4_SLCS_ONLY([Kerberos,])
+Kerberos and their ``default password'' (two authentication factors),
 issues a signed certificate request to the CA,
 and, if the request is approved,
 receives a signed certificate from the CA.
-The M4_CA_NAME 
+])
+M4_SLCS_ONLY([
+To obtain credentials,
+M4_CA_NAME subscribers run software on the host where their
+credentials are to be stored.
+The software generates the subscriber's private key locally,
+authenticates the user to the M4_CA_NAME via 
+Kerberos,
+issues a signed certificate request to the CA,
+and, if the request is approved,
+receives a signed certificate from the CA.
+])
+M4_GSCA_ONLY([
+A user can bind his or her federated identity
+to his or her Kerberos account via a
+web-based account-linking process on the M4_CA_NAME web server.
+Then, to obtain credentials,
+M4_CA_NAME subscribers perform federated web authentication
+to the M4_CA_NAME web server,
+and the web server determines the Kerberos account
+previously linked to that identity via the account-linking process.
+])
+The M4_CA_NAME then
 looks up the distinguished name in the user database 
-that corresponds to the user's authenticated identity,
-then issues a certificate with the appropriate distinguished name.
+that corresponds to the user's authenticated Kerberos identity
+and issues a certificate with the appropriate distinguished name.
 M4_CA_ONLY([For host and service certificate requests, the M4_CA_NAME
 also queries the NCSA Host database, maintained by NCSA networking staff,
 to verify the authenticated user is a registered administrator
@@ -145,6 +189,17 @@ M4_SLCS_ONLY([
 \centering
 \includegraphics[[trim = 0 420 0 0]]{ncsa-slcs-fig.pdf}
 \caption{NCSA SLCS Architecture}
+\label{arch-fig}
+\end{figure}
+
+])
+
+M4_GSCA_ONLY([
+
+\begin{figure}[[ht]]
+\centering
+\includegraphics{ncsa-gsca-fig.pdf}
+\caption{NCSA GridShib CA Architecture}
 \label{arch-fig}
 \end{figure}
 
@@ -177,12 +232,36 @@ create Kerberos accounts for new users,
 M4_CA_ONLY([assign a default password for the account,]) and
 assign distinguished names to new users
 according to Section \ref{sec:names}.
-The M4_CA_NAME uses the Kerberos service to authenticate requests
+
+The M4_CA_NAME uses the Kerberos service to authenticate 
+M4_GSCA_ONLY([account-linking]) requests
 and queries the database to obtain the proper distinguished name for
 authenticated requesters. M4_CA_ONLY([The M4_CA_NAME also uses the database to authenticate users' default passwords as a ``second authentication factor''.])
 The NCSA user database and Kerberos service are used to authenticate 
 NCSA's users and staff for access to NCSA high-performance computing
 resources, NCSA's email services and other production services.
+
+M4_GSCA_ONLY([
+The final step in the M4_CA_NAME registration process is account-linking.
+The account-linking process binds a user's federated identity
+to his or her Kerberos account.
+The user first authenticates to the M4_CA_NAME web server via
+federated web authentication to access the account-linking web application.
+The account-linking application, when presented with a
+federated identity it has not seen before,
+prompts the user for his or her Kerberos username and password
+and then verifies them using the Kerberos service.
+If the Kerberos username and password verify,
+the account-linking application creates a local database entry
+linking the user's federated identity with his or her Kerberos identity.
+When the user later requests a certificate,
+the user's authenticated federated identity entitles
+the user to obtain a certificate with the DN associated
+with the linked Kerberos account.
+When presented with a federated identity it has seen before,
+the account-linking application gives users the ability
+to view and delete account links.
+])
 
 M4_CA_ONLY([Users are instructed to change their default password
 immediately upon receiving their account information and to keep their
@@ -209,30 +288,18 @@ NCSA operations staff.
 
 \subsubsection{Subscribers}
 
-M4_CA_ONLY([
-
-The NCSA-CA will serve the needs of the NCSA community by providing
-users and services at NCSA with x509v3 digital certificates.  These
+The M4_CA_NAME will serve the needs of the NCSA community by providing
+NCSA users and employees with x509v3 digital certificates.  These
 certificates may be used for the purpose of authentication,
 encryption, and digital signing by those individuals to whom the
 certificates have been issued.
+
+M4_CA_ONLY([
 
 The CA will also issue server and service certificates to computers
 operating within the NCSA administrative domain and to computer
 systems from other domains that are providing services in support of
 NCSA projects.
-
-Persons receiving certificates will be users of NCSA's computational
-facilities or staff employed at NCSA.
-
-])
-M4_SLCS_ONLY([
-
-The NCSA-SLCS will serve the needs of the NCSA community by providing
-NCSA users and employees with x509v3 digital certificates.  These
-certificates may be used for the purpose of authentication,
-encryption, and digital signing by those individuals to whom the
-certificates have been issued.
 
 ])
 
@@ -269,7 +336,7 @@ the National Center for Supercomputing Applications
 at the University of Illinois,
 1205 W. Clark, Urbana IL 61801 USA.
 
-This policy is accredited by
+This policy is accredited M4_GSCA_ONLY([(status: pending)]) by
 The Americas Grid Policy Management Authority (TAGPMA),
 a member of the International Grid Trust Federation (IGTF).
 
@@ -332,6 +399,18 @@ stamped list identifying revoked certificates, which is
 signed by a CA and made freely available in a public 
 repository. 
 
+M4_GSCA_ONLY([
+Federated identity - A globally-unique, non-reassigned identifier
+authenticated via federated web authentication, 
+such as eduPersonPerincipalName.
+
+Federated web authentication - A browser-based user authentication
+process that operates across otherwise autonomous security domains.
+For example, the InCommon federation supports SAML-based
+authentication, using technology such as Shibboleth,
+in support of education and research in the United States.
+])
+
 Issuing certification authority (issuing CA) - In the context of a 
 particular certificate, the issuing CA is the CA that issued the 
 certificate (see also Subject certification authority). 
@@ -356,7 +435,7 @@ Authority (LRA) is used elsewhere for the same concept.]
 Relying party - A recipient of a certificate who acts in 
 reliance on that certificate and/or digital signatures 
 verified using that certificate. In this document, the 
-terms "certificate user" and "relying party" are used 
+terms ``certificate user'' and ``relying party'' are used 
 interchangeably. 
  
 Subject certification authority (subject CA) - In the 
@@ -415,7 +494,7 @@ depending on the type of certificate.
 \subsubsection{Need for names to be meaningful}
 
 A unique (see Section \ref{sec:unique})
-"common name" is assigned to each user consisting of their
+``common name'' is assigned to each user consisting of their
 legal name with a serial number appended in the case of name
 conflicts.
 
@@ -454,6 +533,10 @@ M4_SLCS_ONLY([
 Note: MyProxy is the name of the software implementing this CA.
 ])
 
+M4_GSCA_ONLY([
+Note: GridShib is the name of the software implementing this CA.
+])
+
 M4_CA_ONLY([
 
 \item OU=Services :
@@ -487,6 +570,18 @@ C=US, O=National Center for Supercomputing Applications, CN=James J. Barlow
 
 ])
 
+M4_GSCA_ONLY([
+
+\item CN=M4_ITALICS(User Name) :
+for a user's certificate issued by the NCSA-SLCS.  The CN
+component will contain the user's full name and, if needed,
+a numeric value to disambiguate the name from other users with the
+same name.  For example:
+
+C=US, O=National Center for Supercomputing Applications, CN=James J. Barlow
+
+])
+
 \end{itemize}
 
 \subsubsection{\label{sec:unique}Uniqueness of names}
@@ -498,12 +593,12 @@ uniqueness of assigned distinguished names.
 User records are never purged from the database or reused,
 to ensure that distinguished names will never be reassigned
 to another individual.
-The NCSA-CA and NCSA-SLCS may issue certificates
+The NCSA PKI may issue certificates
 with identical names, but only to the same individual.
 All names will be prefixed with the relative DN form of C=US,
 O=National Center for Supercomputing Applications to provide a
 globally unique namespace.
-A unique "common name" is assigned to each user consisting of their
+A unique ``common name'' is assigned to each user consisting of their
 legal name with a serial number appended in the case of name
 conflicts.
 This common name along with the prefix create globally-unique
@@ -532,12 +627,32 @@ described in \ref{sec:enrollment}.
 
 \subsubsection{\label{sec:auth}Authentication of individual identity}
 
-User identity will be authenticated via Kerberos,
+User identity will be authenticated via 
+M4_CA_ONLY([Kerberos,]) M4_SLCS_ONLY([Kerberos,]) M4_GSCA_ONLY([federated web authentication linked to a Kerberos principal,])
 with the authenticated Kerberos principal name mapped to a unique
-"common name" via the NCSA user database.
+``common name'' via the NCSA user database.
 M4_CA_ONLY([The M4_CA_NAME also uses the database to authenticate users'
 ``default passwords'' as a ``second authentication factor'' as described
 in Section \ref{sec:reg}.])
+
+M4_GSCA_ONLY([
+The M4_CA_NAME architecture and policy may support different
+federated web authentication technologies and deployments,
+with the following requirements:
+\begin{enumerate}
+\item The federated web authentication process must be resistant to
+password-guessing, eavesdropping, man-in-the-middle, phishing, 
+cross-site scripting, and other common attack methods.
+\item Federated web identities must be globally-unique and
+non-reassigned, such that subscribers are uniquely identified to the
+M4_CA_NAME.
+\end{enumerate}
+
+The M4_CA_NAME currently supports the following federations:
+\begin{itemize}
+\item InCommon SAML Federation (\url{http://www.incommonfederation.org/})
+\end{itemize}
+])
 
 \subsubsection{Non-verified subscriber information}
 
@@ -583,11 +698,11 @@ according to Section \ref{sec:enrollment}.
 CA Certificates will only be revoked at the instigation of NCSA
 Operational Security personnel.
 
-M4_CA_ONLY([
 Users may request revocation by contacting NCSA Security
 Operations. Requests will be handled as deemed appropriate by NCSA
 Security Operations.
 
+M4_CA_ONLY([
 Requests for revocation of service certificates from NCSA computer
 security personnel and from administrators of the systems hosting the
 services in question will be honored.
@@ -700,6 +815,11 @@ Alternatively, the user can reset their password via the TeraGrid User
 Portal, which authenticates the request via the user's registered
 email address.
 ])
+M4_GSCA_ONLY([
+Alternatively, the user can reset their password via the TeraGrid User
+Portal, which authenticates the request via the user's registered
+email address.
+])
 
 Each user is assigned a unique username used as their Kerberos
 principal and Unix login name as described in \ref{sec:unique}.
@@ -714,7 +834,6 @@ Section \ref{sec:auth}.
 \subsubsection{Approval or rejection of certificate applications}
 
 M4_CA_ONLY([
-
 Certificate applications will be approved if the applicant can be
 authenticated and, in the case of service
 certificates, is validated as an authorized system administrator for
@@ -724,6 +843,12 @@ the host in question, as described in Section \ref{sec:auth}.
 M4_SLCS_ONLY([
 Certificate applications will be approved if the applicant can be
 authenticated via Kerberos.
+])
+
+M4_GSCA_ONLY([
+Certificate applications will be approved if the applicant can be
+authenticated via federated web authentication linked to a 
+Kerberos principal.
 ])
 
 \subsubsection{Time to process certificate applications}
@@ -822,14 +947,6 @@ process.
 
 \subsection{Certificate revocation and suspension}
 
-M4_SLCS_ONLY([
-Certificates issued by the M4_CA_NAME will not be suspended or
-revoked, due to their short lifetime.
-Subscribers may end their subscription by allowing their certificate
-to expire and not requesting a new one.
-])
-
-M4_CA_ONLY([
 \subsubsection{Circumstances for revocation}
 
 Certificates issued by the M4_CA_NAME will be revoked in any of the
@@ -912,8 +1029,6 @@ their certificate.
 \subsection{Key escrow and recovery}
 
 No key escrow is performed.
-
-])
 
 \section{FACILITY, MANAGEMENT, AND OPERATIONAL CONTROLS}
 
@@ -1064,17 +1179,8 @@ No stipulation.
 
 \subsubsection{Entity private key compromise procedures}
 
-M4_CA_ONLY([
 Any private key compromise will result in revocation of the associated
 certificate.
-])
-M4_SLCS_ONLY([
-
-Any private key compromised will be handled by NCSA Security
-Operations on a case-by-case basis. In general an attempt will be made
-to identiify any effected parties and notify those parties.
-
-])
 
 \subsubsection{Business continuity capabilities after a disaster}
 
@@ -1101,6 +1207,12 @@ lifetime of the associated public-key certificate is limited to
 no more than one week.
 ])
 
+M4_GSCA_ONLY([
+Private keys will normally be stored unencrypted, but the
+lifetime of the associated public-key certificate is limited to 
+no more than one week.
+])
+
 M4_CA_ONLY([
 System and service administrators will generate private keys for their
 services, on the service hosts themselves if at all possible.
@@ -1112,8 +1224,9 @@ Not necessary.
 
 \subsubsection{Public key delivery to certificate issuer}
 
-Public keys are delivered under Kerberos authentication and integrity
-protection.
+Public keys are delivered under
+M4_CA_ONLY([Kerberos]) M4_SLCS_ONLY([Kerberos]) M4_GSCA_ONLY([SSL])
+authentication and integrity protection.
 
 \subsubsection{CA public key delivery to relying parties}
 
@@ -1211,6 +1324,9 @@ than one year.
 M4_SLCS_ONLY([
 NCSA-SLCS certificates will have a lifetime of not more than 1 week.
 ])
+M4_GSCA_ONLY([
+NCSA-GSCA certificates will have a lifetime of not more than 1 week.
+])
 
 \subsection{Activation data}
 
@@ -1274,7 +1390,7 @@ For the CA certificate:
 
 M4_CA_ONLY([
 \item CRLDistributionPoints:
-URI:\url{http://ca.ncsa.uiuc.edu/9b95bbf2.r0}
+URI:\url{http://ca.ncsa.uiuc.edu/9b95bbf2.crl}
 ])
 
 \end{itemize}
@@ -1297,12 +1413,14 @@ Digital Signature, Non Repudiation, Key Encipherment, Data Encipherment
 
 M4_CA_ONLY([
 \item CRLDistributionPoints:
-URI:\url{http://ca.ncsa.uiuc.edu/9b95bbf2.r0}
+URI:\url{http://ca.ncsa.uiuc.edu/9b95bbf2.crl}
 ])
-
 M4_SLCS_ONLY([
 \item CRLDistributionPoints:
-URI:\url{http://ca.ncsa.uiuc.edu/f2e89fe3.r0}
+URI:\url{http://ca.ncsa.uiuc.edu/f2e89fe3.crl}
+])
+M4_GSCA_ONLY([
+URI:\url{http://ca.ncsa.uiuc.edu/e8ac4b61.crl}
 ])
 
 \item SubjectAltName:
@@ -1368,6 +1486,16 @@ Where:
 \end{itemize}
 ])
 M4_SLCS_ONLY([
+All certificates will have the following name form:
+
+C=US, O=National Center for Supercomputing Applications, CN=M4_QUOTE(user name)
+
+Where:
+
+ M4_QUOTE(user name) is a unique name for the subscriber, which may have
+ appended digits to disambiguate.
+])
+M4_GSCA_ONLY([
 All certificates will have the following name form:
 
 C=US, O=National Center for Supercomputing Applications, CN=M4_QUOTE(user name)
@@ -1545,6 +1673,7 @@ This document was generated from source on M4_TIMESTAMP using M4_VERSION.
 \section{REVISION HISTORY}
 
 \begin{description}
+\item[1.4] Introduced the GridShib CA.
 \item[1.3] The SLCS CA now issues CRLs.
 \item[1.2] Updated password reset process in Section \ref{sec:enrollment} to include password resets via the TeraGrid User Portal for the SLCS CA. Approved by TAGPMA April 2008. Began issuing certificates May 2008.
 \item[1.1] Approved by TAGPMA April 2007.  Began issuing certificates May 2007.
