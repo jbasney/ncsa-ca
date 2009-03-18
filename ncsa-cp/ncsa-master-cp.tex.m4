@@ -1036,9 +1036,9 @@ No key escrow is performed.
 
 \subsubsection{Site location and construction}
 
-The M4_CA_NAME server will be located in NCSA's machine room in the Advance
+The M4_CA_NAME server is located in NCSA's machine room in the Advanced
 Computation Building (ACB) on the University of Illinois at
-Urbana-Champaign campus.
+Urbana-Champaign campus at 1011 West Springfield Avenue in Urbana, Illinois.
 
 \subsubsection{Physical access}
 
@@ -1071,11 +1071,14 @@ No stipulation.
 
 No stipulation.
 
-\subsubsection{Off-site backup}
+\subsubsection{\label{sec:offsite}Off-site backup}
 
-Audit logs are archived weekly to a secondary storage facility at the
-Beckman Institute on the University of Illinois at
-Urbana-Champaign campus.
+Audit logs are archived weekly to a secondary storage facility 
+in the NCSA Building
+on the University of Illinois at Urbana-Champaign campus
+at 1205 West Clark Street in Urbana, Illinois.
+The NCSA Building is approximately 0.4 miles away from ACB,
+where the CA is located.
 
 \subsection{Procedural controls}
 
@@ -1134,9 +1137,7 @@ No stipulation.
 
 \subsubsection{Audit log backup procedures}
 
-Audit logs are archived weekly to a secondary storage facility at the
-Beckman Institute on the University of Illinois at
-Urbana-Champaign campus.
+See Section \ref{sec:offsite}.
 
 \subsubsection{Audit collection system (internal vs. external)}
 
@@ -1673,7 +1674,7 @@ This document was generated from source on M4_TIMESTAMP using M4_VERSION.
 \section{REVISION HISTORY}
 
 \begin{description}
-\item[1.4] Introduced the GridShib CA.
+\item[1.4] Introduced the GridShib CA. Updated off-site backup location (moved from the Beckman Institute to the new NCSA Building).
 \item[1.3] The SLCS CA now issues CRLs.
 \item[1.2] Updated password reset process in Section \ref{sec:enrollment} to include password resets via the TeraGrid User Portal for the SLCS CA. Approved by TAGPMA April 2008. Began issuing certificates May 2008.
 \item[1.1] Approved by TAGPMA April 2007.  Began issuing certificates May 2007.
