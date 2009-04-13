@@ -623,7 +623,7 @@ Certificate requests must be digitally signed.
 
 NCSA users are identified by their presence in the NCSA user database.
 Users obtain entries in the database according to the procedure
-described in \ref{sec:enrollment}.
+described in Section \ref{sec:enrollment}.
 
 \subsubsection{\label{sec:auth}Authentication of individual identity}
 
@@ -636,6 +636,17 @@ M4_CA_ONLY([The M4_CA_NAME also uses the database to authenticate users'
 in Section \ref{sec:reg}.])
 
 M4_GSCA_ONLY([
+Authentication to the M4_CA_NAME requires the user to have an
+``active'' status in the NCSA user database, meaning that the user is
+associated with an active NCSA account according to the account
+allocations process documented in Section \ref{sec:enrollment}.
+This process includes an annual review that ensures up-to-date contact
+information.
+In the case that contact information is found to be out-of-date
+between annual reviews, such that traceability back to the certificate
+owner is lost, the user's status will be manually marked ``inactive''
+by the NCSA allocations group so the user may not obtain new certificates.
+
 The M4_CA_NAME architecture and policy may support different
 federated web authentication technologies and deployments,
 with the following requirements:
@@ -693,20 +704,26 @@ If the compromise involved a user's password,
 that password will be reset 
 according to Section \ref{sec:enrollment}.
 
-\subsection{Identification and authentication for revocation request}
+\subsection{\label{sec:auth-revoke}Identification and authentication for revocation request}
 
 CA Certificates will only be revoked at the instigation of NCSA
 Operational Security personnel.
 
 Users may request revocation by contacting NCSA Security
-Operations. Requests will be handled as deemed appropriate by NCSA
-Security Operations.
+Operations.
 
 M4_CA_ONLY([
 Requests for revocation of service certificates from NCSA computer
 security personnel and from administrators of the systems hosting the
 services in question will be honored.
 ])
+
+Others may request revocation if they can sufficient prove compromise
+or exposure of the associated private key.
+
+NCSA Security Operations will verify the authenticity of revocation
+requests by checking digital signatures on the request or by telephone
+to the requester's registered phone number.
 
 \section{CERTIFICATE LIFE-CYCLE OPERATIONAL REQUIREMENTS}
 
@@ -978,6 +995,8 @@ Operations.
 
 Requests for revocation should be made by email to
 security@ncsa.uiuc.edu or by phone to NCSA Operations 217-244-0710.
+Requests will be authenticated according to
+Section \ref{sec:auth-revoke}
 
 \subsubsection{Revocation request grace period}
 
@@ -985,8 +1004,8 @@ No constraints.
 
 \subsubsection{Time within which CA must process the revocation request}
 
-Revocation requests will be processed with best effort as quickly as
-possible.
+Revocation requests will be processed within one working day of
+the request being received.
 
 \subsubsection{Revocation checking requirement for relying parties}
 
@@ -1129,7 +1148,7 @@ No stipulation.
 
 \subsubsection{Retention period for audit log}
 
-Audit logs are maintain indefinitely on NCSA's mass storage system in ACB.
+Audit logs are maintain for at least three years.
 
 \subsubsection{Protection of audit log}
 
@@ -1158,7 +1177,7 @@ all issued certificates,
 all revocation requests, all issued CRLs,
 and the login/logout/reboot of the issuing machine. 
 The CA keeps these records for at least three years.
-These records will be be made available to external auditors in the
+These records will be made available to external auditors in the
 course of their work as auditor.
 
 \subsection{Key changeover}
@@ -1231,8 +1250,14 @@ authentication and integrity protection.
 
 \subsubsection{CA public key delivery to relying parties}
 
-The public keys of NCSA PKI CAs are available at
-M4_CA_URL.
+The public keys of NCSA PKI CAs are available at:
+\begin{itemize}
+\item M4_CA_URL
+\item \url{http://security.teragrid.org/TG-CAs.html}
+\item \url{http://vdt.cs.wisc.edu/certificate_authorities.html}
+\item \url{https://dist.eugridpma.info/distribution/igtf/}
+\item \url{https://www.tacar.org/repos/}
+\end{itemize}
 
 \subsubsection{Key sizes}
 
@@ -1255,9 +1280,9 @@ Signature, Certificate Signing, and CRL Signing.
 \subsection{Private Key Protection and Cryptographic Module Engineering Controls}
 \subsubsection{Cryptographic module standards and controls}
 
-The M4_CA_NAME will use a FIPS 140-2 level 3 Hardware Security Module
+The M4_CA_NAME uses a FIPS 140-2 level 3 Hardware Security Module
 (SafeNet Luna PCI)
-for storage of its private key.
+for storage of its private key, operated in FIPS 140-2 level 2 mode.
 
 \subsubsection{Private key (n out of m) multi-person control}
 
@@ -1271,7 +1296,11 @@ M4_CA_NAME private keys are not escrowed.
 
 M4_CA_NAME private key is replicated on two identical cryptographic
 modules on two identical hosts in the NCSA machine room to provide for
-failure protection. If a system hosting one CA should fail, that CA
+failure protection.
+The replication procedure involves transferring the private
+key from one cryptographic module to the other in an encrypted file.
+The private key is never exported in plain text form.
+If a system hosting one CA should fail, that CA
 will temporarily be hosted on the other system until such time as a
 replacement system can be arranged.
 
@@ -1282,13 +1311,15 @@ M4_CA_NAME private keys are not archived.
 \subsubsection{Private key transfer into or from a cryptographic module}
 
 M4_CA_NAME private keys will initially be replicated on two identical
-cryptographic storage modules in a secure manner. After that point
+cryptographic storage modules in a secure manner.
+After that point
 they will not be exported from the cryptographic modules.
+The private key is never exported in plain text form.
 
 \subsubsection{Private key storage on cryptographic module}
 
 M4_CA_NAME private keys are stored on cryptographic modules meeting
-FIPS 140-2 level 3.
+FIPS 140-2 level 3, operated in FIPS 140-2 level 2 mode.
 
 \subsubsection{Method of activating private key}
 
@@ -1334,7 +1365,6 @@ NCSA-GSCA certificates will have a lifetime of not more than 1 week.
 No stipulation.
 
 \subsection{Computer security controls}
-\subsubsection{Specific computer security technical requirements}
 
 The M4_CA_NAME software runs on a dedicated machine, running no other
 services than those needed for the CA operations.
@@ -1342,18 +1372,20 @@ The server's network is protected by a dedicated hardware firewall,
 and the server itself runs an operating system firewall.
 The server is monitored via both host-based and network-based
 intrusion detection systems.
-Login access is subject to hardware-based one-time password
+Login access is subject to hardware-based one-time password (OTP)
 authentication using hardware tokens and permitted only for
 administrative personnel that require access to the system for its
 operation.
 
-\subsubsection{Computer security rating}
-
-No stipulation.
-
-\subsection{Life cycle technical controls}
-
-No stipulation.
+The Kerberos and User Database servers likewise run on dedicated
+machines, 
+running no other services than those needed for Kerberos and
+User Database operations, 
+located in NCSA's machine room in the Advanced Computation Building
+on the University of Illinois campus.
+The servers are monitored via both host-based and network-based
+intrusion detection systems, and login access is subject to
+hardware-based OTP authentication.
 
 \subsection{Network security controls}
 
@@ -1549,6 +1581,9 @@ OCSP is not supported.
 M4_CA_NAME will accept being audited by other IGTF accredited CAs to
 verify compliance with the rules and procedures specified in this
 document.
+M4_CA_NAME audit records will be made available to external auditors
+in the course of their work as auditor.
+Audit results will be made available to the TAGPMA upon request.
 
 \section{OTHER BUSINESS AND LEGAL MATTERS}
 
