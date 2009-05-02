@@ -152,16 +152,23 @@ and, if the request is approved,
 receives a signed certificate from the CA.
 ])
 M4_GSCA_ONLY([
-A user can bind his or her federated identity
+A subscriber can bind his or her federated identity
 to his or her Kerberos account via a
 web-based account-linking process on the M4_CA_NAME web server.
 Then, to obtain credentials,
-M4_CA_NAME subscribers perform federated web authentication
+a M4_CA_NAME subscriber performs federated web authentication
 to the M4_CA_NAME web server,
 and the web server determines the Kerberos account
 previously linked to that identity via the account-linking process.
+Federated web authentication establishes a secure session
+between the subscriber's web browser and the CA.
+The web browser (and/or an associated application),
+running on the subscribers's behalf,
+generates the subscriber's private key and
+issues a signed certificate request containing the corresponding public
+key to the CA (bound to the secure session).
 ])
-The M4_CA_NAME then
+The M4_CA_NAME
 looks up the distinguished name in the user database 
 that corresponds to the user's authenticated Kerberos identity
 and issues a certificate with the appropriate distinguished name.
@@ -198,7 +205,7 @@ M4_GSCA_ONLY([
 
 \begin{figure}[[ht]]
 \centering
-\includegraphics{ncsa-gsca-fig.pdf}
+\includegraphics[[trim = 0 350 0 0]]{ncsa-gsca-fig.pdf}
 \caption{NCSA GridShib CA Architecture}
 \label{arch-fig}
 \end{figure}
@@ -261,6 +268,11 @@ with the linked Kerberos account.
 When presented with a federated identity it has seen before,
 the account-linking application gives users the ability
 to view and delete account links.
+
+Account links expire one year after creation,
+at which point the user is required to perform the account-linking
+process again, to re-verify the binding between the user's 
+federated identity to his or her Kerberos account.
 ])
 
 M4_CA_ONLY([Users are instructed to change their default password
@@ -460,9 +472,9 @@ This repository will contain:
 
 \item PEM-formatted CRLs for the M4_CA_NAME
 
-\item General information about the NCSA PKI
+\item General information about the NCSA PKI, including contact information
 
-\item The most recent copies of all Certificate Policies for the NCSA PKI CAs
+\item The most recent copies of all Certificate Policies for the NCSA PKI CAs, including this policy
 
 \end{itemize}
 
@@ -478,7 +490,7 @@ The Policy shall be published immediately following any update.
 
 \subsection{Access controls on repositories}
 
-There are no restrictions on access to the repositories.
+Repositories are publicly available.
 Best effort will be provided to maintain their availability 24x7.
 
 As a member of the TAGPMA, NCSA grants the IGTF and its
@@ -617,7 +629,8 @@ No stipulation.
 
 \subsubsection{Method to prove possession of private key}
 
-Certificate requests must be digitally signed.
+Certificate requests must be digitally signed by the private key
+associated with the public key in the request.
 
 \subsubsection{Authentication of organization identity}
 
@@ -659,10 +672,27 @@ non-reassigned, such that subscribers are uniquely identified to the
 M4_CA_NAME.
 \end{enumerate}
 
-The M4_CA_NAME currently supports the following federations:
-\begin{itemize}
+The M4_CA_NAME currently supports the following federation(s):
+\begin{enumerate}
 \item InCommon SAML Federation (\url{http://www.incommonfederation.org/})
-\end{itemize}
+\end{enumerate}
+
+M4_CA_NAME staff review each federated identity provider before
+configuring the M4_CA_NAME to accept authentication assertions
+from that identity provider.
+The review process includes:
+\begin{enumerate}
+\item Confirming that the identity provider serves NCSA users.
+\item Confirming that the identity provider is operated by a
+known and respected organization.
+\item Confirming that the identity provider operates a trustworthy
+authentication service and provides identities
+meeting the requirements above.
+\end{enumerate}
+The M4_CA_NAME will refuse authentication assertions from
+any identity providers which fail to meet these requirements
+based on the experience and judgement of M4_CA_NAME staff,
+in consultation with the PMA.
 ])
 
 \subsubsection{Non-verified subscriber information}
@@ -925,7 +955,7 @@ possibility of exposure of a private key.
 
 \subsubsection{Relying party public key and certificate usage}
 
-Relying parties must 
+Relying parties must:
 
 \begin{itemize}
 
@@ -946,21 +976,21 @@ of a certificate from the NCSA PKI or its corresponding private key.
 
 \subsection{Certificate renewal}
 
-Certificates in the NCSA PKI are not explicitly renewed. Instead the
-original subscriber may request a new certificate, using the normal
-certificate issuance process.
+Certificates in the NCSA PKI are not renewed. 
+Instead the original subscriber may request a new certificate, using
+the normal certificate issuance process.
 
 \subsection{Certificate re-key}
 
-Certificates in the NCSA PKI are not explicitly re-keyed. Instead the
-original subscriber may request a new certificate, using the normal
-certificate issuance process.
+Certificates in the NCSA PKI are not re-keyed.
+Instead the original subscriber may request a new certificate, using
+the normal certificate issuance process.
 
 \subsection{Certificate modification}
 
-Certificates in the NCSA PKI are not modified. Instead new
-certificates will be issued using the normal certificate issuance
-process.
+Certificates in the NCSA PKI are not modified.
+Instead new certificates will be issued using the normal certificate
+issuance process.
 
 \subsection{Certificate revocation and suspension}
 
@@ -1027,6 +1057,10 @@ One day.
 Aside from the published CRL, no on-line certificate status checking
 is available.
 
+\subsubsection{On-line revocation checking requirements}
+
+None.
+
 \subsubsection{Other forms of revocation advertisements available}
 
 None.
@@ -1034,6 +1068,22 @@ None.
 \subsubsection{Special requirements re key compromise}
 
 None.
+
+\subsubsection{Circumstances for suspension}
+
+No stipulation.
+
+\subsubsection{Who can request suspension}
+
+No stipulation.
+
+\subsubsection{Procedure for suspension request}
+
+No stipulation.
+
+\subsubsection{Limits on suspension period}
+
+No stipulation.
 
 \subsection{Certificate status services}
 
@@ -1144,7 +1194,7 @@ The NCSA user database maintains contact information for all subscribers.
 
 \subsubsection{Frequency of processing log}
 
-No stipulation.
+See Section \ref{sec:offsite}.
 
 \subsubsection{Retention period for audit log}
 
@@ -1362,6 +1412,20 @@ NCSA-GSCA certificates will have a lifetime of not more than 1 week.
 
 \subsection{Activation data}
 
+The M4_CA_NAME private key is activated automatically at boot time.
+
+\subsubsection{Activation data generation and installation}
+
+Activation data is generated using the operator interface of the
+SafeNet Luna PCI module and stored on the local CA server filesystem.
+
+\subsubsection{Activation data protection}
+
+Activation data is readable only by the root account on the local
+CA server filesystem.
+
+\subsubsection{Other aspects of activation data}
+
 No stipulation.
 
 \subsection{Computer security controls}
@@ -1402,7 +1466,7 @@ No stipulation.
 \subsection{Certificate profile}
 
 End-entity certificates will be X509v3,
-compliant with RFC 3280.
+compliant with RFC 5280.
 
 \subsubsection{Version number(s)}
 
@@ -1439,8 +1503,24 @@ CA:false
 \item X509v3 Authority Key Identifier 
 
 \item X509v3 Certificate Policies:
-OID: M4_DOC_OID
+\begin{itemize}
+\item Policy: M4_DOC_OID (this document)
 
+M4_CA_ONLY([
+\item Policy: 1.2.840.113612.5.2.2.5 (Member Integrated X.509 Credential Services with Secured Infrastructure)
+])
+
+M4_SLCS_ONLY([
+\item Policy: 1.2.840.113612.5.2.2.3 (Short-Lived Credential Services)
+])
+
+M4_GSCA_ONLY([
+\item Policy: 1.2.840.113612.5.2.2.3 (Short-Lived Credential Services)
+])
+
+\item Policy: 1.2.840.113612.5.2.3.2.1 (Identity Vetting by a Trusted Third Party)
+
+\end{itemize}
 \item Key Usage (critical): 
 Digital Signature, Non Repudiation, Key Encipherment, Data Encipherment
 
@@ -1587,7 +1667,12 @@ Audit results will be made available to the TAGPMA upon request.
 
 \section{OTHER BUSINESS AND LEGAL MATTERS}
 
+\subsection{Fees}
+
 No fees will be charged by the M4_CA_NAME nor any refunds given.
+
+\subsection{Financial responsibility}
+
 No financial responsibility is accepted. 
 
 \subsection{Confidentiality of business information}
@@ -1601,6 +1686,10 @@ University systems are, by definition, public records. As such, they
 are subject to laws and policies that may compel the University to
 disclose them. The privacy of materials kept in electronic data
 storage and electronic mail is neither a right nor is it guaranteed.
+
+\subsection{Privacy of personal information}
+
+No stipulation.
 
 \subsection{Intellectual property rights}
 
@@ -1698,6 +1787,8 @@ No stipulation.
 
 This source for this document can be found in the CVSROOT of
 :pserver:anonymous@cvs.ncsa.uiuc.edu:/CVS/ncsa-ca in the ncsa-cp repository.
+It is online at:\\
+\url{http://cvs.ncsa.uiuc.edu/viewcvs.cgi/ncsa-cp/?cvsroot=ncsa-ca}.
 
 The CVS version of the source for this document is $Revision$.
 Changes in
@@ -1708,8 +1799,17 @@ This document was generated from source on M4_TIMESTAMP using M4_VERSION.
 
 \section{REVISION HISTORY}
 
+This section captures the revision history for the
+Certificate Policy and Practice Statements
+of the NCSA PKI.
+The Certificate Policy and Practice Statements of the CAs
+in the NCSA PKI share a common source and are versioned in a
+coordinated fashion, given that changes to policy often
+affect all the CAs.
+Not all revisions listed below may pertain to this policy.
+
 \begin{description}
-\item[1.4] Introduced the GridShib CA. Updated off-site backup location (moved from the Beckman Institute to the new NCSA Building).
+\item[1.4] Introduced the GridShib CA. Updated off-site backup location (moved from the Beckman Institute to the new NCSA Building). Added IGTF policy OIDs. RFC 3280 reference replace with RFC 5280.
 \item[1.3] The SLCS CA now issues CRLs.
 \item[1.2] Updated password reset process in Section \ref{sec:enrollment} to include password resets via the TeraGrid User Portal for the SLCS CA. Approved by TAGPMA April 2008. Began issuing certificates May 2008.
 \item[1.1] Approved by TAGPMA April 2007.  Began issuing certificates May 2007.
