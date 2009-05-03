@@ -472,7 +472,8 @@ This repository will contain:
 
 \item PEM-formatted CRLs for the M4_CA_NAME
 
-\item General information about the NCSA PKI, including contact information
+\item General information about the NCSA PKI,
+      including postal address and contact email address
 
 \item The most recent copies of all Certificate Policies for the NCSA PKI CAs, including this policy
 
@@ -490,7 +491,7 @@ The Policy shall be published immediately following any update.
 
 \subsection{Access controls on repositories}
 
-Repositories are publicly available.
+Repositories are publicly available for read access.
 Best effort will be provided to maintain their availability 24x7.
 
 As a member of the TAGPMA, NCSA grants the IGTF and its
@@ -630,7 +631,8 @@ No stipulation.
 \subsubsection{Method to prove possession of private key}
 
 Certificate requests must be digitally signed by the private key
-associated with the public key in the request.
+associated with the public key in the request
+using a process that is run by the user on the client side of the request.
 
 \subsubsection{Authentication of organization identity}
 
