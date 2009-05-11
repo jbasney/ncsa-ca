@@ -2001,7 +2001,9 @@ See Section \ref{sec:confidentiality}.
 
 \subsubsection{Privacy plan}
 
-The M4_CA_NAME does not have a privacy plan.
+The M4_CA_NAME does not have a specific privacy plan other than
+implementing the privacy polices applied to all University of Illinois
+computer systems.
 
 \subsubsection{Information treated as private}
 
