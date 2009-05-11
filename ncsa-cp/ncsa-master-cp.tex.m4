@@ -491,6 +491,13 @@ The Policy shall be published immediately following any update.
 
 \subsection{Access controls on repositories}
 
+Access to the repository for modification is restricted to 
+NCSA operations staff, NCSA security operations staff,
+and NCSA system administration staff.
+See Section \ref{sec:procedural-controls} for
+procedural controls regarding M4_CA_NAME systems.
+
+Read access to the repository (via HTTP) is unrestricted.
 Repositories are publicly available for read access.
 Best effort will be provided to maintain their availability 24x7.
 
@@ -903,12 +910,16 @@ Kerberos principal.
 \subsubsection{Time to process certificate applications}
 
 Certificate applications are processed automatically.
+Approved applications result in automatic certificate issuance.
+Non-approved applications are automatically rejected and logged.
 
 \subsection{Certificate issuance}
 
 \subsubsection{CA actions during certificate issuance}
 
 Certificate applications are processed automatically.
+Approved applications result in automatic certificate issuance.
+Non-approved applications are automatically rejected and logged.
 
 \subsubsection{Notification to subscriber by the CA of issuance of certificate}
 
@@ -955,9 +966,14 @@ possibility of exposure of a private key.
 
 \end{itemize}
 
+Subscribers are notified of these responsibilities in both
+CA documentation and in the NCSA Acceptable Usage Policy (AUP).
+Subscribers are required to sign the NCSA AUP and return it to
+NCSA Allocations.
+
 \subsubsection{Relying party public key and certificate usage}
 
-Relying parties must:
+Relying parties should:
 
 \begin{itemize}
 
@@ -982,17 +998,101 @@ Certificates in the NCSA PKI are not renewed.
 Instead the original subscriber may request a new certificate, using
 the normal certificate issuance process.
 
+\subsubsection{Circumstance for certificate renewal}
+
+No stipulation.
+
+\subsubsection{Who may request renewal}
+
+No stipulation.
+
+\subsubsection{Processing certificate renewal requests}
+
+No stipulation.
+
+\subsubsection{Notification of new certificate issuance to subscriber}
+
+No stipulation.
+
+\subsubsection{Conduct constituting acceptance of a renewal certificate}
+
+No stipulation.
+
+\subsubsection{Publication of the renewal certificate by the CA}
+
+No stipulation.
+
+\subsubsection{Notification of certificate issuance by the CA to other entities}
+
+No stipulation.
+
 \subsection{Certificate re-key}
 
 Certificates in the NCSA PKI are not re-keyed.
 Instead the original subscriber may request a new certificate, using
 the normal certificate issuance process.
 
+\subsubsection{Circumstance for certificate re-key}
+
+No stipulation.
+
+\subsubsection{Who may request certification of a new public key}
+
+No stipulation.
+
+\subsubsection{Processing certificate re-keying requests}
+
+No stipulation.
+
+\subsubsection{Notification of new certificate issuance to subscriber}
+
+No stipulation.
+
+\subsubsection{Conduct constituting acceptance of a re-keyed certificate}
+
+No stipulation.
+
+\subsubsection{Publication of the re-keyed certificate by the CA}
+
+No stipulation.
+
+\subsubsection{Notification of certificate issuance by the CA to other entities}
+
+No stipulation.
+
 \subsection{Certificate modification}
 
 Certificates in the NCSA PKI are not modified.
 Instead new certificates will be issued using the normal certificate
 issuance process.
+
+\subsubsection{Circumstance for certificate modification}
+
+No stipulation.
+
+\subsubsection{Who may request certificate modification}
+
+No stipulation.
+
+\subsubsection{Processing certificate modification requests}
+
+No stipulation.
+
+\subsubsection{Notification of new certificate issuance to subscriber}
+
+No stipulation.
+
+\subsubsection{Conduct constituting acceptance of modified certificate}
+
+No stipulation.
+
+\subsubsection{Publication of the modified certificate by the CA}
+
+No stipulation.
+
+\subsubsection{Notification of certificate issuance by the CA to other entities}
+
+No stipulation.
 
 \subsection{Certificate revocation and suspension}
 
@@ -1028,7 +1128,7 @@ Operations.
 Requests for revocation should be made by email to
 security@ncsa.uiuc.edu or by phone to NCSA Operations 217-244-0710.
 Requests will be authenticated according to
-Section \ref{sec:auth-revoke}
+Section \ref{sec:auth-revoke}.
 
 \subsubsection{Revocation request grace period}
 
@@ -1092,6 +1192,18 @@ No stipulation.
 Aside from the published CRL, no on-line certificate status checking
 is available.
 
+\subsubsection{Operational characteristics}
+
+No stipulation.
+
+\subsubsection{Service availability}
+
+No stipulation.
+
+\subsubsection{Optional features}
+
+No stipulation.
+
 \subsection{End of subscription}
 
 Subscribers may end their subscription by requesting revocation of
@@ -1100,6 +1212,14 @@ their certificate.
 \subsection{Key escrow and recovery}
 
 No key escrow is performed.
+
+\subsubsection{Key escrow and recovery policy and practices}
+
+No stipulation.
+
+\subsubsection{Session key encapsulation and recovery policy and practices}
+
+No stipulation.
 
 \section{FACILITY, MANAGEMENT, AND OPERATIONAL CONTROLS}
 
@@ -1151,7 +1271,7 @@ at 1205 West Clark Street in Urbana, Illinois.
 The NCSA Building is approximately 0.4 miles away from ACB,
 where the CA is located.
 
-\subsection{Procedural controls}
+\subsection{\label{sec:procedural-controls}Procedural controls}
 
 All persons with access to the systems hosting the M4_CA_NAME will be
 full-time NCSA employees. Personnel will be NCSA Operations staff,
@@ -1166,10 +1286,58 @@ once per year.
 A list of CA and site identity management personnel will be maintained
 and verified at least once per year.
 
+\subsubsection{Trusted roles}
+
+No stipulation.
+
+\subsubsection{Number of persons required per task}
+
+No stipulation.
+
+\subsubsection{Identification and authentication for each role}
+
+No stipulation.
+
+\subsubsection{Roles requiring separation of duties}
+
+No stipulation.
+
 \subsection{Personnel controls}
 
 Operators of the M4_CA_NAME will be qualified system administrators
 and operators at NCSA.
+
+\subsubsection{Qualifications, experience, and clearance requirements}
+
+No stipulation.
+
+\subsubsection{Background check procedures}
+
+No stipulation.
+
+\subsubsection{Training requirements}
+
+No stipulation.
+
+\subsubsection{Retraining frequency and requirements}
+
+No stipulation.
+
+\subsubsection{Job rotation frequency and sequence}
+
+No stipulation.
+
+\subsubsection{Sanctions for unauthorized actions}
+
+No stipulation.
+
+\subsubsection{Independent contractor requirements}
+
+No stipulation.
+
+\subsubsection{Documentation supplied to personnel}
+
+No stipulation.
 
 \subsection{Audit logging procedures}
 
@@ -1204,7 +1372,12 @@ Audit logs are maintain for at least three years.
 
 \subsubsection{Protection of audit log}
 
-No stipulation.
+Events are recorded in real-time via syslog to the local system
+and to NCSA's central syslog collector service, 
+which provides an independent, protected log collection point
+that is physically and logically separated from CA systems.
+Access to the syslog collector service
+is restricted to NCSA security operations staff.
 
 \subsubsection{Audit log backup procedures}
 
@@ -1212,7 +1385,11 @@ See Section \ref{sec:offsite}.
 
 \subsubsection{Audit collection system (internal vs. external)}
 
-No stipulation.
+Audit logs are stored on the local system,
+on NCSA's central syslog collector service,
+and in off-site backups (see Section \ref{sec:offsite}).
+In all cases the logs are maintained on NCSA systems,
+in NCSA buildings, under control of NCSA staff.
 
 \subsubsection{Notification to event-causing subject}
 
@@ -1231,6 +1408,34 @@ and the login/logout/reboot of the issuing machine.
 The CA keeps these records for at least three years.
 These records will be made available to external auditors in the
 course of their work as auditor.
+
+\subsubsection{Types of records archived}
+
+No stipulation.
+
+\subsubsection{Retention period for archive}
+
+No stipulation.
+
+\subsubsection{Protection of archive}
+
+No stipulation.
+
+\subsubsection{Archive backup procedures}
+
+No stipulation.
+
+\subsubsection{Requirements for time-stamping of records}
+
+No stipulation.
+
+\subsubsection{Archive collection system (internal or external)}
+
+No stipulation.
+
+\subsubsection{Procedures to obtain and verify archive information}
+
+No stipulation.
 
 \subsection{Key changeover}
 
@@ -1453,6 +1658,30 @@ The servers are monitored via both host-based and network-based
 intrusion detection systems, and login access is subject to
 hardware-based OTP authentication.
 
+\subsubsection{Specific computer security technical requirements}
+
+No stipulation.
+
+\subsubsection{Computer security rating}
+
+No stipulation.
+
+\subsection{Life cycle technical controls}
+
+No stipulation.
+
+\subsubsection{System development controls}
+
+No stipulation.
+
+\subsubsection{Security management controls}
+
+No stipulation.
+
+\subsubsection{Life cycle security controls}
+
+No stipulation.
+
 \subsection{Network security controls}
 
 Network security controls (software and hardware firewalls)
@@ -1658,6 +1887,14 @@ No stipulation.
 
 OCSP is not supported.
 
+\subsubsection{Version number(s)}
+
+No stipulation.
+
+\subsubsection{OCSP extensions}
+
+No stipulation.
+
 \section{COMPLIANCE AUDIT AND OTHER ASSESSMENTS}
 
 M4_CA_NAME will accept being audited by other IGTF accredited CAs to
@@ -1665,6 +1902,29 @@ verify compliance with the rules and procedures specified in this
 document.
 M4_CA_NAME audit records will be made available to external auditors
 in the course of their work as auditor.
+
+\subsection{Frequency or circumstances of assessment}
+
+No stipulation.
+
+\subsection{Identity/qualifications of assessor}
+
+No stipulation.
+
+\subsection{Assessor's relationship to assessed entity}
+
+No stipulation.
+
+\subsection{Topics covered by assessment}
+
+No stipulation.
+
+\subsection{Actions taken as a result of deficiency}
+
+No stipulation.
+
+\subsection{Communication of results}
+
 Audit results will be made available to the TAGPMA upon request.
 
 \section{OTHER BUSINESS AND LEGAL MATTERS}
@@ -1673,11 +1933,43 @@ Audit results will be made available to the TAGPMA upon request.
 
 No fees will be charged by the M4_CA_NAME nor any refunds given.
 
+\subsubsection{Certificate issuance or renewal fees}
+
+No stipulation.
+
+\subsubsection{Certificate access fees}
+
+No stipulation.
+
+\subsubsection{Revocation or status information access fees}
+
+No stipulation.
+
+\subsubsection{Fees for other services}
+
+No stipulation.
+
+\subsubsection{Refund policy}
+
+No stipulation.
+
 \subsection{Financial responsibility}
 
 No financial responsibility is accepted. 
 
-\subsection{Confidentiality of business information}
+\subsubsection{Insurance coverage}
+
+No stipulation.
+
+\subsubsection{Other assets}
+
+No stipulation.
+
+\subsubsection{Insurance or warranty coverage for end-entities}
+
+No stipulation.
+
+\subsection{\label{sec:confidentiality}Confidentiality of business information}
 
 Information and data maintained in electronic media on University of Illinois
 computer systems are protected by the same laws and policies, and are
@@ -1689,7 +1981,49 @@ are subject to laws and policies that may compel the University to
 disclose them. The privacy of materials kept in electronic data
 storage and electronic mail is neither a right nor is it guaranteed.
 
+\subsubsection{Scope of confidential information}
+
+No stipulation.
+
+\subsubsection{Information not within the scope of confidential information}
+
+No stipulation.
+
+\subsubsection{Responsibility to protect confidential information}
+
+No stipulation.
+
 \subsection{Privacy of personal information}
+
+The privacy of personal information collected by the M4_CA_NAME
+is neither a right nor is it guaranteed.
+See Section \ref{sec:confidentiality}.
+
+\subsubsection{Privacy plan}
+
+The M4_CA_NAME does not have a privacy plan.
+
+\subsubsection{Information treated as private}
+
+No stipulation.
+
+\subsubsection{Information not deemed private}
+
+No stipulation.
+
+\subsubsection{Responsibility to protect private information}
+
+No stipulation.
+
+\subsubsection{Notice and consent to use private information}
+
+No stipulation.
+
+\subsubsection{Disclosure pursuant to judicial or administrative process}
+
+No stipulation.
+
+\subsubsection{Other information disclosure circumstances}
 
 No stipulation.
 
@@ -1711,6 +2045,26 @@ provided on a best effort only basis. It does not warrant its
 procedures and it will take no responsibility for problems arising
 from its operation, or for the use made of the certificates it
 provides.
+
+\subsubsection{CA representations and warranties}
+
+No stipulation.
+
+\subsubsection{RA representations and warranties}
+
+No stipulation.
+
+\subsubsection{Subscriber representations and warranties}
+
+No stipulation.
+
+\subsubsection{Relying party representations and warranties}
+
+No stipulation.
+
+\subsubsection{Representations and warranties of other participants}
+
+No stipulation.
 
 \subsection{Disclaimers of warranties}
 
@@ -1781,6 +2135,26 @@ No stipulation.
 
 No stipulation.
 
+\subsubsection{Entire agreement}
+
+No stipulation.
+
+\subsubsection{Assignment}
+
+No stipulation.
+
+\subsubsection{Severability}
+
+No stipulation.
+
+\subsubsection{Enforcement (attorneys' fees and waiver of rights)}
+
+No stipulation.
+
+\subsubsection{Force Majeure}
+
+No stipulation.
+
 \subsection{Other provisions}
 
 No stipulation.
@@ -1811,7 +2185,7 @@ affect all the CAs.
 Not all revisions listed below may pertain to this policy.
 
 \begin{description}
-\item[1.4] Introduced the GridShib CA. Updated off-site backup location (moved from the Beckman Institute to the new NCSA Building). Added IGTF policy OIDs. RFC 3280 reference replace with RFC 5280.
+\item[1.4] Introduced the GridShib CA. Updated off-site backup location (moved from the Beckman Institute to the new NCSA Building). Added IGTF policy OIDs. RFC 3280 reference replace with RFC 5280. Updated to strictly conform to RFC 3647 outline.
 \item[1.3] The SLCS CA now issues CRLs.
 \item[1.2] Updated password reset process in Section \ref{sec:enrollment} to include password resets via the TeraGrid User Portal for the SLCS CA. Approved by TAGPMA April 2008. Began issuing certificates May 2008.
 \item[1.1] Approved by TAGPMA April 2007.  Began issuing certificates May 2007.
