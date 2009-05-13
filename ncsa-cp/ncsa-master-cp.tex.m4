@@ -1765,12 +1765,10 @@ M4_GSCA_ONLY([
 URI:\url{http://ca.ncsa.uiuc.edu/e8ac4b61.crl}
 ])
 
+M4_CA_ONLY([
 \item SubjectAltName:
-
 For user certificates, the NCSA email address 
 of the subscriber responsible for the certificate.
-
-M4_CA_ONLY([
 For service certificates, the 
 dnsName of the service and
 the NCSA email address of the
