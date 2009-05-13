@@ -1528,11 +1528,8 @@ No stipulation.
 \subsubsection{Key usage purposes (as per X.509 v3 key usage field)}
 
 The M4_CA_NAME does not enforce key usage restrictions by any means
-beyond the X.509v3 extensions in the certificates it issues. In User
-and Service certificates, those extensions will mark the associated
-keys as valid for Digital Signature and Key Encipherment. CA
-certificates will have the Key Usage extension set to allow Digital
-Signature, Certificate Signing, and CRL Signing.
+beyond the X.509v3 extensions in the certificates it issues.
+The certificate extensions are specified in Section \ref{sec:extensions}.
 
 \subsection{Private Key Protection and Cryptographic Module Engineering Controls}
 \subsubsection{Cryptographic module standards and controls}
@@ -1703,7 +1700,7 @@ compliant with RFC 5280.
 
 The version number will have a value of 2 indicating a Version 3 certificate.
 
-\subsubsection{Certificate extensions}
+\subsubsection{\label{sec:extensions}Certificate extensions}
 
 For the CA certificate:
 
@@ -1753,7 +1750,7 @@ M4_GSCA_ONLY([
 
 \end{itemize}
 \item Key Usage (critical): 
-Digital Signature, Non Repudiation, Key Encipherment, Data Encipherment
+Digital Signature, M4_CA_ONLY([Non Repudiation,]) Key Encipherment, Data Encipherment
 
 M4_CA_ONLY([
 \item CRLDistributionPoints:
@@ -1764,6 +1761,7 @@ M4_SLCS_ONLY([
 URI:\url{http://ca.ncsa.uiuc.edu/f2e89fe3.crl}
 ])
 M4_GSCA_ONLY([
+\item CRLDistributionPoints:
 URI:\url{http://ca.ncsa.uiuc.edu/e8ac4b61.crl}
 ])
 
