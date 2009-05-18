@@ -2183,10 +2183,10 @@ affect all the CAs.
 Not all revisions listed below may pertain to this policy.
 
 \begin{description}
-\item[1.4] Introduced the GridShib CA. Updated off-site backup location (moved from the Beckman Institute to the new NCSA Building). Added IGTF policy OIDs. RFC 3280 reference replace with RFC 5280. Updated to strictly conform to RFC 3647 outline.
+\item[1.4] Introduced the GridShib CA (NCSA-GSCA). Updated off-site backup location (moved from the Beckman Institute to the new NCSA Building). Added IGTF policy OIDs. Replaced RFC 3280 reference with RFC 5280. Updated to strictly conform to RFC 3647 outline. GridShib CA approved by TAGPMA May 2009.
 \item[1.3] The SLCS CA now issues CRLs.
 \item[1.2] Updated password reset process in Section \ref{sec:enrollment} to include password resets via the TeraGrid User Portal for the SLCS CA. Approved by TAGPMA April 2008. Began issuing certificates May 2008.
-\item[1.1] Approved by TAGPMA April 2007.  Began issuing certificates May 2007.
+\item[1.1] NCSA-CA and NCSA-SLCS approved by TAGPMA April 2007 and began issuing certificates May 2007.
 \begin{itemize}
 \item Documented allocations process with PIs acting as RAs.
 \item MICS CA updated to issue user certificates with OU=People.
