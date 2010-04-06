@@ -2169,7 +2169,7 @@ Changes in
 the version of this source could be due to minor editorial changes and
 do not by themselves imply a change of policy.
 
-This document was generated from source on M4_TIMESTAMP using M4_VERSION.
+This document was generated from source on M4_TIMESTAMP.
 
 \section{REVISION HISTORY}
 
