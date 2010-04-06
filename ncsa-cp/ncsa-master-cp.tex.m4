@@ -32,13 +32,13 @@ M4_CA_ONLY([
 define(M4_DOC_TITLE, [Certificate Policy and Practice Statement for the NCSA CA])
 define(M4_CA_NAME, [NCSA-CA])
 define(M4_CA_DN, [C=US, O=National Center for Supercomputing Applications, OU=Certificate Authorities, CN=CACL])
-define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.1.1])
+define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.1.4])
 ])
 M4_SLCS_ONLY([
 define(M4_DOC_TITLE, [Certificate Policy and Practice Statement for the NCSA SLCS])
 define(M4_CA_NAME, [NCSA-SLCS])
 define(M4_CA_DN, [C=US, O=National Center for Supercomputing Applications, OU=Certificate Authorities, CN=MyProxy])
-define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.2.3])
+define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.2.4])
 ])
 M4_GSCA_ONLY([
 define(M4_DOC_TITLE, [Certificate Policy and Practice Statement for the GridShib CA])
