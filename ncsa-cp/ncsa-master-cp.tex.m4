@@ -27,29 +27,31 @@ m4comment(Define macros for specifying CA instance-specific details)
 define([M4_CA_ONLY], [ifdef([M4_NCSA_CA], [$*])])
 define([M4_SLCS_ONLY], [ifdef([M4_NCSA_SLCS], [$*])])
 define([M4_GSCA_ONLY], [ifdef([M4_NCSA_GSCA], [$*])])
+define([M4_MYPROXY_ONLY], [ifdef([M4_NCSA_SLCS], [$*])] [ifdef([M4_NCSA_GSCA], [$*])])
+
 
 M4_CA_ONLY([
 define(M4_DOC_TITLE, [Certificate Policy and Practice Statement for the NCSA CA])
 define(M4_CA_NAME, [NCSA-CA])
 define(M4_CA_DN, [C=US, O=National Center for Supercomputing Applications, OU=Certificate Authorities, CN=CACL])
-define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.1.4])
+define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.1.5])
 ])
 M4_SLCS_ONLY([
 define(M4_DOC_TITLE, [Certificate Policy and Practice Statement for the NCSA SLCS])
 define(M4_CA_NAME, [NCSA-SLCS])
 define(M4_CA_DN, [C=US, O=National Center for Supercomputing Applications, OU=Certificate Authorities, CN=MyProxy])
-define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.2.4])
+define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.2.5])
 ])
 M4_GSCA_ONLY([
 define(M4_DOC_TITLE, [Certificate Policy and Practice Statement for the GridShib CA])
 define(M4_CA_NAME, [NCSA-GSCA])
 define(M4_CA_DN, [C=US, O=National Center for Supercomputing Applications, OU=Certificate Authorities, CN=GridShib CA])
-define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.3.4])
+define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.3.5])
 ])
 define(M4_TIMESTAMP, [esyscmd(date)])
-define(M4_DOC_VERSION, [1.4])
+define(M4_DOC_VERSION, [1.5])
 define(M4_DOC_DATE, [M4_TIMESTAMP])
-define(M4_CA_URL, [\url{http://security.ncsa.uiuc.edu/CA/}])
+define(M4_CA_URL, [\url{http://security.ncsa.illinois.edu/CA/}])
 define(M4_VERSION, [esyscmd(m4 --version)])
 
 define(M4_CHANGEBAR_BEGIN, [\chgbarbegin])
@@ -348,7 +350,7 @@ the National Center for Supercomputing Applications
 at the University of Illinois,
 1205 W. Clark, Urbana IL 61801 USA.
 
-This policy is accredited M4_GSCA_ONLY([(status: pending)]) by
+This policy is accredited by
 The Americas Grid Policy Management Authority (TAGPMA),
 a member of the International Grid Trust Federation (IGTF).
 
@@ -360,9 +362,9 @@ M4_CA_NAME is the Head of Security Operations for NCSA:
 James J. Barlow\\
 Phone number: +1 217-244-6403\\
 Postal address: 1205 W. Clark, Urbana IL 61801 USA\\
-E-mail address: jbarlow@ncsa.uiuc.edu\\
+E-mail address: jbarlow@ncsa.illinois.edu\\
 After hours contact information:\\
-NCSA Security Operations and Incident Response: security@ncsa.uiuc.edu\\
+NCSA Security Operations and Incident Response: security@ncsa.illinois.edu\\
 NCSA 24x7 Operations: +1 217-244-0710\\
 
 \subsubsection{Person determining CPS suitability for the policy}
@@ -578,22 +580,10 @@ C=US, O=National Center for Supercomputing Applications, OU=People, CN=James J. 
 
 ])
 
-M4_SLCS_ONLY([
+M4_MYPROXY_ONLY([
 
 \item CN=M4_ITALICS(User Name) :
-for a user's certificate issued by the NCSA-SLCS.  The CN
-component will contain the user's full name and, if needed,
-a numeric value to disambiguate the name from other users with the
-same name.  For example:
-
-C=US, O=National Center for Supercomputing Applications, CN=James J. Barlow
-
-])
-
-M4_GSCA_ONLY([
-
-\item CN=M4_ITALICS(User Name) :
-for a user's certificate issued by the NCSA-SLCS.  The CN
+for a user's certificate issued by the M4_CA_NAME.  The CN
 component will contain the user's full name and, if needed,
 a numeric value to disambiguate the name from other users with the
 same name.  For example:
@@ -706,9 +696,7 @@ in consultation with the PMA.
 
 \subsubsection{Non-verified subscriber information}
 
-Subscriber name and postal address are verified by NCSA's account
-creation process.
-Other gathered information is not verified.
+No stipulation.
 
 \subsubsection{Validation of authority}
 
@@ -780,7 +768,7 @@ M4_CA_NAME.
 They enroll users in the NCSA user database
 according to the following enrollment process.
 Additional details 
-are available at \url{http://www.ncsa.uiuc.edu/UserInfo/Allocations/}.
+are available at \url{http://www.ncsa.illinois.edu/UserInfo/Allocations/}.
 
 To receive an entry in NCSA's user database, a user must satisfy
 one of the following conditions:
@@ -857,7 +845,9 @@ When a user no longer has any active projects, the user's Kerberos account
 is removed.
 User database entries are kept indefinitely for historical purposes.
 
-All initial user passwords are distributed by postal mail.
+M4_CA_ONLY([
+All initial user passwords are distributed by postal/campus mail
+(or in the case of new NCSA employees, in person by the employee's manager).
 The letter distributed with the initial password
 instructs the user to change their password and store
 the letter in a secure place.
@@ -866,14 +856,31 @@ and request that it be reset to the initial value.
 If the user has lost the letter with the initial password,
 they can call the helpdesk and request that a new letter be
 sent to their address on record.
-M4_SLCS_ONLY([
-Alternatively, the user can reset their password via the TeraGrid User
-Portal, which authenticates the request via the user's registered
-email address.
 ])
-M4_GSCA_ONLY([
-Alternatively, the user can reset their password via the TeraGrid User
-Portal, which authenticates the request via the user's registered
+
+M4_MYPROXY_ONLY([
+The user's initial password is established in one of two ways,
+depending on the type of account requested 
+and the method used to request the account.
+For accounts requested via the TeraGrid User Portal,
+users may choose their initial password at the time of initial
+registration.
+Once their registration is approved (via the allocations process),
+their chosen password is activated for obtaining certificates.
+For accounts requested via other methods
+(for example, for new NCSA employees or NCSA guests), 
+the user's initial password is distributed by postal/campus mail
+(or in the case of new NCSA employees, in person by the employee's manager).
+The letter distributed with the initial password
+instructs the user to change their password and store
+the letter in a secure place.
+If the user forgets their password, they can call the helpdesk
+and request that it be reset to the initial value.
+If the user has lost the letter with the initial password,
+they can call the helpdesk and request that a new letter be
+sent to their address on record.
+Users may also reset their password via the TeraGrid User Portal, 
+which authenticates the request via the user's registered
 email address.
 ])
 
@@ -1126,7 +1133,7 @@ Operations.
 \subsubsection{Procedure for revocation request}
 
 Requests for revocation should be made by email to
-security@ncsa.uiuc.edu or by phone to NCSA Operations 217-244-0710.
+security@ncsa.illinois.edu or by phone to NCSA Operations 217-244-0710.
 Requests will be authenticated according to
 Section \ref{sec:auth-revoke}.
 
@@ -1599,19 +1606,16 @@ The hardware security modules meet FIPS 140-2 level 3.
 
 No stipulation.
 
-\subsubsection{Certificate operational periods and key pair usage periods}
+\subsubsection{\label{sec:lifetime}Certificate operational periods and key pair usage periods}
 
 The certificate for M4_CA_NAME will have a lifetime of 10 years.
 
 M4_CA_ONLY([
 NCSA-CA User and Service certificates will have a lifetime of not more
-than one year.
+than 1 year and 1 month.
 ])
-M4_SLCS_ONLY([
-NCSA-SLCS certificates will have a lifetime of not more than 1 week.
-])
-M4_GSCA_ONLY([
-NCSA-GSCA certificates will have a lifetime of not more than 1 week.
+M4_MYPROXY_ONLY([
+M4_CA_NAME certificates will have a lifetime of not more than 12 days.
 ])
 
 \subsection{Activation data}
@@ -1738,11 +1742,7 @@ M4_CA_ONLY([
 \item Policy: 1.2.840.113612.5.2.2.5 (Member Integrated X.509 Credential Services with Secured Infrastructure)
 ])
 
-M4_SLCS_ONLY([
-\item Policy: 1.2.840.113612.5.2.2.3 (Short-Lived Credential Services)
-])
-
-M4_GSCA_ONLY([
+M4_MYPROXY_ONLY([
 \item Policy: 1.2.840.113612.5.2.2.3 (Short-Lived Credential Services)
 ])
 
@@ -1825,17 +1825,7 @@ Where:
 
 \end{itemize}
 ])
-M4_SLCS_ONLY([
-All certificates will have the following name form:
-
-C=US, O=National Center for Supercomputing Applications, CN=M4_QUOTE(user name)
-
-Where:
-
- M4_QUOTE(user name) is a unique name for the subscriber, which may have
- appended digits to disambiguate.
-])
-M4_GSCA_ONLY([
+M4_MYPROXY_ONLY([
 All certificates will have the following name form:
 
 C=US, O=National Center for Supercomputing Applications, CN=M4_QUOTE(user name)
@@ -2183,6 +2173,12 @@ affect all the CAs.
 Not all revisions listed below may pertain to this policy.
 
 \begin{description}
+\item[1.5] The changes in this version are:
+\begin{itemize}
+\item Updated Section \ref{sec:enrollment} to allow the new capability in the TeraGrid User Portal for new users to choose their initial passwords during initial registration, rather that distributing initial passwords via postal mail.
+\item Updated Section \ref{sec:lifetime} to increase the maximum lifetime of certificates issued by the NCSA-CA to 1 year and 1 month and by the NCSA-SLCS and NCSA-GSCA to 12 days.
+\item Updated addresses from uiuc.edu to illinois.edu as appropriate. Note that old uiuc.edu addresses will automatically redirect to their new illinois.edu versions. Note also that some services, such as CRL distribution, still use uiuc.edu addresses.
+\end{itemize}
 \item[1.4] Introduced the GridShib CA (NCSA-GSCA). Updated off-site backup location (moved from the Beckman Institute to the new NCSA Building). Added IGTF policy OIDs. Replaced RFC 3280 reference with RFC 5280. Updated to strictly conform to RFC 3647 outline. GridShib CA approved by TAGPMA May 2009.
 \item[1.3] The SLCS CA now issues CRLs.
 \item[1.2] Updated password reset process in Section \ref{sec:enrollment} to include password resets via the TeraGrid User Portal for the SLCS CA. Approved by TAGPMA April 2008. Began issuing certificates May 2008.
