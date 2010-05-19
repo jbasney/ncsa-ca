@@ -1615,7 +1615,7 @@ NCSA-CA User and Service certificates will have a lifetime of not more
 than 1 year and 1 month.
 ])
 M4_MYPROXY_ONLY([
-M4_CA_NAME certificates will have a lifetime of not more than 12 days.
+M4_CA_NAME certificates will have a lifetime of not more than 11 days.
 ])
 
 \subsection{Activation data}
@@ -2176,7 +2176,7 @@ Not all revisions listed below may pertain to this policy.
 \item[1.5] The changes in this version are:
 \begin{itemize}
 \item Updated Section \ref{sec:enrollment} to allow the new capability in the TeraGrid User Portal for new users to choose their initial passwords during initial registration, rather that distributing initial passwords via postal mail.
-\item Updated Section \ref{sec:lifetime} to increase the maximum lifetime of certificates issued by the NCSA-CA to 1 year and 1 month and by the NCSA-SLCS and NCSA-GSCA to 12 days.
+\item Updated Section \ref{sec:lifetime} to increase the maximum lifetime of certificates issued by the NCSA-CA to 1 year and 1 month and by the NCSA-SLCS and NCSA-GSCA to 11 days.
 \item Updated addresses from uiuc.edu to illinois.edu as appropriate. Note that old uiuc.edu addresses will automatically redirect to their new illinois.edu versions. Note also that some services, such as CRL distribution, still use uiuc.edu addresses.
 \end{itemize}
 \item[1.4] Introduced the GridShib CA (NCSA-GSCA). Updated off-site backup location (moved from the Beckman Institute to the new NCSA Building). Added IGTF policy OIDs. Replaced RFC 3280 reference with RFC 5280. Updated to strictly conform to RFC 3647 outline. GridShib CA approved by TAGPMA May 2009.
