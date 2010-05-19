@@ -101,14 +101,14 @@ choose to trust any NCSA CA separately. These CAs taken together
 along with the associated software and repositories used to distribute
 policies, CRLs and the like, are referred to as the ``NCSA PKI''.
 One CA issues only short-lived certificates
-(with one week or shorter lifetime)
+(with 11 days or shorter lifetime)
 to users
 based on Kerberos authentication
 and is
 henceforth referred to as the ``NCSA Short-lived Certificate Service''
 or ``NCSA-SLCS''.
 One CA issues only short-lived certificates
-(with one week or shorter lifetime)
+(with 11 days or shorter lifetime)
 to users
 based on federated web authentication
 and is
@@ -1488,13 +1488,13 @@ filesystems.
 M4_SLCS_ONLY([
 Private keys will normally be stored unencrypted, but the
 lifetime of the associated public-key certificate is limited to 
-no more than one week.
+no more than 11 days.
 ])
 
 M4_GSCA_ONLY([
 Private keys will normally be stored unencrypted, but the
 lifetime of the associated public-key certificate is limited to 
-no more than one week.
+no more than 11 days.
 ])
 
 M4_CA_ONLY([
