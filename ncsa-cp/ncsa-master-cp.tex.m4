@@ -1772,7 +1772,7 @@ of the subscriber responsible for the certificate.
 For service certificates, the 
 dnsName of the service and
 the NCSA email address of the
-responsible system administer.
+responsible system administrator.
 ])
 
 \end{itemize}
