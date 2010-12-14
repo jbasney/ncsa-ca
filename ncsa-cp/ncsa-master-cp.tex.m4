@@ -34,22 +34,22 @@ M4_CA_ONLY([
 define(M4_DOC_TITLE, [Certificate Policy and Practice Statement for the NCSA CA])
 define(M4_CA_NAME, [NCSA-CA])
 define(M4_CA_DN, [C=US, O=National Center for Supercomputing Applications, OU=Certificate Authorities, CN=CACL])
-define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.1.5])
+define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.1.6])
 ])
 M4_SLCS_ONLY([
 define(M4_DOC_TITLE, [Certificate Policy and Practice Statement for the NCSA SLCS])
 define(M4_CA_NAME, [NCSA-SLCS])
 define(M4_CA_DN, [C=US, O=National Center for Supercomputing Applications, OU=Certificate Authorities, CN=MyProxy])
-define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.2.5])
+define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.2.6])
 ])
 M4_GSCA_ONLY([
 define(M4_DOC_TITLE, [Certificate Policy and Practice Statement for the GridShib CA])
 define(M4_CA_NAME, [NCSA-GSCA])
 define(M4_CA_DN, [C=US, O=National Center for Supercomputing Applications, OU=Certificate Authorities, CN=GridShib CA])
-define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.3.5])
+define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.3.6])
 ])
 define(M4_TIMESTAMP, [esyscmd(date)])
-define(M4_DOC_VERSION, [1.5])
+define(M4_DOC_VERSION, [1.6])
 define(M4_DOC_DATE, [M4_TIMESTAMP])
 define(M4_CA_URL, [\url{http://security.ncsa.illinois.edu/CA/}])
 define(M4_VERSION, [esyscmd(m4 --version)])
@@ -1781,9 +1781,9 @@ responsible system administrator.
 
 \begin{itemize}
 
-\item Hash Function:  id-sha1 1.3.14.3.2.26
+\item Hash Functions: sha1 1.3.14.3.2.26, sha256 2.16.840.1.101.3.4.2.1, sha384 2.16.840.1.101.3.4.2.2, sha512 2.16.840.1.101.3.4.2.3
 \item RSA Encryption: rsaEncryption 1.2.840.113549.1.1.1
-\item Signature Algorithm: sha1WithRSAEncryption 1.2.840.113549.1.1.5
+\item Signature Algorithms: sha1WithRSAEncryption 1.2.840.113549.1.1.5, sha256WithRSAEncryption 1.2.840.113549.1.1.11, sha384WithRSAEncryption 1.2.840.113549.1.1.12, sha512WithRSAEncryption 1.2.840.113549.1.1.13
 
 \end{itemize}
 
@@ -2173,6 +2173,7 @@ affect all the CAs.
 Not all revisions listed below may pertain to this policy.
 
 \begin{description}
+\item[1.6] Added SHA-256, SHA-384, and SHA-512 in Section 7.1.3 (algorithm object identifiers) to enable move to SHA-2 hash functions per the NIST Policy on Hash Functions.
 \item[1.5] The changes in this version are:
 \begin{itemize}
 \item Updated Section \ref{sec:enrollment} to allow the new capability in the TeraGrid User Portal for new users to choose their initial passwords during initial registration, rather that distributing initial passwords via postal mail.
