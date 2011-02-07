@@ -34,22 +34,22 @@ M4_CA_ONLY([
 define(M4_DOC_TITLE, [Certificate Policy and Practice Statement for the NCSA CA])
 define(M4_CA_NAME, [NCSA-CA])
 define(M4_CA_DN, [C=US, O=National Center for Supercomputing Applications, OU=Certificate Authorities, CN=CACL])
-define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.1.6])
+define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.1.7])
 ])
 M4_SLCS_ONLY([
 define(M4_DOC_TITLE, [Certificate Policy and Practice Statement for the NCSA SLCS])
 define(M4_CA_NAME, [NCSA-SLCS])
 define(M4_CA_DN, [C=US, O=National Center for Supercomputing Applications, OU=Certificate Authorities, CN=MyProxy])
-define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.2.6])
+define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.2.7])
 ])
 M4_GSCA_ONLY([
 define(M4_DOC_TITLE, [Certificate Policy and Practice Statement for the GridShib CA])
 define(M4_CA_NAME, [NCSA-GSCA])
 define(M4_CA_DN, [C=US, O=National Center for Supercomputing Applications, OU=Certificate Authorities, CN=GridShib CA])
-define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.3.6])
+define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.3.7])
 ])
 define(M4_TIMESTAMP, [esyscmd(date)])
-define(M4_DOC_VERSION, [1.6])
+define(M4_DOC_VERSION, [1.7])
 define(M4_DOC_DATE, [M4_TIMESTAMP])
 define(M4_CA_URL, [\url{http://security.ncsa.illinois.edu/CA/}])
 define(M4_VERSION, [esyscmd(m4 --version)])
@@ -115,7 +115,7 @@ and is
 henceforth referred to as the ``NCSA GridShib CA''
 or ``NCSA-GSCA''.
 One CA is a traditional CA that issues long-lived certificates to
-hosts, services and users requiring long-lived certificates. This CA
+hosts, services, robots, and users requiring long-lived certificates. This CA
 is henceforth referred to as the ``NCSA-CA''.
 It is expected that users
 will use the NCSA-SLCS and NCSA-GSCA
@@ -298,6 +298,11 @@ service certificates from a host's authorized administrator
 processed. Requests for hosts that do not appear in this database
 (e.g., services run by NCSA collaborators) will be manually vetted by
 NCSA operations staff.
+])
+
+M4_CA_ONLY([
+Robot certificates are manually vetted and issued by CA operators
+according to the requirements of the ``Guideline on IGTF Approved Robots''.
 ])
 
 \subsubsection{Subscribers}
@@ -577,6 +582,20 @@ a numeric value to disambiguate the name from other users with the
 same name.  For example:
 
 C=US, O=National Center for Supercomputing Applications, OU=People, CN=James J. Barlow
+
+\item OU=Robots :
+for a robot certificate issued by the NCSA-CA,
+according to the ``Guideline on IGTF Approved Robots''.
+A CN component will follow the OU, containing either 
+(1) an electronic mail address of a persistent group of people responsible for the robot operations; 
+or (2) the name of a single natural person responsible for the automated client.
+In case (2), a numeric value may be appended to disambiguate the name
+from other users with the same name.
+Then another CN component will follow that CN, containing the string "Robot:"
+appended with a humanly-recognisable and meaningful description of the Robot.
+For example:
+
+C=US, O=National Center for Supercomputing Applications, OU=Robots, CN=James J. Barlow, CN=Robot:Dark Energy Survey Data Mover
 
 ])
 
@@ -964,6 +983,8 @@ M4_CA_ONLY([
 \item  Ensure that the private keys corresponding to their issued service
 certificates are stored in a manner that minimizes the risk of
 exposure. 
+
+\item Ensure that the private keys corresponding to robot certificates are managed in accordance with the ``Guideline on IGTF Approved Robots''.
 ])
 
 \item  Observe restrictions on private key and certificate use. 
@@ -1608,10 +1629,10 @@ No stipulation.
 
 \subsubsection{\label{sec:lifetime}Certificate operational periods and key pair usage periods}
 
-The certificate for M4_CA_NAME will have a lifetime of 10 years.
+The certificate for M4_CA_NAME will have a lifetime of up to 20 years.
 
 M4_CA_ONLY([
-NCSA-CA User and Service certificates will have a lifetime of not more
+NCSA-CA User, Robot, and Service certificates will have a lifetime of not more
 than 1 year and 1 month.
 ])
 M4_MYPROXY_ONLY([
@@ -1724,7 +1745,7 @@ URI:\url{http://ca.ncsa.uiuc.edu/9b95bbf2.crl}
 
 \end{itemize}
 
-For user M4_CA_ONLY([and service]) certificates:
+For user M4_CA_ONLY([robot and service]) certificates:
 
 \begin{itemize}
 
@@ -1740,6 +1761,7 @@ CA:false
 
 M4_CA_ONLY([
 \item Policy: 1.2.840.113612.5.2.2.5 (Member Integrated X.509 Credential Services with Secured Infrastructure)
+\item Policy: 1.2.840.113612.5.2.3.3.1 (Policy on Automated Clients or Robot Entities) (for Robot certificates only)
 ])
 
 M4_MYPROXY_ONLY([
@@ -1747,6 +1769,8 @@ M4_MYPROXY_ONLY([
 ])
 
 \item Policy: 1.2.840.113612.5.2.3.2.1 (Identity Vetting by a Trusted Third Party)
+
+\item Policy: 1.2.840.113612.5.2.3.1.2 (Private Key Protection: Key material held in files)
 
 \end{itemize}
 \item Key Usage (critical): 
@@ -1767,8 +1791,8 @@ URI:\url{http://ca.ncsa.uiuc.edu/e8ac4b61.crl}
 
 M4_CA_ONLY([
 \item SubjectAltName:
-For user certificates, the NCSA email address 
-of the subscriber responsible for the certificate.
+For user and robot certificates, the NCSA email address 
+of the subscriber (or robot group) responsible for the certificate.
 For service certificates, the 
 dnsName of the service and
 the NCSA email address of the
@@ -1803,6 +1827,12 @@ All certificates will have one of the following name forms:
 \item C=US, O=National Center for Supercomputing Applications, OU=People,
       	      CN=M4_QUOTE(user name)
 
+\item C=US, O=National Center for Supercomputing Applications, OU=Robots,
+      	      CN=M4_QUOTE(user name), CN=Robot:M4_QUOTE(robot description)
+
+\item C=US, O=National Center for Supercomputing Applications, OU=Robots,
+      	      CN=M4_QUOTE(robot email), CN=Robot:M4_QUOTE(robot description)
+
 \item C=US, O=National Center for Supercomputing Applications,
               OU=Certificate Authorities, CN=M4_QUOTE(CA name)
 
@@ -1820,6 +1850,10 @@ Where:
 
 \item  M4_QUOTE(user name) is a unique name for the subscriber, which may have
  appended digits to disambiguate.
+
+\item M4_QUOTE(robot description) is a humanly-recognisable and meaningful description of the Robot.
+
+\item M4_QUOTE(robot email) is an electronic mail address of a persistent group of people responsible for the robot operations.
 
 \item  M4_QUOTE(ca name) is the name of a CA.
 
@@ -2173,6 +2207,7 @@ affect all the CAs.
 Not all revisions listed below may pertain to this policy.
 
 \begin{description}
+\item[1.7] Added support for Robot certificates in the NCSA-CA according to the ``Guideline on IGTF Approved Robots''.
 \item[1.6] Added SHA-256, SHA-384, and SHA-512 in Section 7.1.3 (algorithm object identifiers) to enable move to SHA-2 hash functions per the NIST Policy on Hash Functions.
 \item[1.5] The changes in this version are:
 \begin{itemize}
