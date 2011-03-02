@@ -27,29 +27,36 @@ m4comment(Define macros for specifying CA instance-specific details)
 define([M4_CA_ONLY], [ifdef([M4_NCSA_CA], [$*])])
 define([M4_SLCS_ONLY], [ifdef([M4_NCSA_SLCS], [$*])])
 define([M4_GSCA_ONLY], [ifdef([M4_NCSA_GSCA], [$*])])
-define([M4_MYPROXY_ONLY], [ifdef([M4_NCSA_SLCS], [$*])] [ifdef([M4_NCSA_GSCA], [$*])])
-
+define([M4_2FCA_ONLY], [ifdef([M4_NCSA_2FCA], [$*])])
+define([M4_MYPROXY_ONLY], [ifdef([M4_NCSA_SLCS], [$*])] [ifdef([M4_NCSA_GSCA], [$*])] [ifdef([M4_NCSA_2FCA], [$*])])
+define([M4_KERBEROS_ONLY], [ifdef([M4_NCSA_SLCS], [$*])] [ifdef([M4_NCSA_GSCA], [$*])] [ifdef([M4_NCSA_CA], [$*])])
 
 M4_CA_ONLY([
-define(M4_DOC_TITLE, [Certificate Policy and Practice Statement for the NCSA CA])
+define(M4_DOC_TITLE, [Certificate Policy and Practice Statement for the NCSA MICS CA])
 define(M4_CA_NAME, [NCSA-CA])
 define(M4_CA_DN, [C=US, O=National Center for Supercomputing Applications, OU=Certificate Authorities, CN=CACL])
-define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.1.7])
+define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.1.8])
 ])
 M4_SLCS_ONLY([
 define(M4_DOC_TITLE, [Certificate Policy and Practice Statement for the NCSA SLCS])
 define(M4_CA_NAME, [NCSA-SLCS])
 define(M4_CA_DN, [C=US, O=National Center for Supercomputing Applications, OU=Certificate Authorities, CN=MyProxy])
-define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.2.7])
+define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.2.8])
 ])
 M4_GSCA_ONLY([
-define(M4_DOC_TITLE, [Certificate Policy and Practice Statement for the GridShib CA])
+define(M4_DOC_TITLE, [Certificate Policy and Practice Statement for the NCSA GridShib CA])
 define(M4_CA_NAME, [NCSA-GSCA])
 define(M4_CA_DN, [C=US, O=National Center for Supercomputing Applications, OU=Certificate Authorities, CN=GridShib CA])
-define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.3.7])
+define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.3.8])
+])
+M4_2FCA_ONLY([
+define(M4_DOC_TITLE, [Certificate Policy and Practice Statement for the NCSA Two Factor CA])
+define(M4_CA_NAME, [NCSA-2FCA])
+define(M4_CA_DN, [C=US, O=National Center for Supercomputing Applications, OU=Certificate Authorities, CN=Two Factor CA])
+define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.4.8])
 ])
 define(M4_TIMESTAMP, [esyscmd(date)])
-define(M4_DOC_VERSION, [1.7])
+define(M4_DOC_VERSION, [1.8])
 define(M4_DOC_DATE, [M4_TIMESTAMP])
 define(M4_CA_URL, [\url{http://security.ncsa.illinois.edu/CA/}])
 define(M4_VERSION, [esyscmd(m4 --version)])
@@ -94,9 +101,10 @@ Internet Engineering Task Force RFC 3647 (Internet X.509 Public Key
 Infrastructure Certificate Policy and Certification Practices
 Framework).
 
-NCSA runs three CAs. Each CA has its own private key and certificate. 
+NCSA runs four CAs. Each CA has its own private key and certificate. 
 It is expected
-that relying parties will trust all NCSA CAs, though a relying party may
+that relying parties will generally trust all NCSA CAs, 
+though a relying party may
 choose to trust any NCSA CA separately. These CAs taken together
 along with the associated software and repositories used to distribute
 policies, CRLs and the like, are referred to as the ``NCSA PKI''.
@@ -114,23 +122,31 @@ based on federated web authentication
 and is
 henceforth referred to as the ``NCSA GridShib CA''
 or ``NCSA-GSCA''.
+One CA issues only short-lived certificates
+(with 11 days or shorter lifetime)
+to users
+based on (strong) two-factor authentication
+and is henceforth referred to as the ``NCSA Two Factor CA''
+or ``NCSA-2FCA''.
 One CA is a traditional CA that issues long-lived certificates to
 hosts, services, robots, and users requiring long-lived certificates. This CA
 is henceforth referred to as the ``NCSA-CA''.
 It is expected that users
-will use the NCSA-SLCS and NCSA-GSCA
+will use the NCSA-SLCS, NCSA-GSCA, and NCSA-2FCA CAs
 for user certificates unless they have some
 need for a long-lived certificate from the NCSA-CA.
 
 This document covers the policy that applies to the M4_CA_NAME.
 Figure \ref{arch-fig} illustrates the overall architecture of the 
 M4_CA_NAME.
+M4_KERBEROS_ONLY([
 The CA is integrated with the NCSA user database and Kerberos
 authentication service for identity management.
 The NCSA accounting process enrolls users in the user database,
 creates a Kerberos account 
 M4_CA_ONLY([with an initial default password]) for them,
 and assigns them a distinguished name.
+])
 M4_CA_ONLY([
 To obtain credentials,
 M4_CA_NAME subscribers run software on the host where their
@@ -170,6 +186,7 @@ generates the subscriber's private key and
 issues a signed certificate request containing the corresponding public
 key to the CA (bound to the secure session).
 ])
+M4_KERBEROS_ONLY([
 The M4_CA_NAME
 looks up the distinguished name in the user database 
 that corresponds to the user's authenticated Kerberos identity
@@ -180,6 +197,11 @@ to verify the authenticated user is a registered administrator
 for the requested host.])
 Further policy and implementation details are provided
 throughout the document.
+])
+M4_2FCA_ONLY([
+FIXME: Need some overview text for the 2FCA here.
+])
+
 
 M4_CA_ONLY([
 
@@ -237,11 +259,12 @@ M4_CA_NAME.
 They enroll users in the NCSA user database
 according to the enrollment process described in 
 Section \ref{sec:enrollment},
-create Kerberos accounts for new users,
+create accounts for new users,
 M4_CA_ONLY([assign a default password for the account,]) and
 assign distinguished names to new users
 according to Section \ref{sec:names}.
 
+M4_KERBEROS_ONLY([
 The M4_CA_NAME uses the Kerberos service to authenticate 
 M4_GSCA_ONLY([account-linking]) requests
 and queries the database to obtain the proper distinguished name for
@@ -249,6 +272,7 @@ authenticated requesters. M4_CA_ONLY([The M4_CA_NAME also uses the database to a
 The NCSA user database and Kerberos service are used to authenticate 
 NCSA's users and staff for access to NCSA high-performance computing
 resources, NCSA's email services and other production services.
+])
 
 M4_GSCA_ONLY([
 The final step in the M4_CA_NAME registration process is account-linking.
@@ -275,6 +299,11 @@ Account links expire one year after creation,
 at which point the user is required to perform the account-linking
 process again, to re-verify the binding between the user's 
 federated identity to his or her Kerberos account.
+])
+
+M4_2FCA_ONLY([
+FIXME: Need 2FCA registration process overview here
+(with details in later sections).
 ])
 
 M4_CA_ONLY([Users are instructed to change their default password
@@ -337,7 +366,7 @@ No stipulation.
 One of the purposes of this policy is to promote a wide use of
 public-key certificates in many different applications.  These
 applications may include, but are not limited to, login
-authentication, job submission authentication, encrypted e-mail, and
+authentication, job submission authentication, M4_CA_ONLY([encrypted e-mail,]) and
 SSL/TLS encryption for applications capable of making use of these
 technologies.
 
@@ -659,8 +688,10 @@ described in Section \ref{sec:enrollment}.
 \subsubsection{\label{sec:auth}Authentication of individual identity}
 
 User identity will be authenticated via 
-M4_CA_ONLY([Kerberos,]) M4_SLCS_ONLY([Kerberos,]) M4_GSCA_ONLY([federated web authentication linked to a Kerberos principal,])
-with the authenticated Kerberos principal name mapped to a unique
+M4_CA_ONLY([Kerberos,]) M4_SLCS_ONLY([Kerberos,]) M4_GSCA_ONLY([federated web authentication linked to a Kerberos principal,]) M4_2FCA_ONLY([one-time password,]) 
+with the authenticated
+M4_KERBEROS_ONLY([Kerberos principal name]) M4_2FCA_ONLY([NCSA login name])
+mapped to a unique
 ``common name'' via the NCSA user database.
 M4_CA_ONLY([The M4_CA_NAME also uses the database to authenticate users'
 ``default passwords'' as a ``second authentication factor'' as described
@@ -746,9 +777,12 @@ Every certificate request is treated as an initial registration.
 
 If the compromise was limited to just the private key, the request for
 re-key will be treated as an initial registration.
-If the compromise involved a user's password,
+M4_KERBEROS_ONLY([If the compromise involved a user's password,
 that password will be reset 
-according to Section \ref{sec:enrollment}.
+according to Section \ref{sec:enrollment}.])
+M4_2FCA_ONLY([If the compromise involved a user's authentication token,
+that token will be revoked/re-issued
+according to Section \ref{sec:enrollment}.])
 
 \subsection{\label{sec:auth-revoke}Identification and authentication for revocation request}
 
@@ -777,10 +811,12 @@ to the requester's registered phone number.
 
 \subsubsection{Who can submit a certificate application}
 
-Any user who appears in NCSA's User Database may request a
+Any user who appears in NCSA's user database may request a
 certificate.
 
 \subsubsection{\label{sec:enrollment}Enrollment process and responsibilities}
+
+M4_2FCA_ONLY([FIXME: Update this subsubsection for 2FCA.])
 
 NCSA allocations group staff serve as registration authorities for the
 M4_CA_NAME.
@@ -1028,31 +1064,31 @@ the normal certificate issuance process.
 
 \subsubsection{Circumstance for certificate renewal}
 
-No stipulation.
+Not applicable.
 
 \subsubsection{Who may request renewal}
 
-No stipulation.
+Not applicable.
 
 \subsubsection{Processing certificate renewal requests}
 
-No stipulation.
+Not applicable.
 
 \subsubsection{Notification of new certificate issuance to subscriber}
 
-No stipulation.
+Not applicable.
 
 \subsubsection{Conduct constituting acceptance of a renewal certificate}
 
-No stipulation.
+Not applicable.
 
 \subsubsection{Publication of the renewal certificate by the CA}
 
-No stipulation.
+Not applicable.
 
 \subsubsection{Notification of certificate issuance by the CA to other entities}
 
-No stipulation.
+Not applicable.
 
 \subsection{Certificate re-key}
 
@@ -1062,31 +1098,32 @@ the normal certificate issuance process.
 
 \subsubsection{Circumstance for certificate re-key}
 
+Not applicable.
 No stipulation.
 
 \subsubsection{Who may request certification of a new public key}
 
-No stipulation.
+Not applicable.
 
 \subsubsection{Processing certificate re-keying requests}
 
-No stipulation.
+Not applicable.
 
 \subsubsection{Notification of new certificate issuance to subscriber}
 
-No stipulation.
+Not applicable.
 
 \subsubsection{Conduct constituting acceptance of a re-keyed certificate}
 
-No stipulation.
+Not applicable.
 
 \subsubsection{Publication of the re-keyed certificate by the CA}
 
-No stipulation.
+Not applicable.
 
 \subsubsection{Notification of certificate issuance by the CA to other entities}
 
-No stipulation.
+Not applicable.
 
 \subsection{Certificate modification}
 
@@ -1096,31 +1133,31 @@ issuance process.
 
 \subsubsection{Circumstance for certificate modification}
 
-No stipulation.
+Not applicable.
 
 \subsubsection{Who may request certificate modification}
 
-No stipulation.
+Not applicable.
 
 \subsubsection{Processing certificate modification requests}
 
-No stipulation.
+Not applicable.
 
 \subsubsection{Notification of new certificate issuance to subscriber}
 
-No stipulation.
+Not applicable.
 
 \subsubsection{Conduct constituting acceptance of modified certificate}
 
-No stipulation.
+Not applicable.
 
 \subsubsection{Publication of the modified certificate by the CA}
 
-No stipulation.
+Not applicable.
 
 \subsubsection{Notification of certificate issuance by the CA to other entities}
 
-No stipulation.
+Not applicable.
 
 \subsection{Certificate revocation and suspension}
 
@@ -1170,13 +1207,11 @@ the request being received.
 \subsubsection{Revocation checking requirement for relying parties}
 
 Relying parties are advised to obtain and consult a valid CRL from
-M4_CA_URL
+M4_CA_URL.
 
 \subsubsection{CRL issuance frequency (if applicable)}
 
-CRLs are issued when a certificate is revoked.
-
-CRLs are issued daily.
+CRLs are issued daily and whenever a certificate is revoked.
 
 \subsubsection{Maximum latency for CRLs (if applicable)}
 
@@ -1201,19 +1236,19 @@ None.
 
 \subsubsection{Circumstances for suspension}
 
-No stipulation.
+Certificate suspension is not supported.
 
 \subsubsection{Who can request suspension}
 
-No stipulation.
+Not applicable.
 
 \subsubsection{Procedure for suspension request}
 
-No stipulation.
+Not applicable.
 
 \subsubsection{Limits on suspension period}
 
-No stipulation.
+Not applicable.
 
 \subsection{Certificate status services}
 
@@ -1243,31 +1278,34 @@ No key escrow is performed.
 
 \subsubsection{Key escrow and recovery policy and practices}
 
-No stipulation.
+Not applicable.
 
 \subsubsection{Session key encapsulation and recovery policy and practices}
 
-No stipulation.
+Not applicable.
 
 \section{FACILITY, MANAGEMENT, AND OPERATIONAL CONTROLS}
 
 \subsection{Physical controls}
 
-\subsubsection{Site location and construction}
+\subsubsection{\label{sec:location}Site location and construction}
 
-The M4_CA_NAME server is located in NCSA's machine room in the Advanced
-Computation Building (ACB) on the University of Illinois at
-Urbana-Champaign campus at 1011 West Springfield Avenue in Urbana, Illinois.
+The M4_CA_NAME servers are located in NCSA's machine room in the 
+National Petascale Computing Facility (NPCF)
+on the University of Illinois at
+Urbana-Champaign campus at 1725 South Oak Street in Champaign, Illinois.
 
 \subsubsection{Physical access}
 
-NCSA occupies all of ACB with the exception of space dedicated to
-mechanical systems and custodians.  ACB entrances and computer rooms
+FIXME: Update NPCF text in this subsubsection.
+
+NCSA occupies all of NPCF with the exception of space dedicated to
+mechanical systems and custodians.  NPCF entrances and computer rooms
 are locked at all times and use a keycard system to gain entry.  Video
 cameras are located at all entrances and are monitored by staff in the
 control room.  An intercom and remote lock release system is used at
 the main entrance to allow entry to authorized personnel who do not
-have keycard access.  ACB is not open to the general public and is
+have keycard access.  NPCF is not open to the general public and is
 staffed 24x7x365.
 
 \subsubsection{Power and air conditioning}
@@ -1292,11 +1330,13 @@ No stipulation.
 
 \subsubsection{\label{sec:offsite}Off-site backup}
 
+FIXME: Is this still accurate?
+
 Audit logs are archived weekly to a secondary storage facility 
 in the NCSA Building
 on the University of Illinois at Urbana-Champaign campus
 at 1205 West Clark Street in Urbana, Illinois.
-The NCSA Building is approximately 0.4 miles away from ACB,
+The NCSA Building is approximately 3 miles away from NPCF,
 where the CA is located.
 
 \subsection{\label{sec:procedural-controls}Procedural controls}
@@ -1530,7 +1570,7 @@ Not necessary.
 \subsubsection{Public key delivery to certificate issuer}
 
 Public keys are delivered under
-M4_CA_ONLY([Kerberos]) M4_SLCS_ONLY([Kerberos]) M4_GSCA_ONLY([SSL])
+M4_CA_ONLY([Kerberos]) M4_MYPROXY_ONLY([SSL])
 authentication and integrity protection.
 
 \subsubsection{CA public key delivery to relying parties}
@@ -1547,7 +1587,7 @@ The public keys of NCSA PKI CAs are available at:
 \subsubsection{Key sizes}
 
 The CA private key will be 2048 bits in length.
-Public RSA keys shorter than 1024 bits will not be signed.
+Public RSA keys shorter than 2048 bits will not be signed.
 
 \subsubsection{Public key parameters generation and quality checking}
 
@@ -1670,15 +1710,18 @@ authentication using hardware tokens and permitted only for
 administrative personnel that require access to the system for its
 operation.
 
-The Kerberos and User Database servers likewise run on dedicated
-machines, 
-running no other services than those needed for Kerberos and
-User Database operations, 
-located in NCSA's machine room in the Advanced Computation Building
+The 
+M4_KERBEROS_ONLY([Kerberos]) M4_2FCA_ONLY([one-time password])
+and NCSA user database servers
+likewise run on dedicated machines, 
+running no other services than those needed for 
+M4_KERBEROS_ONLY([Kerberos]) M4_2FCA_ONLY([one-time password])
+NCSA user database operations, 
+located in NCSA's machine room in the National Petascale Computing Facility
 on the University of Illinois campus.
 The servers are monitored via both host-based and network-based
 intrusion detection systems, and login access is subject to
-hardware-based OTP authentication.
+hardware-based one-time password (OTP) authentication.
 
 \subsubsection{Specific computer security technical requirements}
 
@@ -1731,7 +1774,7 @@ For the CA certificate:
 
 \begin{itemize}
 
-\item keyUsage (critical): Digital Signature, Certificate Sign, CRL Sign
+\item keyUsage (critical): Certificate Sign, CRL Sign
 
 \item basicConstraints (critical): CA:true
 
@@ -1740,7 +1783,7 @@ For the CA certificate:
 
 M4_CA_ONLY([
 \item CRLDistributionPoints:
-URI:\url{http://ca.ncsa.uiuc.edu/9b95bbf2.crl}
+URI:\url{http://ca.ncsa.uiuc.edu/ncsa-2fca.crl}
 ])
 
 \end{itemize}
@@ -1909,11 +1952,11 @@ OCSP is not supported.
 
 \subsubsection{Version number(s)}
 
-No stipulation.
+Not applicable.
 
 \subsubsection{OCSP extensions}
 
-No stipulation.
+Not applicable.
 
 \section{COMPLIANCE AUDIT AND OTHER ASSESSMENTS}
 
@@ -1955,23 +1998,23 @@ No fees will be charged by the M4_CA_NAME nor any refunds given.
 
 \subsubsection{Certificate issuance or renewal fees}
 
-No stipulation.
+Not applicable.
 
 \subsubsection{Certificate access fees}
 
-No stipulation.
+Not applicable.
 
 \subsubsection{Revocation or status information access fees}
 
-No stipulation.
+Not applicable.
 
 \subsubsection{Fees for other services}
 
-No stipulation.
+Not applicable.
 
 \subsubsection{Refund policy}
 
-No stipulation.
+Not applicable.
 
 \subsection{Financial responsibility}
 
@@ -2127,7 +2170,7 @@ Changes to this document will be presented to the TAGPMA for approval
 before taking effect.
 
 Changes will go into effect on the publishing of this document to
-M4_CA_NAME.
+M4_CA_URL.
 
 \subsubsection{Notification mechanism and period}
 
@@ -2207,6 +2250,14 @@ affect all the CAs.
 Not all revisions listed below may pertain to this policy.
 
 \begin{description}
+\item[1.8] The changes in this version are:
+\begin{itemize}
+\item Introduced the NCSA-2FCA. 
+\item In Section \ref{sec:location}, changed location
+from the Advanced Computation Building (ACB) 
+to the National Petascale Computing Facility (NPCF).
+\item Replaced instances of "no stipulation" with "not applicable" where appropriate.
+\end{itemize}
 \item[1.7] Added support for Robot certificates in the NCSA-CA according to the ``Guideline on IGTF Approved Robots''.
 \item[1.6] Added SHA-256, SHA-384, and SHA-512 in Section 7.1.3 (algorithm object identifiers) to enable move to SHA-2 hash functions per the NIST Policy on Hash Functions.
 \item[1.5] The changes in this version are:
