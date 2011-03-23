@@ -199,7 +199,10 @@ Further policy and implementation details are provided
 throughout the document.
 ])
 M4_2FCA_ONLY([
-FIXME: Need some overview text for the 2FCA here.
+The M4_CA_NAME
+looks up the distinguished name in the user database 
+that corresponds to the user's authenticated RSA SecurID identity
+and issues a certificate with the appropriate distinguished name.
 ])
 
 
@@ -302,8 +305,12 @@ federated identity to his or her Kerberos account.
 ])
 
 M4_2FCA_ONLY([
-FIXME: Need 2FCA registration process overview here
-(with details in later sections).
+The M4_CA_NAME
+uses the RSA SecurID two factor service to authenticate requests and
+queries the database to obtain the proper distinguished name for 
+authenticated requesters. The NCSA user database and RSA SecureID 
+service are used to authenticate NCSA users and staff to NCSA high-performance 
+computing resources.
 ])
 
 M4_CA_ONLY([Users are instructed to change their default password
@@ -1301,12 +1308,18 @@ FIXME: Update NPCF text in this subsubsection.
 
 NCSA occupies all of NPCF with the exception of space dedicated to
 mechanical systems and custodians.  NPCF entrances and computer rooms
-are locked at all times and use a keycard system to gain entry.  Video
-cameras are located at all entrances and are monitored by staff in the
-control room.  An intercom and remote lock release system is used at
-the main entrance to allow entry to authorized personnel who do not
-have keycard access.  NPCF is not open to the general public and is
-staffed 24x7x365.
+are locked at all times and use and utilize a two factor HID keycard 
+system to gain entry.  The building entrances use iris scanners or randomized 
+keypads as the second factor and the data center uses iris scanners exclusively 
+as the second factor. The physical access control system for the data
+ center uses anti-passback features to reduce the likelihood of tailgating.  
+Video cameras are located at all entrances, in all the halls and public areas, 
+the data center and command center. They are monitored by staff in the
+control room, and video is saved on a DVR for a minimum of 1 month. Guests 
+cannot be buzzed in, but instead a person must physically go to the entrance 
+and badge and login all guests. Unescorted guest badges must be pre-approved, 
+and are only used in special cases for maintenance staff and vendors. NPCF is 
+not open to the general public and is staffed 24x7x365.
 
 \subsubsection{Power and air conditioning}
 
@@ -1329,10 +1342,7 @@ No stipulation.
 No stipulation.
 
 \subsubsection{\label{sec:offsite}Off-site backup}
-
-FIXME: Is this still accurate?
-
-Audit logs are archived weekly to a secondary storage facility 
+Audit logs (see section 5.4) are archived weekly to a secondary storage facility 
 in the NCSA Building
 on the University of Illinois at Urbana-Champaign campus
 at 1205 West Clark Street in Urbana, Illinois.
