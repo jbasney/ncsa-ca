@@ -823,8 +823,6 @@ certificate.
 
 \subsubsection{\label{sec:enrollment}Enrollment process and responsibilities}
 
-M4_2FCA_ONLY([FIXME: Update this subsubsection for 2FCA.])
-
 NCSA allocations group staff serve as registration authorities for the
 M4_CA_NAME.
 They enroll users in the NCSA user database
@@ -859,37 +857,13 @@ an NCSA staff member, who takes responsibility for that person's
 account.  Guest account requests are reviewed and approved by NCSA
 management and allocations group staff.
 
-Identity vetting for PIs is performed via peer review.
-PIs submit proposals for supercomputing allocations to a
-Resource Allocations Committee,
-which consists of volunteers selected from the faculty and staff of
-U.S.\ universities, laboratories and other research institutions. All
-members serve a term of 2--5 years and have expertise in computational
-science or engineering.
-Each proposal is assigned to two committee members for review. The
-committee members can also solicit an external review. After several
-weeks of review, the entire committee convenes to discuss the relative
-merits of each proposal and award time based on availability of
-resources.
-To apply, the principal investigator (PI) must be a researcher or
-educator at a U.S.\ academic or non-profit research institution.
-
-Proposals are judged on the following criteria:
-
-\begin{itemize}
-\item Scientific merit: sound scientific goals and approaches of high merit; timely problems of interest to researchers and scientists
-\item Potential for progress: a PI with a verifiable record of success, indicated by publications or other measures, with the necessary resources to conduct the proposed research
-\item Numerical approach: codes that employ correct and efficient numerical algorithms; a selection of temporal/spatial resolution that is appropriate for the research
-\item Justification for resources: an appropriate amount of time has been requested; proposed research requires the use of a supercomputer; applications have been optimized to achieve high single-processor and parallel performance; good scaling of applications on a parallel machine
-\end{itemize}
-
 Allocations are typically awarded for one year,
 though multi-year allocations may be granted for well-known PIs.
 PIs can submit renewal or supplemental proposals to the committee
 to extend their allocation.
 
 PIs are instructed not to share their accounts with others.
-Instead, they use the Add User Form on the TeraGrid User Portal
+Instead, they use a web form
 to request accounts for their project members.
 PIs can also use this form to remove project members.
 Access to this form requires authentication via Kerberos username and
@@ -899,12 +873,12 @@ their project.
 For users on multiple projects, each project PI must complete the
 required information separately for each user to request the user
 to have access to the project's resources.
-The PI is notified by postal mail whenever a user is added to their project.
-All users are required to sign the TeraGrid User Responsibility Form,
+All users are required to sign an acceptable use policy,
 which educates users about secure and appropriate computing practices.
 
-When a user no longer has any active projects, the user's Kerberos account
-is removed.
+When a user no longer has any active projects, the user's 
+M4_KERBEROS_ONLY([Kerberos account]) M4_2FCA_ONLY([RSA SecurID])
+is disabled.
 User database entries are kept indefinitely for historical purposes.
 
 M4_CA_ONLY([
@@ -921,6 +895,7 @@ sent to their address on record.
 ])
 
 M4_MYPROXY_ONLY([
+M4_KERBEROS_ONLY([
 The user's initial password is established in one of two ways,
 depending on the type of account requested 
 and the method used to request the account.
@@ -945,9 +920,14 @@ Users may also reset their password via the TeraGrid User Portal,
 which authenticates the request via the user's registered
 email address.
 ])
+M4_2FCA_ONLY([
+FIXME: Describe how tokens are issued/activated and reset.
+])
+])
 
-Each user is assigned a unique username used as their Kerberos
-principal and Unix login name as described in \ref{sec:unique}.
+Each user is assigned a unique username used as 
+their M4_KERBEROS_ONLY([Kerberos principal and]) Unix login name
+as described in \ref{sec:unique}.
 
 \subsection{Certificate application processing}
 
@@ -1106,7 +1086,6 @@ the normal certificate issuance process.
 \subsubsection{Circumstance for certificate re-key}
 
 Not applicable.
-No stipulation.
 
 \subsubsection{Who may request certification of a new public key}
 
@@ -1304,10 +1283,7 @@ Urbana-Champaign campus at 1725 South Oak Street in Champaign, Illinois.
 
 \subsubsection{Physical access}
 
-FIXME: Update NPCF text in this subsubsection.
-
-NCSA occupies all of NPCF with the exception of space dedicated to
-mechanical systems and custodians.  NPCF entrances and computer rooms
+NCSA occupies all of NPCF.  NPCF entrances and computer rooms
 are locked at all times and use and utilize a two factor HID keycard 
 system to gain entry.  The building entrances use iris scanners or randomized 
 keypads as the second factor and the data center uses iris scanners exclusively 
@@ -2266,7 +2242,7 @@ Not all revisions listed below may pertain to this policy.
 \item In Section \ref{sec:location}, changed location
 from the Advanced Computation Building (ACB) 
 to the National Petascale Computing Facility (NPCF).
-\item Replaced instances of "no stipulation" with "not applicable" where appropriate.
+\item Replaced instances of ``no stipulation'' with ``not applicable'' where appropriate.
 \end{itemize}
 \item[1.7] Added support for Robot certificates in the NCSA-CA according to the ``Guideline on IGTF Approved Robots''.
 \item[1.6] Added SHA-256, SHA-384, and SHA-512 in Section 7.1.3 (algorithm object identifiers) to enable move to SHA-2 hash functions per the NIST Policy on Hash Functions.
