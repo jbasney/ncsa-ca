@@ -921,7 +921,21 @@ which authenticates the request via the user's registered
 email address.
 ])
 M4_2FCA_ONLY([
-FIXME: Describe how tokens are issued/activated and reset.
+When RSA SecurID tokens are requested, the user establishes 3 
+personal questions with NCSA and their corresponding answers. 
+Then the token is  
+either mailed to a verified address or issued in person (government issued
+ID required). After this, the user must activate the new token through a
+web form which will ask for the answers to these 3 questions that were
+established earlier.
+
+A user who needs to reset a token (or activate an additional 
+soft token) will also utilize the answers
+to these 3 questions. If they call the NCSA Help Desk to get a token
+reset, the help desk person will verify their identity by asking for 
+the answers to those questions before proceeding. The web form to 
+activate a new soft token associated with the same user account will 
+also ask these same questions. 
 ])
 ])
 
