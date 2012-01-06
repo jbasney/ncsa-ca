@@ -818,8 +818,8 @@ to the requester's registered phone number.
 
 \subsubsection{Who can submit a certificate application}
 
-Any user who appears in NCSA's user database may request a
-certificate.
+Any user who appears in NCSA's user database
+M4_2FCA_ONLY([and has an active RSA SecurID]) may request a certificate.
 
 \subsubsection{\label{sec:enrollment}Enrollment process and responsibilities}
 
@@ -866,9 +866,9 @@ PIs are instructed not to share their accounts with others.
 Instead, they use a web form
 to request accounts for their project members.
 PIs can also use this form to remove project members.
-Access to this form requires authentication via Kerberos username and
-password.
-PIs submit name, telephone, and address information for the users on
+Access to this form requires authentication via 
+M4_KERBEROS_ONLY([Kerberos]) M4_2FCA_ONLY([RSA SecurID]).
+PIs validate name, telephone, and address information for the users on
 their project.
 For users on multiple projects, each project PI must complete the
 required information separately for each user to request the user
@@ -1032,8 +1032,8 @@ possibility of exposure of a private key.
 \end{itemize}
 
 Subscribers are notified of these responsibilities in both
-CA documentation and in the NCSA Acceptable Usage Policy (AUP).
-Subscribers are required to sign the NCSA AUP and return it to
+CA documentation and an Acceptable Usage Policy (AUP).
+Subscribers are required to sign the AUP and return it to
 NCSA Allocations.
 
 \subsubsection{Relying party public key and certificate usage}
@@ -1305,10 +1305,7 @@ as the second factor. The physical access control system for the data
  center uses anti-passback features to reduce the likelihood of tailgating.  
 Video cameras are located at all entrances, in all the halls and public areas, 
 the data center and command center. They are monitored by staff in the
-control room, and video is saved on a DVR for a minimum of 1 month. Guests 
-cannot be buzzed in, but instead a person must physically go to the entrance 
-and badge and login all guests. Unescorted guest badges must be pre-approved, 
-and are only used in special cases for maintenance staff and vendors. NPCF is 
+control room, and video is saved for a minimum of 1 month. NPCF is 
 not open to the general public and is staffed 24x7x365.
 
 \subsubsection{Power and air conditioning}
