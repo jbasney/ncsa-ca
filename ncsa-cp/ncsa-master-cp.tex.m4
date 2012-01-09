@@ -139,14 +139,14 @@ need for a long-lived certificate from the NCSA-CA.
 This document covers the policy that applies to the M4_CA_NAME.
 Figure \ref{arch-fig} illustrates the overall architecture of the 
 M4_CA_NAME.
-M4_KERBEROS_ONLY([
-The CA is integrated with the NCSA user database and Kerberos
+The CA is integrated with the NCSA user database and
+M4_KERBEROS_ONLY([Kerberos]) M4_2FCA_ONLY([one-time password])
 authentication service for identity management.
 The NCSA accounting process enrolls users in the user database,
-creates a Kerberos account 
+creates a
+M4_KERBEROS_ONLY([Kerberos]) M4_2FCA_ONLY([one-time password]) account 
 M4_CA_ONLY([with an initial default password]) for them,
 and assigns them a distinguished name.
-])
 M4_CA_ONLY([
 To obtain credentials,
 M4_CA_NAME subscribers run software on the host where their
@@ -165,6 +165,17 @@ credentials are to be stored.
 The software generates the subscriber's private key locally,
 authenticates the user to the M4_CA_NAME via 
 Kerberos,
+issues a signed certificate request to the CA,
+and, if the request is approved,
+receives a signed certificate from the CA.
+])
+M4_2FCA_ONLY([
+To obtain credentials,
+M4_CA_NAME subscribers run software on the host where their
+credentials are to be stored.
+The software generates the subscriber's private key locally,
+authenticates the user to the M4_CA_NAME via 
+one-time password,
 issues a signed certificate request to the CA,
 and, if the request is approved,
 receives a signed certificate from the CA.
@@ -210,7 +221,7 @@ M4_CA_ONLY([
 
 \begin{figure}[[ht]]
 \centering
-\includegraphics[[trim = 0 380 0 0]]{ncsa-ca-fig.pdf}
+\includegraphics[[trim = 0 350 0 0]]{ncsa-ca-fig.pdf}
 \caption{NCSA CA Architecture}
 \label{arch-fig}
 \end{figure}
@@ -221,7 +232,7 @@ M4_SLCS_ONLY([
 
 \begin{figure}[[ht]]
 \centering
-\includegraphics[[trim = 0 420 0 0]]{ncsa-slcs-fig.pdf}
+\includegraphics[[trim = 0 380 0 0]]{ncsa-slcs-fig.pdf}
 \caption{NCSA SLCS Architecture}
 \label{arch-fig}
 \end{figure}
@@ -234,6 +245,17 @@ M4_GSCA_ONLY([
 \centering
 \includegraphics[[trim = 0 350 0 0]]{ncsa-gsca-fig.pdf}
 \caption{NCSA GridShib CA Architecture}
+\label{arch-fig}
+\end{figure}
+
+])
+
+M4_2FCA_ONLY([
+
+\begin{figure}[[ht]]
+\centering
+\includegraphics{ncsa-2fca-fig.pdf}
+\caption{NCSA 2FCA CA Architecture}
 \label{arch-fig}
 \end{figure}
 
