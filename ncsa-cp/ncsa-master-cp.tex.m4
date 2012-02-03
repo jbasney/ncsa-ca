@@ -1800,11 +1800,6 @@ For the CA certificate:
 \item X509v3 Subject Key Identifier 
 \item X509v3 Authority Key Identifier 
 
-M4_CA_ONLY([
-\item CRLDistributionPoints:
-URI:\url{http://ca.ncsa.uiuc.edu/ncsa-2fca.crl}
-])
-
 \end{itemize}
 
 For user M4_CA_ONLY([robot and service]) certificates:
@@ -1850,6 +1845,11 @@ M4_GSCA_ONLY([
 \item CRLDistributionPoints:
 URI:\url{http://ca.ncsa.uiuc.edu/e8ac4b61.crl}
 ])
+M4_2FCA_ONLY([
+\item CRLDistributionPoints:
+URI:\url{http://ca.ncsa.uiuc.edu/caa3b51c.crl}
+])
+
 
 M4_CA_ONLY([
 \item SubjectAltName:
