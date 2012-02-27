@@ -136,8 +136,8 @@ need for a long-lived certificate from the NCSA-CA.
 This document covers the policy that applies to the M4_CA_NAME.
 Figure \ref{arch-fig} illustrates the overall architecture of the 
 M4_CA_NAME.
-The CA is integrated with the NCSA user database and
-M4_KERBEROS_ONLY([Kerberos]) M4_2FCA_ONLY([one-time password ])
+The CA is integrated with the NCSA user database and NCSA
+M4_KERBEROS_ONLY([Kerberos]) M4_2FCA_ONLY([one-time password (RSA SecurID) ])
 authentication service for identity management.
 The NCSA accounting process enrolls users in the user database,
 creates a
@@ -209,7 +209,7 @@ throughout the document.
 M4_2FCA_ONLY([
 The M4_CA_NAME
 looks up the distinguished name in the user database 
-that corresponds to the user's authenticated RSA SecurID identity
+that corresponds to the user's authenticated NCSA identity
 and issues a certificate with the appropriate distinguished name.
 ])
 
@@ -325,7 +325,7 @@ federated identity to his or her Kerberos account.
 
 M4_2FCA_ONLY([
 The M4_CA_NAME
-uses the RSA SecurID two factor service to authenticate requests and
+uses the NCSA one-time password (RSA SecurID) service to authenticate requests and
 queries the database to obtain the proper distinguished name for 
 authenticated requesters. The NCSA user database and RSA SecureID 
 service are used to authenticate NCSA users and staff to NCSA high-performance 
@@ -530,9 +530,9 @@ This repository will contain:
 
 \begin{itemize}
 
-\item Self-signed, PEM-formatted certificates for all CAs in the NCSA PKI
+\item Self-signed, certificates for all CAs in the NCSA PKI
 
-\item PEM-formatted CRLs for the M4_CA_NAME
+\item CRLs for the M4_CA_NAME
 
 \item General information about the NCSA PKI,
       including postal address and contact email address
@@ -825,7 +825,7 @@ security personnel and from administrators of the systems hosting the
 services in question will be honored.
 ])
 
-Others may request revocation if they can sufficient prove compromise
+Others may request revocation if they can sufficiently prove compromise
 or exposure of the associated private key.
 
 NCSA Security Operations will verify the authenticity of revocation
@@ -839,7 +839,7 @@ to the requester's registered phone number.
 \subsubsection{Who can submit a certificate application}
 
 Any user who appears in NCSA's user database
-M4_2FCA_ONLY([and has an active RSA SecurID ]) may request a certificate.
+M4_2FCA_ONLY([and has an active NCSA-issued RSA SecurID ]) may request a certificate.
 
 \subsubsection{\label{sec:enrollment}Enrollment process and responsibilities}
 
@@ -886,8 +886,8 @@ PIs are instructed not to share their accounts with others.
 Instead, they use a web form
 to request accounts for their project members.
 PIs can also use this form to remove project members.
-Access to this form requires authentication via 
-M4_KERBEROS_ONLY([Kerberos]) M4_2FCA_ONLY([RSA SecurID]).
+Access to this form requires authentication via NCSA
+M4_KERBEROS_ONLY([Kerberos]) M4_2FCA_ONLY([one-time password]).
 PIs validate name, telephone, and address information for the users on
 their project.
 For users on multiple projects, each project PI must complete the
@@ -896,7 +896,7 @@ to have access to the project's resources.
 All users are required to sign an acceptable use policy,
 which educates users about secure and appropriate computing practices.
 
-When a user no longer has any active projects, the user's 
+When a user no longer has any active projects, the user's NCSA
 M4_KERBEROS_ONLY([Kerberos account]) M4_2FCA_ONLY([RSA SecurID ])
 is disabled.
 User database entries are kept indefinitely for historical purposes.
@@ -941,7 +941,7 @@ which authenticates the request via the user's registered
 email address.
 ])
 M4_2FCA_ONLY([
-When RSA SecurID tokens are requested, the user establishes 3 
+When NCSA RSA SecurID tokens are requested, the user establishes 3 
 personal questions with NCSA and their corresponding answers. 
 Then the token is  
 either mailed to a verified address or issued in person (government issued
@@ -969,6 +969,9 @@ as described in \ref{sec:unique}.
 
 The M4_CA_NAME authenticates all certificate requests as described in
 Section \ref{sec:auth}.
+M4_MYPROXY_ONLY([Communications between the subscriber, the CA, and
+the user database are encrypted and integrity protected using the TLS
+protocol to protect the chain of trust during application processing.])
 
 \subsubsection{Approval or rejection of certificate applications}
 
@@ -988,6 +991,11 @@ M4_GSCA_ONLY([
 Certificate applications will be approved if the applicant can be
 authenticated via federated web authentication linked to a 
 Kerberos principal.
+])
+
+M4_2FCA_ONLY([
+Certificate applications will be approved if the applicant can be
+authenticated via NCSA-issued RSA SecurID.
 ])
 
 \subsubsection{Time to process certificate applications}
@@ -1054,7 +1062,9 @@ possibility of exposure of a private key.
 Subscribers are notified of these responsibilities in both
 CA documentation and an Acceptable Usage Policy (AUP).
 Subscribers are required to sign the AUP and return it to
-NCSA Allocations.
+NCSA Allocations,
+thereby acknowledging reading of the AUP
+and agreeing to abide by its requirements.
 
 \subsubsection{Relying party public key and certificate usage}
 
@@ -1326,7 +1336,7 @@ as the second factor. The physical access control system for the data
 Video cameras are located at all entrances, in all the halls and public areas, 
 the data center and command center. They are monitored by staff in the
 control room, and video is saved for a minimum of 1 month. NPCF is 
-not open to the general public and is staffed 24x7x365.
+not open to the general public and is staffed at all times.
 
 \subsubsection{Power and air conditioning}
 
@@ -1587,7 +1597,7 @@ Not necessary.
 \subsubsection{Public key delivery to certificate issuer}
 
 Public keys are delivered under
-M4_CA_ONLY([Kerberos]) M4_MYPROXY_ONLY([SSL])
+M4_CA_ONLY([Kerberos]) M4_MYPROXY_ONLY([TLS])
 authentication and integrity protection.
 
 \subsubsection{CA public key delivery to relying parties}
