@@ -11,8 +11,8 @@ m4comment(latex configuration, bracket to protect from m4)
 \usepackage{url}
 \usepackage[pdftex,colorlinks=false]{hyperref}
 \usepackage{epsfig}
-\usepackage{changebar}
 \usepackage{tocloft}
+\usepackage{color}
 
 %\bibliographystyle{abbrv}
 \bibliographystyle{plain}
@@ -27,7 +27,7 @@ m4comment(Define macros for specifying CA instance-specific details)
 define([M4_CA_ONLY], [ifdef([M4_NCSA_CA], [$*])])
 define([M4_SLCS_ONLY], [ifdef([M4_NCSA_SLCS], [$*])])
 define([M4_GSCA_ONLY], [ifdef([M4_NCSA_GSCA], [$*])])
-define([M4_2FCA_ONLY], [ifdef([M4_NCSA_2FCA], [$*])])
+define([M4_2FCA_ONLY], [ifdef([M4_NCSA_2FCA], [\color{green}$*\color{black}])])
 define([M4_MYPROXY_ONLY], [ifdef([M4_NCSA_SLCS], [$*])] [ifdef([M4_NCSA_GSCA], [$*])] [ifdef([M4_NCSA_2FCA], [$*])])
 define([M4_KERBEROS_ONLY], [ifdef([M4_NCSA_SLCS], [$*])] [ifdef([M4_NCSA_GSCA], [$*])] [ifdef([M4_NCSA_CA], [$*])])
 
@@ -52,17 +52,14 @@ define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.3.8])
 M4_2FCA_ONLY([
 define(M4_DOC_TITLE, [Certificate Policy and Practice Statement for the NCSA Two Factor CA])
 define(M4_CA_NAME, [NCSA-2FCA])
-define(M4_CA_DN, [C=US, O=National Center for Supercomputing Applications, OU=Certificate Authorities, CN=Two Factor CA])
-define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.4.8])
+define(M4_CA_DN, [\color{green}C=US, O=National Center for Supercomputing Applications, OU=Certificate Authorities, CN=Two Factor CA\color{black}])
+define(M4_DOC_OID, [\color{green}1.3.6.1.4.1.4670.100.4.8 \color{black}])
 ])
 define(M4_TIMESTAMP, [esyscmd(date)])
 define(M4_DOC_VERSION, [1.8])
 define(M4_DOC_DATE, [M4_TIMESTAMP])
 define(M4_CA_URL, [\url{http://security.ncsa.illinois.edu/CA/}])
 define(M4_VERSION, [esyscmd(m4 --version)])
-
-define(M4_CHANGEBAR_BEGIN, [\chgbarbegin])
-define(M4_CHANGEBAR_END, [\chgbarend])
 
 define(M4_ITALICS, [\textit{$*}])
 define(M4_SLANTED, [\textsl{$*}])
@@ -140,11 +137,11 @@ This document covers the policy that applies to the M4_CA_NAME.
 Figure \ref{arch-fig} illustrates the overall architecture of the 
 M4_CA_NAME.
 The CA is integrated with the NCSA user database and
-M4_KERBEROS_ONLY([Kerberos]) M4_2FCA_ONLY([one-time password])
+M4_KERBEROS_ONLY([Kerberos]) M4_2FCA_ONLY([one-time password ])
 authentication service for identity management.
 The NCSA accounting process enrolls users in the user database,
 creates a
-M4_KERBEROS_ONLY([Kerberos]) M4_2FCA_ONLY([one-time password]) account 
+M4_KERBEROS_ONLY([Kerberos]) M4_2FCA_ONLY([one-time password ]) account 
 M4_CA_ONLY([with an initial default password]) for them,
 and assigns them a distinguished name.
 M4_CA_ONLY([
@@ -251,7 +248,7 @@ M4_GSCA_ONLY([
 ])
 
 M4_2FCA_ONLY([
-
+\color{black}
 \begin{figure}[[ht]]
 \centering
 \includegraphics{ncsa-2fca-fig.pdf}
@@ -696,8 +693,9 @@ qualified domain name of the host on which the service resides serves
 to disambiguate the name.
 ])
 
-\subsubsection{Recognition, authentication, and role of trademarks}
 
+\subsubsection{\color{black}Recognition, authentication, and role of trademarks}
+\color{black}
 No stipulation.
 
 \subsection{Initial identity validation}
@@ -717,9 +715,9 @@ described in Section \ref{sec:enrollment}.
 \subsubsection{\label{sec:auth}Authentication of individual identity}
 
 User identity will be authenticated via 
-M4_CA_ONLY([Kerberos,]) M4_SLCS_ONLY([Kerberos,]) M4_GSCA_ONLY([federated web authentication linked to a Kerberos principal,]) M4_2FCA_ONLY([one-time password,]) 
+M4_CA_ONLY([Kerberos,]) M4_SLCS_ONLY([Kerberos,]) M4_GSCA_ONLY([federated web authentication linked to a Kerberos principal,]) M4_2FCA_ONLY([one-time password, ]) 
 with the authenticated
-M4_KERBEROS_ONLY([Kerberos principal name]) M4_2FCA_ONLY([NCSA login name])
+M4_KERBEROS_ONLY([Kerberos principal name]) M4_2FCA_ONLY([NCSA login name ])
 mapped to a unique
 ``common name'' via the NCSA user database.
 M4_CA_ONLY([The M4_CA_NAME also uses the database to authenticate users'
@@ -841,7 +839,7 @@ to the requester's registered phone number.
 \subsubsection{Who can submit a certificate application}
 
 Any user who appears in NCSA's user database
-M4_2FCA_ONLY([and has an active RSA SecurID]) may request a certificate.
+M4_2FCA_ONLY([and has an active RSA SecurID ]) may request a certificate.
 
 \subsubsection{\label{sec:enrollment}Enrollment process and responsibilities}
 
@@ -899,7 +897,7 @@ All users are required to sign an acceptable use policy,
 which educates users about secure and appropriate computing practices.
 
 When a user no longer has any active projects, the user's 
-M4_KERBEROS_ONLY([Kerberos account]) M4_2FCA_ONLY([RSA SecurID])
+M4_KERBEROS_ONLY([Kerberos account]) M4_2FCA_ONLY([RSA SecurID ])
 is disabled.
 User database entries are kept indefinitely for historical purposes.
 
@@ -1730,11 +1728,11 @@ administrative personnel that require access to the system for its
 operation.
 
 The 
-M4_KERBEROS_ONLY([Kerberos]) M4_2FCA_ONLY([one-time password])
+M4_KERBEROS_ONLY([Kerberos]) M4_2FCA_ONLY([one-time password ])
 and NCSA user database servers
 likewise run on dedicated machines, 
 running no other services than those needed for 
-M4_KERBEROS_ONLY([Kerberos]) M4_2FCA_ONLY([one-time password])
+M4_KERBEROS_ONLY([Kerberos]) M4_2FCA_ONLY([one-time password ])
 NCSA user database operations, 
 located in NCSA's machine room in the National Petascale Computing Facility
 on the University of Illinois campus.
@@ -1847,7 +1845,7 @@ URI:\url{http://ca.ncsa.uiuc.edu/e8ac4b61.crl}
 ])
 M4_2FCA_ONLY([
 \item CRLDistributionPoints:
-URI:\url{http://ca.ncsa.uiuc.edu/caa3b51c.crl}
+URI:\url{http://ca.ncsa.illinois.edu/679cff61.crl}
 ])
 
 
