@@ -771,6 +771,14 @@ based on the experience and judgement of M4_CA_NAME staff,
 in consultation with the PMA.
 ])
 
+If traceability to a user is lost, i.e., NCSA is unable to contact a
+user based on the data associated with that user in the NCSA user database,
+then the user's NCSA login will be disabled 
+to prevent further attempts to obtain
+certificates issued by the M4_CA_NAME. 
+This also prevents authentication by the
+user to other NCSA services.
+
 \subsubsection{Non-verified subscriber information}
 
 No stipulation.
@@ -899,6 +907,9 @@ which educates users about secure and appropriate computing practices.
 When a user no longer has any active projects, the user's NCSA
 M4_KERBEROS_ONLY([Kerberos account]) M4_2FCA_ONLY([RSA SecurID ])
 is disabled.
+The user's NCSA
+M4_KERBEROS_ONLY([Kerberos account]) M4_2FCA_ONLY([RSA SecurID ])
+may also be disabled for inactivity.
 User database entries are kept indefinitely for historical purposes.
 
 M4_CA_ONLY([
@@ -971,7 +982,10 @@ The M4_CA_NAME authenticates all certificate requests as described in
 Section \ref{sec:auth}.
 M4_MYPROXY_ONLY([Communications between the subscriber, the CA, and
 the user database are encrypted and integrity protected using the TLS
-protocol to protect the chain of trust during application processing.])
+protocol to protect the chain of trust during application processing.
+The chain of trust is protected within the CA service by the secured
+process of translation from an authenticated certificate signing
+request to delivery of a signed certificate.])
 
 \subsubsection{Approval or rejection of certificate applications}
 
