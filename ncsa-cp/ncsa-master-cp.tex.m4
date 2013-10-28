@@ -26,37 +26,30 @@ m4comment(latex configuration, bracket to protect from m4)
 m4comment(Define macros for specifying CA instance-specific details)
 define([M4_CA_ONLY], [ifdef([M4_NCSA_CA], [$*])])
 define([M4_SLCS_ONLY], [ifdef([M4_NCSA_SLCS], [$*])])
-define([M4_GSCA_ONLY], [ifdef([M4_NCSA_GSCA], [$*])])
-define([M4_2FCA_ONLY], [ifdef([M4_NCSA_2FCA], [\color{green}$*\color{black}])])
-define([M4_MYPROXY_ONLY], [ifdef([M4_NCSA_SLCS], [$*])] [ifdef([M4_NCSA_GSCA], [$*])] [ifdef([M4_NCSA_2FCA], [$*])])
-define([M4_KERBEROS_ONLY], [ifdef([M4_NCSA_SLCS], [$*])] [ifdef([M4_NCSA_GSCA], [$*])] [ifdef([M4_NCSA_CA], [$*])])
+define([M4_2FCA_ONLY], [ifdef([M4_NCSA_2FCA], [$*])])
+define([M4_MYPROXY_ONLY], [ifdef([M4_NCSA_SLCS], [$*])] [ifdef([M4_NCSA_2FCA], [$*])])
+define([M4_KERBEROS_ONLY], [ifdef([M4_NCSA_SLCS], [$*])] [$*])] [ifdef([M4_NCSA_CA], [$*])])
 
 M4_CA_ONLY([
 define(M4_DOC_TITLE, [Certificate Policy and Practice Statement for the NCSA MICS CA])
 define(M4_CA_NAME, [NCSA-CA])
 define(M4_CA_DN, [C=US, O=National Center for Supercomputing Applications, OU=Certificate Authorities, CN=CACL])
-define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.1.8])
+define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.1.9])
 ])
 M4_SLCS_ONLY([
 define(M4_DOC_TITLE, [Certificate Policy and Practice Statement for the NCSA SLCS])
 define(M4_CA_NAME, [NCSA-SLCS])
-define(M4_CA_DN, [C=US, O=National Center for Supercomputing Applications, OU=Certificate Authorities, CN=MyProxy])
-define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.2.8])
-])
-M4_GSCA_ONLY([
-define(M4_DOC_TITLE, [Certificate Policy and Practice Statement for the NCSA GridShib CA])
-define(M4_CA_NAME, [NCSA-GSCA])
-define(M4_CA_DN, [C=US, O=National Center for Supercomputing Applications, OU=Certificate Authorities, CN=GridShib CA])
-define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.3.8])
+define(M4_CA_DN, [C=US, O=National Center for Supercomputing Applications, OU=Certificate Authorities, CN=MyProxy CA 2013])
+define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.2.9])
 ])
 M4_2FCA_ONLY([
 define(M4_DOC_TITLE, [Certificate Policy and Practice Statement for the NCSA Two Factor CA])
 define(M4_CA_NAME, [NCSA-2FCA])
-define(M4_CA_DN, [\color{green}C=US, O=National Center for Supercomputing Applications, OU=Certificate Authorities, CN=Two Factor CA\color{black}])
-define(M4_DOC_OID, [\color{green}1.3.6.1.4.1.4670.100.4.8 \color{black}])
+define(M4_CA_DN, [C=US, O=National Center for Supercomputing Applications, OU=Certificate Authorities, CN=Two Factor CA 2013])
+define(M4_DOC_OID, [1.3.6.1.4.1.4670.100.4.9 ])
 ])
 define(M4_TIMESTAMP, [esyscmd(date)])
-define(M4_DOC_VERSION, [1.8])
+define(M4_DOC_VERSION, [1.9])
 define(M4_DOC_DATE, [M4_TIMESTAMP])
 define(M4_CA_URL, [\url{http://security.ncsa.illinois.edu/CA/}])
 define(M4_VERSION, [esyscmd(m4 --version)])
@@ -98,7 +91,7 @@ Internet Engineering Task Force RFC 3647 (Internet X.509 Public Key
 Infrastructure Certificate Policy and Certification Practices
 Framework).
 
-NCSA runs four CAs. Each CA has its own private key and certificate. 
+NCSA runs three CAs. Each CA has its own private key and certificate. 
 It is expected
 that relying parties will generally trust all NCSA CAs, 
 though a relying party may
@@ -115,13 +108,6 @@ or ``NCSA-SLCS''.
 One CA issues only short-lived certificates
 (with 11 days or shorter lifetime)
 to users
-based on federated web authentication
-and is
-henceforth referred to as the ``NCSA GridShib CA''
-or ``NCSA-GSCA''.
-One CA issues only short-lived certificates
-(with 11 days or shorter lifetime)
-to users
 based on (strong) two-factor authentication
 and is henceforth referred to as the ``NCSA Two Factor CA''
 or ``NCSA-2FCA''.
@@ -129,7 +115,7 @@ One CA is a traditional CA that issues long-lived certificates to
 hosts, services, robots, and users requiring long-lived certificates. This CA
 is henceforth referred to as the ``NCSA-CA''.
 It is expected that users
-will use the NCSA-SLCS, NCSA-GSCA, and NCSA-2FCA CAs
+will use the NCSA-SLCS and NCSA-2FCA CAs
 for user certificates unless they have some
 need for a long-lived certificate from the NCSA-CA.
 
@@ -177,23 +163,6 @@ issues a signed certificate request to the CA,
 and, if the request is approved,
 receives a signed certificate from the CA.
 ])
-M4_GSCA_ONLY([
-A subscriber can bind his or her federated identity
-to his or her Kerberos account via a
-web-based account-linking process on the M4_CA_NAME web server.
-Then, to obtain credentials,
-a M4_CA_NAME subscriber performs federated web authentication
-to the M4_CA_NAME web server,
-and the web server determines the Kerberos account
-previously linked to that identity via the account-linking process.
-Federated web authentication establishes a secure session
-between the subscriber's web browser and the CA.
-The web browser (and/or an associated application),
-running on the subscribers's behalf,
-generates the subscriber's private key and
-issues a signed certificate request containing the corresponding public
-key to the CA (bound to the secure session).
-])
 M4_KERBEROS_ONLY([
 The M4_CA_NAME
 looks up the distinguished name in the user database 
@@ -236,19 +205,8 @@ M4_SLCS_ONLY([
 
 ])
 
-M4_GSCA_ONLY([
-
-\begin{figure}[[ht]]
-\centering
-\includegraphics[[trim = 0 350 0 0]]{ncsa-gsca-fig.pdf}
-\caption{NCSA GridShib CA Architecture}
-\label{arch-fig}
-\end{figure}
-
-])
-
 M4_2FCA_ONLY([
-\color{black}
+
 \begin{figure}[[ht]]
 \centering
 \includegraphics{ncsa-2fca-fig.pdf}
@@ -288,39 +246,12 @@ according to Section \ref{sec:names}.
 
 M4_KERBEROS_ONLY([
 The M4_CA_NAME uses the Kerberos service to authenticate 
-M4_GSCA_ONLY([account-linking]) requests
+requests
 and queries the database to obtain the proper distinguished name for
 authenticated requesters. M4_CA_ONLY([The M4_CA_NAME also uses the database to authenticate users' default passwords as a ``second authentication factor''.])
 The NCSA user database and Kerberos service are used to authenticate 
 NCSA's users and staff for access to NCSA high-performance computing
 resources, NCSA's email services and other production services.
-])
-
-M4_GSCA_ONLY([
-The final step in the M4_CA_NAME registration process is account-linking.
-The account-linking process binds a user's federated identity
-to his or her Kerberos account.
-The user first authenticates to the M4_CA_NAME web server via
-federated web authentication to access the account-linking web application.
-The account-linking application, when presented with a
-federated identity it has not seen before,
-prompts the user for his or her Kerberos username and password
-and then verifies them using the Kerberos service.
-If the Kerberos username and password verify,
-the account-linking application creates a local database entry
-linking the user's federated identity with his or her Kerberos identity.
-When the user later requests a certificate,
-the user's authenticated federated identity entitles
-the user to obtain a certificate with the DN associated
-with the linked Kerberos account.
-When presented with a federated identity it has seen before,
-the account-linking application gives users the ability
-to view and delete account links.
-
-Account links expire one year after creation,
-at which point the user is required to perform the account-linking
-process again, to re-verify the binding between the user's 
-federated identity to his or her Kerberos account.
 ])
 
 M4_2FCA_ONLY([
@@ -473,18 +404,6 @@ stamped list identifying revoked certificates, which is
 signed by a CA and made freely available in a public 
 repository. 
 
-M4_GSCA_ONLY([
-Federated identity - A globally-unique, non-reassigned identifier
-authenticated via federated web authentication, 
-such as eduPersonPerincipalName.
-
-Federated web authentication - A browser-based user authentication
-process that operates across otherwise autonomous security domains.
-For example, the InCommon federation supports SAML-based
-authentication, using technology such as Shibboleth,
-in support of education and research in the United States.
-])
-
 Issuing certification authority (issuing CA) - In the context of a 
 particular certificate, the issuing CA is the CA that issued the 
 certificate (see also Subject certification authority). 
@@ -615,10 +534,6 @@ M4_SLCS_ONLY([
 Note: MyProxy is the name of the software implementing this CA.
 ])
 
-M4_GSCA_ONLY([
-Note: GridShib is the name of the software implementing this CA.
-])
-
 M4_CA_ONLY([
 
 \item OU=Services :
@@ -694,8 +609,8 @@ to disambiguate the name.
 ])
 
 
-\subsubsection{\color{black}Recognition, authentication, and role of trademarks}
-\color{black}
+\subsubsection{Recognition, authentication, and role of trademarks}
+
 No stipulation.
 
 \subsection{Initial identity validation}
@@ -715,7 +630,7 @@ described in Section \ref{sec:enrollment}.
 \subsubsection{\label{sec:auth}Authentication of individual identity}
 
 User identity will be authenticated via 
-M4_CA_ONLY([Kerberos,]) M4_SLCS_ONLY([Kerberos,]) M4_GSCA_ONLY([federated web authentication linked to a Kerberos principal,]) M4_2FCA_ONLY([one-time password, ]) 
+M4_CA_ONLY([Kerberos,]) M4_SLCS_ONLY([Kerberos,]) M4_2FCA_ONLY([one-time password, ]) 
 with the authenticated
 M4_KERBEROS_ONLY([Kerberos principal name]) M4_2FCA_ONLY([NCSA login name ])
 mapped to a unique
@@ -723,53 +638,6 @@ mapped to a unique
 M4_CA_ONLY([The M4_CA_NAME also uses the database to authenticate users'
 ``default passwords'' as a ``second authentication factor'' as described
 in Section \ref{sec:reg}.])
-
-M4_GSCA_ONLY([
-Authentication to the M4_CA_NAME requires the user to have an
-``active'' status in the NCSA user database, meaning that the user is
-associated with an active NCSA account according to the account
-allocations process documented in Section \ref{sec:enrollment}.
-This process includes an annual review that ensures up-to-date contact
-information.
-In the case that contact information is found to be out-of-date
-between annual reviews, such that traceability back to the certificate
-owner is lost, the user's status will be manually marked ``inactive''
-by the NCSA allocations group so the user may not obtain new certificates.
-
-The M4_CA_NAME architecture and policy may support different
-federated web authentication technologies and deployments,
-with the following requirements:
-\begin{enumerate}
-\item The federated web authentication process must be resistant to
-password-guessing, eavesdropping, man-in-the-middle, phishing, 
-cross-site scripting, and other common attack methods.
-\item Federated web identities must be globally-unique and
-non-reassigned, such that subscribers are uniquely identified to the
-M4_CA_NAME.
-\end{enumerate}
-
-The M4_CA_NAME currently supports the following federation(s):
-\begin{enumerate}
-\item InCommon SAML Federation (\url{http://www.incommonfederation.org/})
-\end{enumerate}
-
-M4_CA_NAME staff review each federated identity provider before
-configuring the M4_CA_NAME to accept authentication assertions
-from that identity provider.
-The review process includes:
-\begin{enumerate}
-\item Confirming that the identity provider serves NCSA users.
-\item Confirming that the identity provider is operated by a
-known and respected organization.
-\item Confirming that the identity provider operates a trustworthy
-authentication service and provides identities
-meeting the requirements above.
-\end{enumerate}
-The M4_CA_NAME will refuse authentication assertions from
-any identity providers which fail to meet these requirements
-based on the experience and judgement of M4_CA_NAME staff,
-in consultation with the PMA.
-])
 
 If traceability to a user is lost, i.e., NCSA is unable to contact a
 user based on the data associated with that user in the NCSA user database,
@@ -999,12 +867,6 @@ the host in question, as described in Section \ref{sec:auth}.
 M4_SLCS_ONLY([
 Certificate applications will be approved if the applicant can be
 authenticated via Kerberos.
-])
-
-M4_GSCA_ONLY([
-Certificate applications will be approved if the applicant can be
-authenticated via federated web authentication linked to a 
-Kerberos principal.
 ])
 
 M4_2FCA_ONLY([
@@ -1593,12 +1455,6 @@ lifetime of the associated public-key certificate is limited to
 no more than 11 days.
 ])
 
-M4_GSCA_ONLY([
-Private keys will normally be stored unencrypted, but the
-lifetime of the associated public-key certificate is limited to 
-no more than 11 days.
-])
-
 M4_CA_ONLY([
 System and service administrators will generate private keys for their
 services, on the service hosts themselves if at all possible.
@@ -1862,10 +1718,6 @@ URI:\url{http://ca.ncsa.uiuc.edu/9b95bbf2.crl}
 M4_SLCS_ONLY([
 \item CRLDistributionPoints:
 URI:\url{http://ca.ncsa.uiuc.edu/f2e89fe3.crl}
-])
-M4_GSCA_ONLY([
-\item CRLDistributionPoints:
-URI:\url{http://ca.ncsa.uiuc.edu/e8ac4b61.crl}
 ])
 M4_2FCA_ONLY([
 \item CRLDistributionPoints:
@@ -2291,6 +2143,12 @@ affect all the CAs.
 Not all revisions listed below may pertain to this policy.
 
 \begin{description}
+\item[1.9] The changes in this version are:
+\begin{itemize}
+\item Due to CA rekey, CA CNs updated to
+"MyProxy CA 2013" and "Two Factor CA 2013".
+\item Removed all references to the NCSA GridShib CA (now retired).
+\end{itemize}
 \item[1.8] The changes in this version are:
 \begin{itemize}
 \item Introduced the NCSA-2FCA. 
