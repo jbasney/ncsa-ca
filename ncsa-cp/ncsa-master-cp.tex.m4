@@ -28,7 +28,7 @@ define([M4_CA_ONLY], [ifdef([M4_NCSA_CA], [$*])])
 define([M4_SLCS_ONLY], [ifdef([M4_NCSA_SLCS], [$*])])
 define([M4_2FCA_ONLY], [ifdef([M4_NCSA_2FCA], [$*])])
 define([M4_MYPROXY_ONLY], [ifdef([M4_NCSA_SLCS], [$*])] [ifdef([M4_NCSA_2FCA], [$*])])
-define([M4_KERBEROS_ONLY], [ifdef([M4_NCSA_SLCS], [$*])] [$*])] [ifdef([M4_NCSA_CA], [$*])])
+define([M4_KERBEROS_ONLY], [ifdef([M4_NCSA_SLCS], [$*])] [ifdef([M4_NCSA_CA], [$*])])
 
 M4_CA_ONLY([
 define(M4_DOC_TITLE, [Certificate Policy and Practice Statement for the NCSA MICS CA])
