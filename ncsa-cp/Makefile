@@ -46,9 +46,6 @@ ncsa-ca-policy.tex: ncsa-master-cp.tex.m4
 ncsa-slcs-policy.tex: ncsa-master-cp.tex.m4
 	$(M4) -DM4_NCSA_SLCS $< > $@
 
-ncsa-gridshib-policy.tex: ncsa-master-cp.tex.m4
-	$(M4) -DM4_NCSA_GSCA $< > $@
-
 ncsa-2fca-policy.tex: ncsa-master-cp.tex.m4
 	$(M4) -DM4_NCSA_2FCA $< > $@
 
