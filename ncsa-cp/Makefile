@@ -3,7 +3,7 @@ M4=m4
 
 TIMESTAMP=`date`
 
-TEX_FILES=ncsa-ca-policy.tex ncsa-slcs-policy.tex ncsa-gridshib-policy.tex ncsa-2fca-policy.tex
+TEX_FILES=ncsa-ca-policy.tex ncsa-slcs-policy.tex ncsa-2fca-policy.tex
 
 PDF_FILES=$(TEX_FILES:.tex=.pdf)
 DVI_FILES=$(TEX_FILES:.tex=.dvi)
