@@ -348,12 +348,12 @@ a member of the International Grid Trust Federation (IGTF).
 \subsubsection{Contact person}
 
 The point of contact for this Policy and other matters related to the
-M4_CA_NAME is the Head of Security Operations for NCSA:
+M4_CA_NAME is:
 
-James J. Barlow\\
-Phone number: +1 217-244-6403\\
+Jim Basney\\
+Phone number: +1 217-244-1954\\
 Postal address: 1205 W. Clark, Urbana IL 61801 USA\\
-E-mail address: jbarlow@ncsa.illinois.edu\\
+E-mail address: jbasney@illinois.edu\\
 After hours contact information:\\
 NCSA Security Operations and Incident Response: security@ncsa.illinois.edu\\
 NCSA 24x7 Operations: +1 217-244-0710\\
@@ -551,7 +551,7 @@ component will follow the OU, containing the user's full name and, if needed,
 a numeric value to disambiguate the name from other users with the
 same name.  For example:
 
-C=US, O=National Center for Supercomputing Applications, OU=People, CN=James J. Barlow
+C=US, O=National Center for Supercomputing Applications, OU=People, CN=Jim Basney
 
 \item OU=Robots :
 for a robot certificate issued by the NCSA-CA,
@@ -565,7 +565,7 @@ Then another CN component will follow that CN, containing the string "Robot:"
 appended with a humanly-recognisable and meaningful description of the Robot.
 For example:
 
-C=US, O=National Center for Supercomputing Applications, OU=Robots, CN=James J. Barlow, CN=Robot:Dark Energy Survey Data Mover
+C=US, O=National Center for Supercomputing Applications, OU=Robots, CN=Jim Basney, CN=Robot:Dark Energy Survey Data Mover
 
 ])
 
@@ -577,7 +577,7 @@ component will contain the user's full name and, if needed,
 a numeric value to disambiguate the name from other users with the
 same name.  For example:
 
-C=US, O=National Center for Supercomputing Applications, CN=James J. Barlow
+C=US, O=National Center for Supercomputing Applications, CN=Jim Basney
 
 ])
 
@@ -1500,7 +1500,6 @@ The certificate extensions are specified in Section \ref{sec:extensions}.
 \subsubsection{Cryptographic module standards and controls}
 
 The M4_CA_NAME uses a FIPS 140-2 level 3 Hardware Security Module
-(SafeNet Luna PCI)
 for storage of its private key, operated in FIPS 140-2 level 2 mode.
 
 \subsubsection{Private key (n out of m) multi-person control}
@@ -1583,7 +1582,7 @@ The M4_CA_NAME private key is activated automatically at boot time.
 \subsubsection{Activation data generation and installation}
 
 Activation data is generated using the operator interface of the
-SafeNet Luna PCI module and stored on the local CA server filesystem.
+hardware security module and stored on the local CA server filesystem.
 
 \subsubsection{Activation data protection}
 
@@ -1598,12 +1597,12 @@ No stipulation.
 
 The M4_CA_NAME software runs on a dedicated machine, running no other
 services than those needed for the CA operations.
-The server's network is protected by a dedicated hardware firewall,
+The server's network is protected by a dedicated firewall,
 and the server itself runs an operating system firewall.
 The server is monitored via both host-based and network-based
 intrusion detection systems.
-Login access is subject to hardware-based one-time password (OTP)
-authentication using hardware tokens and permitted only for
+Login access is subject to one-time password (OTP)
+authentication and permitted only for
 administrative personnel that require access to the system for its
 operation.
 
@@ -1618,7 +1617,7 @@ located in NCSA's machine room in the National Petascale Computing Facility
 on the University of Illinois campus.
 The servers are monitored via both host-based and network-based
 intrusion detection systems, and login access is subject to
-hardware-based one-time password (OTP) authentication.
+one-time password (OTP) authentication.
 
 \subsubsection{Specific computer security technical requirements}
 
@@ -1646,7 +1645,7 @@ No stipulation.
 
 \subsection{Network security controls}
 
-Network security controls (software and hardware firewalls)
+Network security controls (firewalls)
 allow inbound connections only for certificate requests
 and download of CA certificates and CRLs from hosts outside NCSA's
 network.
@@ -2148,6 +2147,9 @@ Not all revisions listed below may pertain to this policy.
 \item Due to CA rekey, CA CNs updated to
 "MyProxy CA 2013" and "Two Factor CA 2013".
 \item Removed all references to the NCSA GridShib CA (now retired).
+\item Removed references to hardware security module vendor.
+\item Clarified software/hardware firewalls/tokens.
+\item Change contact person from James Barlow to Jim Basney.
 \end{itemize}
 \item[1.8] The changes in this version are:
 \begin{itemize}
