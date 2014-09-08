@@ -1716,11 +1716,11 @@ URI:\url{http://ca.ncsa.uiuc.edu/9b95bbf2.crl}
 ])
 M4_SLCS_ONLY([
 \item CRLDistributionPoints:
-URI:\url{http://ca.ncsa.uiuc.edu/f2e89fe3.crl}
+URI:\url{http://crl.ncsa.illinois.edu/myproxy2013.crl}
 ])
 M4_2FCA_ONLY([
 \item CRLDistributionPoints:
-URI:\url{http://ca.ncsa.illinois.edu/679cff61.crl}
+URI:\url{http://crl.ncsa.illinois.edu/tfca2013.crl}
 ])
 
 
@@ -2145,7 +2145,8 @@ Not all revisions listed below may pertain to this policy.
 \item[1.9] The changes in this version are:
 \begin{itemize}
 \item Due to CA rekey, CA CNs updated to
-"MyProxy CA 2013" and "Two Factor CA 2013".
+"MyProxy CA 2013" and "Two Factor CA 2013"
+and CRLDistributionPoints updated.
 \item Removed all references to the NCSA GridShib CA (now retired).
 \item Removed references to hardware security module vendor.
 \item Clarified software/hardware firewalls/tokens.
